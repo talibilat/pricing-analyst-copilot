@@ -98,6 +98,33 @@ def _run_controlled_increase(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     return result
 
 
+def test_workflow_endpoint_retention_concern_recommends_hold(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "pricing_copilot.workflow.get_default_synthesizer",
+        lambda settings: FakeRecommendationSynthesizer(),
+    )
+    payload = _controlled_increase_payload()
+    payload["scenario"] = "retention_concern"
+    response = client.post("/workflow", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["recommendation"]["action"] in ("hold", "decrease")
+    assert body["missing_evidence"] == []
+
+
+def test_workflow_endpoint_conflicting_evidence_forces_investigate() -> None:
+    payload = _controlled_increase_payload()
+    payload["scenario"] = "conflicting_evidence"
+    response = client.post("/workflow", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["recommendation"]["action"] == "investigate"
+    assert body["recommendation"]["price_range"] is None
+    assert body["missing_evidence"]
+
+
 def test_post_decisions_approve_persists_and_is_retrievable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
