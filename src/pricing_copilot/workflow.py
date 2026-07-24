@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from pricing_copilot.analytics.calculators import (
+    MetricCalculationError,
     calculate_claims_metrics,
     calculate_competitor_metrics,
     calculate_conversion_metrics,
@@ -27,6 +28,7 @@ from pricing_copilot.documents.retrieval import retrieve_documents
 from pricing_copilot.evidence.confidence import calculate_confidence
 from pricing_copilot.evidence.fair_value import calculate_fair_value_status
 from pricing_copilot.evidence.ledger import build_evidence_ledger
+from pricing_copilot.evidence.policy import detect_material_evidence_issues
 from pricing_copilot.recommendation.governance import validate_and_clamp_draft
 from pricing_copilot.recommendation.synthesizer import (
     RecommendationSynthesizer,
@@ -40,7 +42,29 @@ REQUIRED_EVIDENCE_DOMAINS: tuple[EvidenceDomain, ...] = (
     EvidenceDomain.PRICING_HISTORY,
 )
 
-IMPLEMENTED_DATA_SCENARIOS: frozenset[ScenarioName] = frozenset({ScenarioName.CONTROLLED_INCREASE})
+IMPLEMENTED_DATA_SCENARIOS: frozenset[ScenarioName] = frozenset(
+    {
+        ScenarioName.CONTROLLED_INCREASE,
+        ScenarioName.RETENTION_CONCERN,
+        ScenarioName.CONFLICTING_EVIDENCE,
+    }
+)
+
+_DOMAIN_ERROR_PREFIXES: dict[str, EvidenceDomain] = {
+    "claims": EvidenceDomain.CLAIMS,
+    "conversion": EvidenceDomain.CONVERSION,
+    "competitors": EvidenceDomain.MARKET_INTELLIGENCE,
+    "market_intelligence": EvidenceDomain.MARKET_INTELLIGENCE,
+    "pricing_history": EvidenceDomain.PRICING_HISTORY,
+}
+
+
+def _domain_from_error_message(message: str) -> EvidenceDomain:
+    prefix = message.split(":", 1)[0].strip()
+    for key, domain in _DOMAIN_ERROR_PREFIXES.items():
+        if prefix.startswith(key):
+            return domain
+    return EvidenceDomain.CLAIMS
 
 RETRIEVAL_QUERY = (
     "claims severity loss ratio conversion retention competitor pricing customer feedback broker "
@@ -77,6 +101,40 @@ def _missing_evidence_workflow_result(question: PortfolioQuestion) -> WorkflowRe
         rationale=(
             "Investigation is required: no evidence sources are connected yet for this "
             "prototype slice, so no pricing claim can be supported."
+        ),
+    )
+    governance_outcome = GovernanceOutcome(
+        approved=True,
+        reasons=[
+            "An investigate outcome proposes no price movement and cites no unsupported claims."
+        ],
+    )
+    return WorkflowResult(
+        question=question,
+        specialist_reports=specialist_reports,
+        recommendation=recommendation,
+        governance_outcome=governance_outcome,
+        missing_evidence=missing_evidence,
+    )
+
+
+def _data_quality_investigation_result(question: PortfolioQuestion, reason: str) -> WorkflowResult:
+    domain = _domain_from_error_message(reason)
+    missing_evidence = [MissingEvidence(domain=domain, reason=reason)]
+    specialist_reports = [
+        SpecialistReport(
+            domain=domain,
+            status="error",
+            evidence_ids=[],
+            summary=reason,
+            missing_evidence=missing_evidence,
+        )
+    ]
+    recommendation = Recommendation(
+        action=RecommendationAction.INVESTIGATE,
+        rationale=(
+            f"Investigation is required: {reason} This gap is material enough that no "
+            "pricing claim can be safely supported for this period."
         ),
     )
     governance_outcome = GovernanceOutcome(
@@ -173,11 +231,24 @@ def _evidence_backed_workflow_result(
         raise ValueError("Evidence-backed workflow requires a scenario.")
 
     repository = PortfolioDataRepository.from_scenario(scenario)
-    analytics = _build_analytics(question, repository)
+
+    try:
+        analytics = _build_analytics(question, repository)
+    except MetricCalculationError as exc:
+        return _data_quality_investigation_result(question, str(exc))
 
     retrieved_documents = retrieve_documents(
         scenario=scenario, region=question.region, query=RETRIEVAL_QUERY, top_k=6
     )
+
+    material_issues = detect_material_evidence_issues(
+        retrieved_documents,
+        analysis_period_end=analytics.claims.period_end,
+        max_evidence_age_days=settings.policy.max_evidence_age_days,
+    )
+    if material_issues:
+        return _data_quality_investigation_result(question, "; ".join(material_issues))
+
     retrieved_at = datetime.now(UTC)
     ledger = build_evidence_ledger(
         analytics=analytics,

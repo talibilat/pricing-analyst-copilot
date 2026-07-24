@@ -125,3 +125,38 @@ def test_movement_limit_is_enforced_even_when_the_draft_proposes_more() -> None:
     assert result.recommendation.price_range is not None
     assert result.recommendation.price_range.upper_pct <= 5.0
     assert any("clamped" in c for c in result.recommendation.conditions)
+
+
+def test_retention_concern_scenario_recommends_hold_with_elasticity_investigation() -> None:
+    question = _question().model_copy(update={"scenario": ScenarioName.RETENTION_CONCERN})
+
+    result = run_portfolio_workflow(question, synthesizer=FakeRecommendationSynthesizer())
+
+    assert result.missing_evidence == []
+    assert result.recommendation.action in (RecommendationAction.HOLD, RecommendationAction.DECREASE)
+    assert result.recommendation.price_range is None or (
+        result.recommendation.price_range.upper_pct <= 0
+    )
+    assert any(
+        "elasticity" in area.lower() for area in result.recommendation.investigation_areas
+    )
+    assert result.analytics is not None
+    retention_movement = result.analytics.conversion.renewal_retention.movement_pct
+    assert retention_movement is not None and retention_movement < -5.0
+
+
+def test_conflicting_evidence_scenario_forces_investigate_without_calling_the_model() -> None:
+    question = _question().model_copy(update={"scenario": ScenarioName.CONFLICTING_EVIDENCE})
+
+    # No synthesizer is passed - if this reaches synthesis it would try the real Azure
+    # OpenAI-backed default, which would fail fast in an environment without network access.
+    # The material-evidence-issues gate must short-circuit before that ever happens.
+    result = run_portfolio_workflow(question)
+
+    assert result.recommendation.action is RecommendationAction.INVESTIGATE
+    assert result.recommendation.price_range is None
+    assert result.missing_evidence
+    assert result.missing_evidence[0].domain in (
+        EvidenceDomain.CONVERSION,
+        EvidenceDomain.MARKET_INTELLIGENCE,
+    )
