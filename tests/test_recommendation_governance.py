@@ -38,7 +38,9 @@ def test_valid_draft_passes_through_unchanged() -> None:
     draft = RecommendationDraft(
         action=RecommendationAction.INCREASE,
         price_range=PriceRange(lower_pct=2.0, upper_pct=3.0),
-        rationale="Loss ratio moved from 71.0% to 82.0%, supporting a 2 to 3 percent pilot increase.",
+        rationale=(
+            "Loss ratio moved from 71.0% to 82.0%, supporting a 2 to 3 percent pilot increase."
+        ),
         counter_evidence=[],
         conditions=[],
         investigation_areas=[],

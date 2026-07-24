@@ -1,7 +1,5 @@
 from datetime import UTC, datetime
 
-from pricing_copilot.contracts import Product, Region, ScenarioName, Segment
-from pricing_copilot.data.repository import PortfolioDataRepository
 from pricing_copilot.analytics.calculators import (
     calculate_claims_metrics,
     calculate_competitor_metrics,
@@ -9,6 +7,8 @@ from pricing_copilot.analytics.calculators import (
     summarize_pricing_history,
 )
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
+from pricing_copilot.contracts import Product, Region, ScenarioName, Segment
+from pricing_copilot.data.repository import PortfolioDataRepository
 from pricing_copilot.documents.retrieval import retrieve_documents
 from pricing_copilot.evidence.ledger import build_evidence_ledger
 
@@ -26,7 +26,10 @@ def _analytics() -> PortfolioAnalytics:
         repo.fetch_pricing_history(Product.PERSONAL_MOTOR, Region.NORTH_WEST, Segment.RENEWAL)
     )
     return PortfolioAnalytics(
-        claims=claims, conversion=conversion, competitors=competitors, pricing_history=pricing_history
+        claims=claims,
+        conversion=conversion,
+        competitors=competitors,
+        pricing_history=pricing_history,
     )
 
 
@@ -39,7 +42,10 @@ def test_ledger_contains_one_entry_per_structured_metric_and_per_document() -> N
         top_k=6,
     )
     ledger = build_evidence_ledger(
-        analytics=analytics, documents=documents, region=Region.NORTH_WEST, retrieved_at=datetime.now(UTC)
+        analytics=analytics,
+        documents=documents,
+        region=Region.NORTH_WEST,
+        retrieved_at=datetime.now(UTC),
     )
 
     structured_entries = [e for e in ledger.entries if e.source_type == "structured_metric"]

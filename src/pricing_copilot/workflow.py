@@ -28,7 +28,10 @@ from pricing_copilot.evidence.confidence import calculate_confidence
 from pricing_copilot.evidence.fair_value import calculate_fair_value_status
 from pricing_copilot.evidence.ledger import build_evidence_ledger
 from pricing_copilot.recommendation.governance import validate_and_clamp_draft
-from pricing_copilot.recommendation.synthesizer import RecommendationSynthesizer, get_default_synthesizer
+from pricing_copilot.recommendation.synthesizer import (
+    RecommendationSynthesizer,
+    get_default_synthesizer,
+)
 
 REQUIRED_EVIDENCE_DOMAINS: tuple[EvidenceDomain, ...] = (
     EvidenceDomain.CLAIMS,
@@ -91,7 +94,9 @@ def _missing_evidence_workflow_result(question: PortfolioQuestion) -> WorkflowRe
     )
 
 
-def _build_analytics(question: PortfolioQuestion, repository: PortfolioDataRepository) -> PortfolioAnalytics:
+def _build_analytics(
+    question: PortfolioQuestion, repository: PortfolioDataRepository
+) -> PortfolioAnalytics:
     claims_records = repository.fetch_claims(question.product, question.region, question.segment)
     conversion_records = repository.fetch_conversion(question.product, question.region)
     competitor_records = repository.fetch_competitors(question.region)
@@ -148,7 +153,8 @@ def _specialist_reports(
             domain=EvidenceDomain.PRICING_HISTORY,
             status="completed",
             evidence_ids=[
-                f"pricing-history-{action.period.isoformat()}" for action in analytics.pricing_history
+                f"pricing-history-{action.period.isoformat()}"
+                for action in analytics.pricing_history
             ],
             summary=(
                 f"{len(analytics.pricing_history)} previous pricing action(s) on record."
@@ -174,7 +180,10 @@ def _evidence_backed_workflow_result(
     )
     retrieved_at = datetime.now(UTC)
     ledger = build_evidence_ledger(
-        analytics=analytics, documents=retrieved_documents, region=question.region, retrieved_at=retrieved_at
+        analytics=analytics,
+        documents=retrieved_documents,
+        region=question.region,
+        retrieved_at=retrieved_at,
     )
 
     active_synthesizer = synthesizer or get_default_synthesizer(settings)

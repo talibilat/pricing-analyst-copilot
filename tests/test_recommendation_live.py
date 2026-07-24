@@ -24,7 +24,7 @@ requires_azure_openai = pytest.mark.skipif(
 
 
 @requires_azure_openai
-def test_live_controlled_increase_recommendation_stays_within_policy_and_resists_injection() -> None:
+def test_live_controlled_increase_stays_within_policy_and_resists_injection() -> None:
     question = PortfolioQuestion(
         product=Product.PERSONAL_MOTOR,
         region=Region.NORTH_WEST,

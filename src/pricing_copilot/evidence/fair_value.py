@@ -24,7 +24,8 @@ def calculate_fair_value_status(
 
     if against_count >= 2 or movement < MATERIAL_RETENTION_DROP_PCT:
         return FairValueStatus.CONCERN_IDENTIFIED, [
-            "Escalate to fair-value review before any rollout: evidence flags material price sensitivity."
+            "Escalate to fair-value review before any rollout: evidence flags material price "
+            "sensitivity."
         ]
 
     return FairValueStatus.REVIEW_RECOMMENDED, [

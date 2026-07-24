@@ -142,7 +142,8 @@ if submitted:
                 if result.evidence_ledger is not None:
                     for entry in result.evidence_ledger.entries:
                         st.write(
-                            f"- **{entry.evidence_id}** ({entry.source_type}): {entry.interpretation}"
+                            f"- **{entry.evidence_id}** ({entry.source_type}): "
+                            f"{entry.interpretation}"
                         )
 
             st.subheader("Pricing history")

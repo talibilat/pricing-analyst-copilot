@@ -77,7 +77,9 @@ def build_evidence_ledger(
                 period_end=action.period,
                 metric_name="price_change_pct",
                 value=action.price_change_pct,
-                interpretation=f"Previous {action.price_change_pct:+.1f}% action: {action.rationale}",
+                interpretation=(
+                    f"Previous {action.price_change_pct:+.1f}% action: {action.rationale}"
+                ),
             )
         )
 

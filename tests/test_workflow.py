@@ -87,8 +87,9 @@ def test_controlled_increase_scenario_returns_evidence_backed_analytics() -> Non
 
     recommendation = result.recommendation
     assert recommendation.action is RecommendationAction.INCREASE
-    assert recommendation.price_range is not None
-    assert 0.0 <= recommendation.price_range.lower_pct <= recommendation.price_range.upper_pct <= 5.0
+    price_range = recommendation.price_range
+    assert price_range is not None
+    assert 0.0 <= price_range.lower_pct <= price_range.upper_pct <= 5.0
     assert recommendation.cited_evidence_ids
     assert set(recommendation.cited_evidence_ids).issubset(ledger_ids)
     assert recommendation.counter_evidence

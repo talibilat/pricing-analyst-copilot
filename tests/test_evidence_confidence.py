@@ -67,7 +67,10 @@ def _analytics(
         )
     ]
     return PortfolioAnalytics(
-        claims=claims, conversion=conversion, competitors=competitors, pricing_history=pricing_history
+        claims=claims,
+        conversion=conversion,
+        competitors=competitors,
+        pricing_history=pricing_history,
     )
 
 
@@ -91,7 +94,10 @@ def test_confidence_is_high_when_signals_agree_and_evidence_is_fresh() -> None:
     analytics = _analytics()
     documents = [_document(DocumentSentiment.SUPPORTS_INCREASE, date(2025, 11, 1))]
     ledger = build_evidence_ledger(
-        analytics=analytics, documents=documents, region=Region.NORTH_WEST, retrieved_at=datetime.now(UTC)
+        analytics=analytics,
+        documents=documents,
+        region=Region.NORTH_WEST,
+        retrieved_at=datetime.now(UTC),
     )
     breakdown = calculate_confidence(
         ledger=ledger,
@@ -114,7 +120,10 @@ def test_confidence_drops_with_conflicting_documents() -> None:
         _document(DocumentSentiment.SUPPORTS_INCREASE, date(2025, 11, 2)),
     ]
     ledger = build_evidence_ledger(
-        analytics=analytics, documents=documents, region=Region.NORTH_WEST, retrieved_at=datetime.now(UTC)
+        analytics=analytics,
+        documents=documents,
+        region=Region.NORTH_WEST,
+        retrieved_at=datetime.now(UTC),
     )
     breakdown = calculate_confidence(
         ledger=ledger,

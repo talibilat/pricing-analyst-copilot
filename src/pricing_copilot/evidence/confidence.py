@@ -34,7 +34,10 @@ def calculate_confidence(
 
     if documents:
         freshness_scores = [
-            max(0.0, 1.0 - (analysis_period_end - r.document.source_date).days / FRESHNESS_DECAY_DAYS)
+            max(
+                0.0,
+                1.0 - (analysis_period_end - r.document.source_date).days / FRESHNESS_DECAY_DAYS,
+            )
             for r in documents
         ]
         source_freshness = sum(freshness_scores) / len(freshness_scores)
@@ -71,7 +74,11 @@ def calculate_confidence(
         conflict_penalty = 0.0
 
     overall = (
-        evidence_coverage + source_freshness + specialist_agreement + data_quality + (1 - conflict_penalty)
+        evidence_coverage
+        + source_freshness
+        + specialist_agreement
+        + data_quality
+        + (1 - conflict_penalty)
     ) / 5
 
     return ConfidenceBreakdown(
