@@ -148,6 +148,58 @@ Changes cannot become the default until the relevant evaluation gates pass.
 The Sunday 2:30 pm feature freeze applies to the interview release.
 Later development may continue as a separately versioned iteration after the interview package is stable, recorded, and rehearsed.
 
+## Setup and running the prototype
+
+This build implements [Issue #2](https://github.com/talibilat/pricing-analyst-copilot/issues/2): a runnable vertical slice that safely abstains because no evidence sources are connected yet.
+
+### Prerequisites
+
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/)
+
+### Install
+
+```bash
+uv sync --all-groups
+cp .env.example .env
+```
+
+### Run the API
+
+```bash
+uv run uvicorn pricing_copilot.api:app --reload
+```
+
+Then submit a supported portfolio question:
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/workflow \
+  -H "Content-Type: application/json" \
+  -d '{"product":"personal_motor","region":"north_west","segment":"renewal","analysis_period":{"start_month":"2026-01-01","end_month":"2026-06-01"},"scenario":null}'
+```
+
+### Run the CLI
+
+```bash
+uv run pricing-copilot \
+  --product personal_motor --region north_west --segment renewal \
+  --start-month 2026-01-01 --end-month 2026-06-01
+```
+
+### Run the Streamlit interface
+
+```bash
+uv run streamlit run src/pricing_copilot/streamlit_app.py
+```
+
+### Run the quality command
+
+```bash
+./scripts/quality.sh
+```
+
+This runs Ruff, MyPy, Pytest, Bandit, and the secret-scanning check.
+
 ## Delivery roadmap
 
 | Order | Ticket | Blocked by | Complete behavior |
