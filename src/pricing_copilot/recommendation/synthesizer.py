@@ -12,6 +12,8 @@ from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
+RECOMMENDATION_VERSION = "single-agent-baseline-v1"
+
 SYSTEM_PROMPT = (
     "You are a pricing evidence synthesizer for a governed insurance decision-support prototype. "
     "You MUST use only the deterministic analytics and evidence ledger entries provided to you. "

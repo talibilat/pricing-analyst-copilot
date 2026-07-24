@@ -6,6 +6,8 @@ from pricing_copilot.contracts import PriceRange
 from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
+GOVERNANCE_VERSION = "deterministic-governance-v1"
+
 _NUMBER_PATTERN = re.compile(r"(-?\d+(?:\.\d+)?)\s*%")
 _TOLERANCE = 0.5
 
