@@ -63,9 +63,54 @@ if submitted:
         st.subheader(f"Recommendation: {result.recommendation.action.value}")
         st.write(result.recommendation.rationale)
 
-        st.subheader("Missing evidence")
-        for item in result.missing_evidence:
-            st.warning(f"**{item.domain.value}**: {item.reason}")
+        if result.analytics is not None:
+            analytics = result.analytics
+
+            st.subheader("Loss ratio (%)")
+            st.line_chart(
+                {"loss_ratio_pct": [v.value * 100 for v in analytics.claims.loss_ratio.monthly]}
+            )
+
+            st.subheader("Claim severity (GBP)")
+            st.line_chart(
+                {
+                    "average_severity_gbp": [
+                        v.value for v in analytics.claims.average_severity_gbp.monthly
+                    ]
+                }
+            )
+
+            st.subheader("Conversion and retention (%)")
+            st.line_chart(
+                {
+                    "quote_to_sale_conversion_pct": [
+                        v.value * 100 for v in analytics.conversion.quote_to_sale_conversion.monthly
+                    ],
+                    "renewal_retention_pct": [
+                        v.value * 100 for v in analytics.conversion.renewal_retention.monthly
+                    ],
+                }
+            )
+
+            st.subheader("Competitor price-index movement")
+            st.line_chart(
+                {
+                    movement.competitor_name: [v.value for v in movement.price_index.monthly]
+                    for movement in analytics.competitors.competitors
+                }
+            )
+
+            st.subheader("Pricing history")
+            for action in analytics.pricing_history:
+                st.write(
+                    f"- **{action.period.isoformat()}**: {action.price_change_pct:+.1f}% - "
+                    f"{action.rationale} (conversion impact {action.conversion_impact_pct:+.1f}%, "
+                    f"loss-ratio impact {action.loss_ratio_impact_pct:+.1f}%)"
+                )
+        else:
+            st.subheader("Missing evidence")
+            for item in result.missing_evidence:
+                st.warning(f"**{item.domain.value}**: {item.reason}")
 
         st.subheader("Specialist reports")
         for report in result.specialist_reports:
