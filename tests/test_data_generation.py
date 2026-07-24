@@ -1,5 +1,3 @@
-import pytest
-
 from pricing_copilot.contracts import ScenarioName
 from pricing_copilot.data.generation import (
     DEFAULT_SCENARIO_SEED,
@@ -33,6 +31,21 @@ def test_default_seed_and_version_are_stable_constants() -> None:
     assert isinstance(DEFAULT_SCENARIO_VERSION, str)
 
 
-def test_unimplemented_scenario_raises_not_implemented() -> None:
-    with pytest.raises(NotImplementedError):
-        generate_scenario_dataset(ScenarioName.RETENTION_CONCERN)
+def test_retention_concern_dataset_has_24_monthly_periods_per_domain() -> None:
+    dataset = generate_scenario_dataset(ScenarioName.RETENTION_CONCERN)
+    assert len({r.period for r in dataset.claims}) == 24
+    assert len({r.period for r in dataset.competitors}) == 24
+
+
+def test_conflicting_evidence_dataset_has_incomplete_conversion_data() -> None:
+    dataset = generate_scenario_dataset(ScenarioName.CONFLICTING_EVIDENCE)
+    renewal_conversion = [r for r in dataset.conversion if r.segment.value == "renewal"]
+    assert len({r.period for r in renewal_conversion}) < 24
+    assert len({r.period for r in dataset.claims}) == 24
+
+
+def test_all_three_scenarios_are_byte_for_byte_reproducible() -> None:
+    for scenario in ScenarioName:
+        first = generate_scenario_dataset(scenario, seed=7, version="v1")
+        second = generate_scenario_dataset(scenario, seed=7, version="v1")
+        assert first.model_dump_json() == second.model_dump_json()
