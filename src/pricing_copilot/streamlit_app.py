@@ -100,6 +100,51 @@ if submitted:
                 }
             )
 
+            recommendation = result.recommendation
+            st.subheader("Proposed action")
+            if recommendation.price_range is not None:
+                st.write(
+                    f"**{recommendation.action.value}** "
+                    f"({recommendation.price_range.lower_pct:g}% to "
+                    f"{recommendation.price_range.upper_pct:g}%)"
+                )
+            else:
+                st.write(f"**{recommendation.action.value}**")
+
+            evidence_col, counter_col = st.columns(2)
+            with evidence_col:
+                st.markdown("**Supporting rationale**")
+                st.write(recommendation.rationale)
+            with counter_col:
+                st.markdown("**Counter-evidence**")
+                for item in recommendation.counter_evidence:
+                    st.write(f"- {item}")
+
+            if recommendation.conditions:
+                st.markdown("**Conditions**")
+                for item in recommendation.conditions:
+                    st.write(f"- {item}")
+            if recommendation.investigation_areas:
+                st.markdown("**Areas for further investigation**")
+                for item in recommendation.investigation_areas:
+                    st.write(f"- {item}")
+
+            if recommendation.fair_value_status is not None:
+                st.subheader(f"Fair-value status: {recommendation.fair_value_status.value}")
+                for item in recommendation.fair_value_follow_up:
+                    st.write(f"- {item}")
+
+            if recommendation.confidence is not None:
+                st.subheader("Confidence components")
+                st.json(recommendation.confidence.model_dump())
+
+            with st.expander("Evidence ledger detail"):
+                if result.evidence_ledger is not None:
+                    for entry in result.evidence_ledger.entries:
+                        st.write(
+                            f"- **{entry.evidence_id}** ({entry.source_type}): {entry.interpretation}"
+                        )
+
             st.subheader("Pricing history")
             for action in analytics.pricing_history:
                 st.write(
