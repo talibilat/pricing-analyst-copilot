@@ -112,11 +112,14 @@ def _evidence_backed_workflow_result(question: PortfolioQuestion) -> WorkflowRes
         SpecialistReport(
             domain=EvidenceDomain.CLAIMS,
             status="completed",
-            evidence_ids=[f"claims-{question.region.value}-{claims_metrics.period_end.isoformat()}"],
+            evidence_ids=[
+                f"claims-{question.region.value}-{claims_metrics.period_end.isoformat()}"
+            ],
             summary=(
                 f"Loss ratio moved from {claims_metrics.loss_ratio.baseline:.1%} to "
                 f"{claims_metrics.loss_ratio.current:.1%} across "
-                f"{claims_metrics.period_start.isoformat()} to {claims_metrics.period_end.isoformat()}."
+                f"{claims_metrics.period_start.isoformat()} to "
+                f"{claims_metrics.period_end.isoformat()}."
             ),
         ),
         SpecialistReport(
@@ -146,7 +149,9 @@ def _evidence_backed_workflow_result(question: PortfolioQuestion) -> WorkflowRes
         SpecialistReport(
             domain=EvidenceDomain.PRICING_HISTORY,
             status="completed",
-            evidence_ids=[f"pricing-history-{action.period.isoformat()}" for action in pricing_history],
+            evidence_ids=[
+                f"pricing-history-{action.period.isoformat()}" for action in pricing_history
+            ],
             summary=(
                 f"{len(pricing_history)} previous pricing action(s) on record."
                 if pricing_history

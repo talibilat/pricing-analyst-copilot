@@ -136,7 +136,8 @@ def _generate_pricing_history(periods: list[date]) -> list[PricingActionRecord]:
 
 
 def _generate_controlled_increase_dataset(seed: int, version: str) -> ScenarioDataset:
-    rng = random.Random(seed)
+    # Deliberately non-cryptographic: reproducibility from a fixed seed is the requirement.
+    rng = random.Random(seed)  # nosec B311
     periods = _month_periods(SCENARIO_START_MONTH, TOTAL_MONTHS)
     return ScenarioDataset(
         scenario=ScenarioName.CONTROLLED_INCREASE,

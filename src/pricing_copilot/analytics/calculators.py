@@ -73,15 +73,23 @@ def calculate_claims_metrics(records: list[ClaimsMonthlyRecord]) -> ClaimsMetric
     for record in ordered:
         label = record.period.isoformat()
         if record.policies_in_force <= 0:
-            raise MetricCalculationError(f"claims: policies_in_force must be positive for {label}.")
+            raise MetricCalculationError(
+                f"claims: policies_in_force must be positive for {label}."
+            )
         if record.claim_count < 0:
             raise MetricCalculationError(f"claims: claim_count cannot be negative for {label}.")
         if record.claim_count == 0:
-            raise MetricCalculationError(f"claims: cannot compute severity with zero claims for {label}.")
+            raise MetricCalculationError(
+                f"claims: cannot compute severity with zero claims for {label}."
+            )
         if record.earned_premium_gbp <= 0:
-            raise MetricCalculationError(f"claims: earned_premium_gbp must be positive for {label}.")
+            raise MetricCalculationError(
+                f"claims: earned_premium_gbp must be positive for {label}."
+            )
         if record.incurred_loss_gbp < 0:
-            raise MetricCalculationError(f"claims: incurred_loss_gbp cannot be negative for {label}.")
+            raise MetricCalculationError(
+                f"claims: incurred_loss_gbp cannot be negative for {label}."
+            )
 
         loss_ratio = record.incurred_loss_gbp / record.earned_premium_gbp
         if loss_ratio > MAX_PLAUSIBLE_LOSS_RATIO:
@@ -90,12 +98,16 @@ def calculate_claims_metrics(records: list[ClaimsMonthlyRecord]) -> ClaimsMetric
             )
 
         frequency_monthly.append(
-            MonthlyValue(period=record.period, value=record.claim_count / record.policies_in_force)
+            MonthlyValue(
+                period=record.period, value=record.claim_count / record.policies_in_force
+            )
         )
         severity_monthly.append(
             MonthlyValue(period=record.period, value=record.incurred_loss_gbp / record.claim_count)
         )
-        incurred_loss_monthly.append(MonthlyValue(period=record.period, value=record.incurred_loss_gbp))
+        incurred_loss_monthly.append(
+            MonthlyValue(period=record.period, value=record.incurred_loss_gbp)
+        )
         loss_ratio_monthly.append(MonthlyValue(period=record.period, value=loss_ratio))
 
     return ClaimsMetrics(
@@ -127,17 +139,25 @@ def calculate_conversion_metrics(
         if record.sales < 0 or record.sales > record.quotes:
             raise MetricCalculationError(f"conversion: sales out of range for {label}.")
         if record.renewals_due < 0:
-            raise MetricCalculationError(f"conversion: renewals_due cannot be negative for {label}.")
+            raise MetricCalculationError(
+                f"conversion: renewals_due cannot be negative for {label}."
+            )
         if record.renewals_retained < 0 or record.renewals_retained > record.renewals_due:
-            raise MetricCalculationError(f"conversion: renewals_retained out of range for {label}.")
+            raise MetricCalculationError(
+                f"conversion: renewals_retained out of range for {label}."
+            )
         if record.average_quoted_premium_gbp <= 0:
-            raise MetricCalculationError(f"conversion: average premium must be positive for {label}.")
+            raise MetricCalculationError(
+                f"conversion: average premium must be positive for {label}."
+            )
         if record.renewals_due == 0:
             raise MetricCalculationError(
                 f"conversion: cannot compute retention with zero renewals due for {label}."
             )
 
-        conversion_monthly.append(MonthlyValue(period=record.period, value=record.sales / record.quotes))
+        conversion_monthly.append(
+            MonthlyValue(period=record.period, value=record.sales / record.quotes)
+        )
         retention_monthly.append(
             MonthlyValue(period=record.period, value=record.renewals_retained / record.renewals_due)
         )

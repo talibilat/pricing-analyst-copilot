@@ -24,7 +24,7 @@ class PortfolioDataRepository:
         self._connection = connection
 
     @classmethod
-    def from_dataset(cls, dataset: ScenarioDataset) -> "PortfolioDataRepository":
+    def from_dataset(cls, dataset: ScenarioDataset) -> PortfolioDataRepository:
         connection = duckdb.connect(":memory:")
         _load_dataset(connection, dataset)
         return cls(connection)
@@ -35,7 +35,7 @@ class PortfolioDataRepository:
         scenario: ScenarioName,
         seed: int = DEFAULT_SCENARIO_SEED,
         version: str = DEFAULT_SCENARIO_VERSION,
-    ) -> "PortfolioDataRepository":
+    ) -> PortfolioDataRepository:
         return cls.from_dataset(generate_scenario_dataset(scenario, seed, version))
 
     def fetch_claims(

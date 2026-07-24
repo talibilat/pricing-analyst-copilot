@@ -68,7 +68,9 @@ def test_controlled_increase_scenario_returns_evidence_backed_analytics() -> Non
 
     assert result.analytics is not None
     claims = result.analytics.claims
-    assert 10.0 <= claims.average_severity_gbp.movement_pct <= 22.0
+    severity_movement_pct = claims.average_severity_gbp.movement_pct
+    assert severity_movement_pct is not None
+    assert 10.0 <= severity_movement_pct <= 22.0
     assert 0.75 <= claims.loss_ratio.current <= 0.90
 
     competitor_movements = [
