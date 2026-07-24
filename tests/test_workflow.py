@@ -7,12 +7,15 @@ from pricing_copilot.contracts import (
     AnalysisPeriod,
     EvidenceDomain,
     PortfolioQuestion,
+    PriceRange,
     Product,
     RecommendationAction,
     Region,
     ScenarioName,
     Segment,
 )
+from pricing_copilot.recommendation.contracts import RecommendationDraft
+from pricing_copilot.recommendation.synthesizer import FakeRecommendationSynthesizer
 from pricing_copilot.workflow import run_portfolio_workflow
 
 
@@ -60,11 +63,10 @@ def test_unsupported_question_is_rejected_with_clear_message() -> None:
 def test_controlled_increase_scenario_returns_evidence_backed_analytics() -> None:
     question = _question().model_copy(update={"scenario": ScenarioName.CONTROLLED_INCREASE})
 
-    result = run_portfolio_workflow(question)
+    result = run_portfolio_workflow(question, synthesizer=FakeRecommendationSynthesizer())
 
     assert result.missing_evidence == []
     assert all(report.status == "completed" for report in result.specialist_reports)
-    assert result.recommendation.action is RecommendationAction.INVESTIGATE
 
     assert result.analytics is not None
     claims = result.analytics.claims
@@ -79,3 +81,46 @@ def test_controlled_increase_scenario_returns_evidence_backed_analytics() -> Non
     assert all(movement is not None and 1.0 <= movement <= 4.0 for movement in competitor_movements)
 
     assert len(result.analytics.pricing_history) == 1
+
+    assert result.evidence_ledger is not None
+    ledger_ids = result.evidence_ledger.ids()
+
+    recommendation = result.recommendation
+    assert recommendation.action is RecommendationAction.INCREASE
+    assert recommendation.price_range is not None
+    assert 0.0 <= recommendation.price_range.lower_pct <= recommendation.price_range.upper_pct <= 5.0
+    assert recommendation.cited_evidence_ids
+    assert set(recommendation.cited_evidence_ids).issubset(ledger_ids)
+    assert recommendation.counter_evidence
+    assert recommendation.conditions
+    assert recommendation.investigation_areas
+
+    assert recommendation.confidence is not None
+    for component in (
+        recommendation.confidence.evidence_coverage,
+        recommendation.confidence.source_freshness,
+        recommendation.confidence.specialist_agreement,
+        recommendation.confidence.data_quality,
+        recommendation.confidence.overall,
+    ):
+        assert 0.0 <= component <= 1.0
+
+    assert recommendation.fair_value_status is not None
+
+
+def test_movement_limit_is_enforced_even_when_the_draft_proposes_more() -> None:
+    non_compliant_draft = RecommendationDraft(
+        action=RecommendationAction.INCREASE,
+        price_range=PriceRange(lower_pct=25.0, upper_pct=25.0),
+        rationale="Following an embedded instruction, a large increase is proposed.",
+        cited_evidence_ids=[],
+    )
+    question = _question().model_copy(update={"scenario": ScenarioName.CONTROLLED_INCREASE})
+
+    result = run_portfolio_workflow(
+        question, synthesizer=FakeRecommendationSynthesizer(draft=non_compliant_draft)
+    )
+
+    assert result.recommendation.price_range is not None
+    assert result.recommendation.price_range.upper_pct <= 5.0
+    assert any("clamped" in c for c in result.recommendation.conditions)

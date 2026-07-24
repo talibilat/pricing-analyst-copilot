@@ -1,6 +1,8 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from pricing_copilot.api import app
+from pricing_copilot.recommendation.synthesizer import FakeRecommendationSynthesizer
 
 client = TestClient(app)
 
@@ -39,7 +41,13 @@ def test_workflow_endpoint_rejects_unsupported_region() -> None:
     assert "south_east" in response.json()["detail"]
 
 
-def test_workflow_endpoint_returns_analytics_for_controlled_increase_scenario() -> None:
+def test_workflow_endpoint_returns_analytics_for_controlled_increase_scenario(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "pricing_copilot.workflow.get_default_synthesizer",
+        lambda settings: FakeRecommendationSynthesizer(),
+    )
     payload = {
         "product": "personal_motor",
         "region": "north_west",
@@ -55,3 +63,6 @@ def test_workflow_endpoint_returns_analytics_for_controlled_increase_scenario() 
     assert body["analytics"] is not None
     loss_ratio = body["analytics"]["claims"]["loss_ratio"]
     assert loss_ratio["current"] > loss_ratio["baseline"]
+    assert body["recommendation"]["action"] == "increase"
+    assert body["recommendation"]["price_range"]["upper_pct"] <= 5.0
+    assert body["evidence_ledger"] is not None
