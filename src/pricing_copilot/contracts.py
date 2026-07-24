@@ -5,6 +5,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
+from pricing_copilot.analytics.contracts import PortfolioAnalytics
+
 
 class Product(StrEnum):
     PERSONAL_MOTOR = "personal_motor"
@@ -116,3 +118,4 @@ class WorkflowResult(BaseModel):
     recommendation: Recommendation
     governance_outcome: GovernanceOutcome
     missing_evidence: list[MissingEvidence]
+    analytics: PortfolioAnalytics | None = None
