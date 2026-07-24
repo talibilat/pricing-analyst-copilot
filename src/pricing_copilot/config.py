@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class PolicySettings(BaseModel):
     max_price_movement_pct: float = 5.0
+    max_evidence_age_days: int = 120
 
 
 class Settings(BaseSettings):
