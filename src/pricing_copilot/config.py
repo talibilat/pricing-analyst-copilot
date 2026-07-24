@@ -27,3 +27,16 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+class AzureOpenAISettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="AZURE_OPENAI_", env_file=".env", extra="ignore")
+
+    api_key: str | None = None
+    endpoint: str | None = None
+    chat_deployment: str | None = None
+
+
+@lru_cache
+def get_azure_openai_settings() -> AzureOpenAISettings:
+    return AzureOpenAISettings()
