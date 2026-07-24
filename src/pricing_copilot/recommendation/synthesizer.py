@@ -9,7 +9,7 @@ from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.config import Settings, get_azure_openai_settings
 from pricing_copilot.contracts import PriceRange, RecommendationAction
 from pricing_copilot.documents.retrieval import RetrievedDocument
-from pricing_copilot.evidence.ledger import EvidenceLedger
+from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 SYSTEM_PROMPT = (

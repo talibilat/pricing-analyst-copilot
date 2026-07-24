@@ -3,7 +3,7 @@ from __future__ import annotations
 from pricing_copilot.contracts import RecommendationAction
 from pricing_copilot.documents.corpus import DocumentSentiment
 from pricing_copilot.documents.retrieval import RetrievedDocument
-from pricing_copilot.evidence.ledger import FairValueStatus
+from pricing_copilot.evidence.models import FairValueStatus
 
 MATERIAL_RETENTION_DROP_PCT = -10.0
 

@@ -6,6 +6,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, model_validator
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
+from pricing_copilot.evidence.models import ConfidenceBreakdown, EvidenceLedger, FairValueStatus
 
 
 class Product(StrEnum):
@@ -96,8 +97,13 @@ class Recommendation(BaseModel):
     action: RecommendationAction
     price_range: PriceRange | None = None
     rationale: str
+    counter_evidence: list[str] = Field(default_factory=list)
+    conditions: list[str] = Field(default_factory=list)
+    investigation_areas: list[str] = Field(default_factory=list)
     cited_evidence_ids: list[str] = Field(default_factory=list)
-    confidence: float | None = None
+    confidence: ConfidenceBreakdown | None = None
+    fair_value_status: FairValueStatus | None = None
+    fair_value_follow_up: list[str] = Field(default_factory=list)
 
 
 class GovernanceOutcome(BaseModel):
@@ -119,3 +125,4 @@ class WorkflowResult(BaseModel):
     governance_outcome: GovernanceOutcome
     missing_evidence: list[MissingEvidence]
     analytics: PortfolioAnalytics | None = None
+    evidence_ledger: EvidenceLedger | None = None

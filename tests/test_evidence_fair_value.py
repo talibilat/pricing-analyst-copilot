@@ -4,7 +4,7 @@ from pricing_copilot.contracts import RecommendationAction, Region, ScenarioName
 from pricing_copilot.documents.corpus import DocumentRecord, DocumentSentiment, SourceType
 from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.evidence.fair_value import calculate_fair_value_status
-from pricing_copilot.evidence.ledger import FairValueStatus
+from pricing_copilot.evidence.models import FairValueStatus
 
 
 def _document(sentiment: DocumentSentiment) -> RetrievedDocument:

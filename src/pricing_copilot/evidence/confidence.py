@@ -6,7 +6,7 @@ from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.contracts import RecommendationAction
 from pricing_copilot.documents.corpus import DocumentSentiment
 from pricing_copilot.documents.retrieval import RetrievedDocument
-from pricing_copilot.evidence.ledger import ConfidenceBreakdown, EvidenceLedger
+from pricing_copilot.evidence.models import ConfidenceBreakdown, EvidenceLedger
 
 FRESHNESS_DECAY_DAYS = 180.0
 CONVERSION_TOLERANCE_PCT = -10.0

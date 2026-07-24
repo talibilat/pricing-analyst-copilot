@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import pytest
 
 from pricing_copilot.contracts import PriceRange, RecommendationAction
-from pricing_copilot.evidence.ledger import EvidenceLedger, EvidenceLedgerEntry
+from pricing_copilot.evidence.models import EvidenceLedger, EvidenceLedgerEntry
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 from pricing_copilot.recommendation.governance import (
     RecommendationValidationError,

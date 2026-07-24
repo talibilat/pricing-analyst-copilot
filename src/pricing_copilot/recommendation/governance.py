@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 
 from pricing_copilot.contracts import PriceRange
-from pricing_copilot.evidence.ledger import EvidenceLedger
+from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 _NUMBER_PATTERN = re.compile(r"(-?\d+(?:\.\d+)?)\s*%")
