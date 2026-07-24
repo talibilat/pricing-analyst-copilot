@@ -111,11 +111,50 @@ class GovernanceOutcome(BaseModel):
     reasons: list[str] = Field(default_factory=list)
 
 
+class ConfigurationVersions(BaseModel):
+    model_name: str
+    recommendation_version: str
+    governance_version: str
+    scenario_seed: int
+    scenario_version: str
+    max_price_movement_pct: float
+
+
 class AnalystDecision(BaseModel):
+    record_id: str | None = None
+    question: PortfolioQuestion
+    recommendation: Recommendation
+    governance_outcome: GovernanceOutcome
+    evidence_ids: list[str] = Field(default_factory=list)
     decision: AnalystDecisionType
     rationale: str
     conditions: list[str] = Field(default_factory=list)
     decided_at: datetime
+    configuration_versions: ConfigurationVersions
+
+    @model_validator(mode="after")
+    def check_material_decision_requirements(self) -> AnalystDecision:
+        if not self.rationale.strip():
+            raise ValueError("rationale is required for a material analyst decision.")
+        needs_conditions = self.decision in (
+            AnalystDecisionType.APPROVE_WITH_CONDITIONS,
+            AnalystDecisionType.REQUEST_INVESTIGATION,
+        )
+        if needs_conditions and not any(c.strip() for c in self.conditions):
+            raise ValueError(
+                f"{self.decision.value} requires at least one recorded condition or "
+                "outstanding question."
+            )
+        return self
+
+
+class DecisionRequest(BaseModel):
+    question: PortfolioQuestion
+    recommendation: Recommendation
+    governance_outcome: GovernanceOutcome
+    decision: AnalystDecisionType
+    rationale: str
+    conditions: list[str] = Field(default_factory=list)
 
 
 class WorkflowResult(BaseModel):
