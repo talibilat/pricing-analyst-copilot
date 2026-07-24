@@ -7,11 +7,31 @@ from pricing_copilot.analytics.calculators import (
     summarize_pricing_history,
 )
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
-from pricing_copilot.contracts import Product, Region, ScenarioName, Segment
+from pricing_copilot.contracts import Product, RecommendationAction, Region, ScenarioName, Segment
 from pricing_copilot.data.repository import PortfolioDataRepository
 from pricing_copilot.documents.retrieval import retrieve_documents
 from pricing_copilot.evidence.ledger import build_evidence_ledger
 from pricing_copilot.recommendation.synthesizer import FakeRecommendationSynthesizer
+
+
+def _analytics(scenario: ScenarioName) -> PortfolioAnalytics:
+    repo = PortfolioDataRepository.from_scenario(scenario)
+    claims = calculate_claims_metrics(
+        repo.fetch_claims(Product.PERSONAL_MOTOR, Region.NORTH_WEST, Segment.RENEWAL)
+    )
+    conversion = calculate_conversion_metrics(
+        repo.fetch_conversion(Product.PERSONAL_MOTOR, Region.NORTH_WEST), Segment.RENEWAL
+    )
+    competitors = calculate_competitor_metrics(repo.fetch_competitors(Region.NORTH_WEST))
+    pricing_history = summarize_pricing_history(
+        repo.fetch_pricing_history(Product.PERSONAL_MOTOR, Region.NORTH_WEST, Segment.RENEWAL)
+    )
+    return PortfolioAnalytics(
+        claims=claims,
+        conversion=conversion,
+        competitors=competitors,
+        pricing_history=pricing_history,
+    )
 
 
 def test_fake_synthesizer_cites_only_ids_present_in_the_ledger() -> None:
@@ -55,3 +75,27 @@ def test_fake_synthesizer_cites_only_ids_present_in_the_ledger() -> None:
     assert draft.price_range is not None
     assert draft.price_range.lower_pct >= 0
     assert draft.price_range.upper_pct <= 5.0
+
+
+def test_fake_synthesizer_recommends_hold_when_retention_declines_and_loss_ratio_is_stable() -> None:
+    analytics = _analytics(ScenarioName.RETENTION_CONCERN)
+    documents = retrieve_documents(
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        query="retention conversion",
+        top_k=5,
+    )
+    ledger = build_evidence_ledger(
+        analytics=analytics,
+        documents=documents,
+        region=Region.NORTH_WEST,
+        retrieved_at=datetime.now(UTC),
+    )
+
+    draft = FakeRecommendationSynthesizer().synthesize(
+        analytics=analytics, ledger=ledger, documents=documents, max_movement_pct=5.0
+    )
+
+    assert draft.action is RecommendationAction.HOLD
+    assert draft.price_range is None
+    assert any("elasticity" in area.lower() for area in draft.investigation_areas)

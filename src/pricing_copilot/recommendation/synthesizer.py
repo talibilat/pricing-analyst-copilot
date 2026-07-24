@@ -71,6 +71,29 @@ class FakeRecommendationSynthesizer:
         ]
         cited = (structured_ids + document_ids)[:4]
 
+        loss_ratio_movement = analytics.claims.loss_ratio.movement_pct or 0.0
+        retention_movement = analytics.conversion.renewal_retention.movement_pct or 0.0
+
+        if retention_movement < -5.0 and loss_ratio_movement < 5.0:
+            return RecommendationDraft(
+                action=RecommendationAction.HOLD,
+                price_range=None,
+                rationale=(
+                    "Renewal retention has softened materially while the loss ratio remains "
+                    "broadly stable, so no increase is supported at this time."
+                ),
+                counter_evidence=[
+                    "Loss ratio has not deteriorated, so cost pressure alone does not justify "
+                    "any reduction either."
+                ],
+                conditions=[],
+                investigation_areas=[
+                    "Run a price elasticity investigation for the affected segment before any "
+                    "further pricing action."
+                ],
+                cited_evidence_ids=cited,
+            )
+
         return RecommendationDraft(
             action=RecommendationAction.INCREASE,
             price_range=PriceRange(lower_pct=2.0, upper_pct=3.0),
