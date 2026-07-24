@@ -189,6 +189,9 @@ if result is not None and question is not None:
             decision_submitted = st.form_submit_button("Record analyst decision")
 
         if decision_submitted:
+            if not isinstance(decision_choice, AnalystDecisionType):
+                raise TypeError("Decision selector must always return a value.")
+
             conditions_list = [
                 line.strip() for line in conditions_input.splitlines() if line.strip()
             ]

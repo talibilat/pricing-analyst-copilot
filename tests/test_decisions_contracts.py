@@ -1,4 +1,5 @@
 from datetime import UTC, date, datetime
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -39,7 +40,7 @@ def _versions() -> ConfigurationVersions:
     )
 
 
-def _base_kwargs() -> dict:
+def _base_kwargs() -> dict[str, Any]:
     return dict(
         question=_question(),
         recommendation=Recommendation(action=RecommendationAction.INCREASE, rationale="test"),
@@ -59,7 +60,9 @@ def test_approve_requires_no_conditions() -> None:
 
 def test_reject_requires_no_conditions() -> None:
     decision = AnalystDecision(
-        decision=AnalystDecisionType.REJECT, rationale="Not convinced by the evidence.", **_base_kwargs()
+        decision=AnalystDecisionType.REJECT,
+        rationale="Not convinced by the evidence.",
+        **_base_kwargs(),
     )
     assert decision.decision is AnalystDecisionType.REJECT
 

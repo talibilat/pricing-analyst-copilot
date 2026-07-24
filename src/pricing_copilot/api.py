@@ -5,7 +5,12 @@ from pydantic import ValidationError
 
 from pricing_copilot.catalog import UnsupportedPortfolioError
 from pricing_copilot.config import get_settings
-from pricing_copilot.contracts import AnalystDecision, DecisionRequest, PortfolioQuestion, WorkflowResult
+from pricing_copilot.contracts import (
+    AnalystDecision,
+    DecisionRequest,
+    PortfolioQuestion,
+    WorkflowResult,
+)
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.workflow import run_portfolio_workflow
 

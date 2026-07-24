@@ -27,7 +27,7 @@ class DecisionStore:
         self._connection.commit()
 
     @classmethod
-    def from_path(cls, path: Path) -> "DecisionStore":
+    def from_path(cls, path: Path) -> DecisionStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         # check_same_thread=False: FastAPI/Streamlit may serve requests from a worker
         # thread different from the one that opened the connection. This prototype has

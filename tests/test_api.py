@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -71,7 +72,7 @@ def test_workflow_endpoint_returns_analytics_for_controlled_increase_scenario(
     assert body["evidence_ledger"] is not None
 
 
-def _controlled_increase_payload() -> dict:
+def _controlled_increase_payload() -> dict[str, Any]:
     return {
         "product": "personal_motor",
         "region": "north_west",
@@ -86,14 +87,15 @@ def _isolated_decision_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr("pricing_copilot.api.get_decision_store", lambda: store)
 
 
-def _run_controlled_increase(monkeypatch: pytest.MonkeyPatch) -> dict:
+def _run_controlled_increase(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     monkeypatch.setattr(
         "pricing_copilot.workflow.get_default_synthesizer",
         lambda settings: FakeRecommendationSynthesizer(),
     )
     response = client.post("/workflow", json=_controlled_increase_payload())
     assert response.status_code == 200
-    return response.json()
+    result: dict[str, Any] = response.json()
+    return result
 
 
 def test_post_decisions_approve_persists_and_is_retrievable(

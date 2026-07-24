@@ -51,6 +51,7 @@ def test_save_and_get_round_trips_exactly(tmp_path: Path) -> None:
     decision = _decision()
     store.save(decision)
 
+    assert decision.record_id is not None
     loaded = store.get(decision.record_id)
     assert loaded == decision
 
