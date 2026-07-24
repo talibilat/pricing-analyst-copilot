@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     request_timeout_seconds: float = 30.0
     max_agent_turns: int = 6
     policy: PolicySettings = PolicySettings()
+    decision_store_path: str = "var/decisions.sqlite3"
 
 
 @lru_cache
