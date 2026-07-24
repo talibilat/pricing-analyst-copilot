@@ -11,6 +11,26 @@ GOVERNANCE_VERSION = "deterministic-governance-v1"
 _NUMBER_PATTERN = re.compile(r"(-?\d+(?:\.\d+)?)\s*%")
 _TOLERANCE = 0.5
 
+_CAUSAL_REPLACEMENTS: tuple[tuple[str, str], ...] = (
+    (r"\bcaused\b", "coincided with"),
+    (r"\bcauses\b", "coincides with"),
+    (r"\bcausing\b", "coinciding with"),
+    (r"\bled to\b", "was associated with"),
+    (r"\bleads to\b", "is associated with"),
+    (r"\bresulted in\b", "was followed by"),
+    (r"\bresults in\b", "is followed by"),
+    (r"\bdrove\b", "coincided with"),
+    (r"\bdrives\b", "coincides with"),
+    (r"\bdue to\b", "alongside"),
+)
+
+
+def _soften_causal_language(text: str) -> str:
+    softened = text
+    for pattern, replacement in _CAUSAL_REPLACEMENTS:
+        softened = re.sub(pattern, replacement, softened, flags=re.IGNORECASE)
+    return softened
+
 
 class RecommendationValidationError(ValueError):
     """Raised when a recommendation draft fails deterministic governance checks."""
@@ -66,4 +86,14 @@ def validate_and_clamp_draft(
                     f"(known values: {sorted(allowed_numbers)})"
                 )
 
-    return draft.model_copy(update={"price_range": price_range, "conditions": conditions})
+    return draft.model_copy(
+        update={
+            "price_range": price_range,
+            "conditions": conditions,
+            "rationale": _soften_causal_language(draft.rationale),
+            "counter_evidence": [_soften_causal_language(t) for t in draft.counter_evidence],
+            "investigation_areas": [
+                _soften_causal_language(t) for t in draft.investigation_areas
+            ],
+        }
+    )

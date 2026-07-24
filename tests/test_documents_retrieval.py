@@ -24,7 +24,7 @@ def test_retrieval_respects_top_k() -> None:
     assert len(results) == 2
 
 
-def test_retrieval_filters_by_region_and_scenario() -> None:
+def test_retrieval_filters_by_region() -> None:
     assert (
         retrieve_documents(
             scenario=ScenarioName.CONTROLLED_INCREASE,
@@ -34,15 +34,30 @@ def test_retrieval_filters_by_region_and_scenario() -> None:
         )
         == []
     )
-    assert (
-        retrieve_documents(
+
+
+def test_retrieval_does_not_leak_documents_across_scenarios() -> None:
+    controlled_increase_ids = {
+        r.document.document_id
+        for r in retrieve_documents(
+            scenario=ScenarioName.CONTROLLED_INCREASE,
+            region=Region.NORTH_WEST,
+            query="claims conversion competitor broker feedback",
+            top_k=10,
+        )
+    }
+    retention_concern_ids = {
+        r.document.document_id
+        for r in retrieve_documents(
             scenario=ScenarioName.RETENTION_CONCERN,
             region=Region.NORTH_WEST,
-            query="anything",
-            top_k=5,
+            query="claims conversion competitor broker feedback",
+            top_k=10,
         )
-        == []
-    )
+    }
+    assert controlled_increase_ids
+    assert retention_concern_ids
+    assert controlled_increase_ids.isdisjoint(retention_concern_ids)
 
 
 def test_retrieval_can_surface_the_adversarial_document() -> None:

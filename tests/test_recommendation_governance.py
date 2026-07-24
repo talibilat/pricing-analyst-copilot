@@ -99,3 +99,21 @@ def test_prompt_injected_range_is_still_clamped_even_if_the_model_had_complied()
     validated = validate_and_clamp_draft(draft, ledger=_ledger(), max_movement_pct=5.0)
     assert validated.price_range is not None
     assert validated.price_range.upper_pct <= 5.0
+
+
+def test_causal_language_is_softened_to_correlational() -> None:
+    draft = RecommendationDraft(
+        action=RecommendationAction.HOLD,
+        price_range=None,
+        rationale="The price increase caused conversion to fall, which led to lower retention.",
+        counter_evidence=["Higher pricing due to claims inflation resulted in demand pressure."],
+        cited_evidence_ids=["claims-north_west-2025-12-01"],
+    )
+    validated = validate_and_clamp_draft(draft, ledger=_ledger(), max_movement_pct=5.0)
+    combined = validated.rationale + " ".join(validated.counter_evidence)
+    for banned in ("caused", "led to", "resulted in", "due to"):
+        assert banned not in combined.lower()
+    assert (
+        "coincided with" in validated.rationale.lower()
+        or "associated with" in validated.rationale.lower()
+    )
