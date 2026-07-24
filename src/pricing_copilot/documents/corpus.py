@@ -41,10 +41,10 @@ CONTROLLED_INCREASE_DOCUMENTS: list[DocumentRecord] = [
         body=(
             "Fictional competitor observations for illustrative purposes only. Meridian Insure, "
             "Northgate Cover, and Bracken Mutual have each firmed personal motor renewal pricing "
-            "by roughly two to three percent over the past quarter, citing claims inflation. No "
-            "fictional competitor has reduced pricing in this window. Overall market positioning "
-            "remains consistent with a modest, portfolio-wide pricing adjustment rather than an "
-            "aggressive move."
+            "by roughly two to three percent (2% to 3%) over the past quarter, citing claims "
+            "inflation. No fictional competitor has reduced pricing in this window. Overall "
+            "market positioning remains consistent with a modest, portfolio-wide pricing "
+            "adjustment rather than an aggressive move."
         ),
         source_date=date(2025, 11, 1),
         scenario=ScenarioName.CONTROLLED_INCREASE,
@@ -101,7 +101,7 @@ CONTROLLED_INCREASE_DOCUMENTS: list[DocumentRecord] = [
         source_type=SourceType.BROKER_NOTE,
         title="Broker Panel Observations - North West Motor Renewals",
         body=(
-            "Broker panel note (synthetic). A previous two percent portfolio-level renewal "
+            "Broker panel note (synthetic). A previous two percent (2%) portfolio-level renewal "
             "increase was implemented earlier this year. Brokers report limited customer "
             "pushback and no material shift in quote volumes attributable to that change."
         ),
@@ -154,8 +154,8 @@ RETENTION_CONCERN_DOCUMENTS: list[DocumentRecord] = [
         body=(
             "Fictional competitor observations for illustrative purposes only. Meridian Insure, "
             "Northgate Cover, and Bracken Mutual have each reduced personal motor renewal "
-            "pricing by roughly four to six percent over the past quarter, softening the "
-            "competitive backdrop for any further increase."
+            "pricing by roughly four to six percent (4% to 6%) over the past quarter, softening "
+            "the competitive backdrop for any further increase."
         ),
         source_date=date(2025, 11, 20),
         scenario=ScenarioName.RETENTION_CONCERN,

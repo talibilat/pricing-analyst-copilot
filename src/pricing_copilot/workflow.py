@@ -265,7 +265,10 @@ def _evidence_backed_workflow_result(
         max_movement_pct=settings.policy.max_price_movement_pct,
     )
     validated = validate_and_clamp_draft(
-        draft, ledger=ledger, max_movement_pct=settings.policy.max_price_movement_pct
+        draft,
+        ledger=ledger,
+        documents=retrieved_documents,
+        max_movement_pct=settings.policy.max_price_movement_pct,
     )
 
     confidence = calculate_confidence(

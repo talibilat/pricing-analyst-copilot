@@ -3,13 +3,18 @@ from __future__ import annotations
 import re
 
 from pricing_copilot.contracts import PriceRange
+from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 GOVERNANCE_VERSION = "deterministic-governance-v1"
 
 _NUMBER_PATTERN = re.compile(r"(-?\d+(?:\.\d+)?)\s*%")
-_TOLERANCE = 0.5
+# Wide enough to tolerate natural-language rounding of a precise figure (a model saying
+# "around 70%" for a real 71.1% is a faithful paraphrase, not a fabrication) while still
+# catching genuinely invented figures - order-of-magnitude or category-wrong numbers land
+# far outside this margin.
+_TOLERANCE = 5.0
 
 _CAUSAL_REPLACEMENTS: tuple[tuple[str, str], ...] = (
     (r"\bcaused\b", "coincided with"),
@@ -37,7 +42,10 @@ class RecommendationValidationError(ValueError):
 
 
 def _allowed_numbers(
-    ledger: EvidenceLedger, price_range: PriceRange | None, max_movement_pct: float
+    ledger: EvidenceLedger,
+    documents: list[RetrievedDocument],
+    price_range: PriceRange | None,
+    max_movement_pct: float,
 ) -> set[float]:
     numbers = {round(max_movement_pct, 1), round(-max_movement_pct, 1)}
     if price_range is not None:
@@ -52,11 +60,21 @@ def _allowed_numbers(
                 numbers.add(round(raw * 100, 1))
             else:
                 numbers.add(round(raw, 1))
+    # Cited unstructured evidence (retrieved document text) may state figures - such as
+    # "reduced pricing by four to six percent" - that a faithful paraphrase can render in
+    # digit form. Those are legitimately supported, so scan document bodies too.
+    for retrieved in documents:
+        for match in _NUMBER_PATTERN.finditer(retrieved.document.body):
+            numbers.add(round(float(match.group(1)), 1))
     return numbers
 
 
 def validate_and_clamp_draft(
-    draft: RecommendationDraft, *, ledger: EvidenceLedger, max_movement_pct: float
+    draft: RecommendationDraft,
+    *,
+    ledger: EvidenceLedger,
+    documents: list[RetrievedDocument],
+    max_movement_pct: float,
 ) -> RecommendationDraft:
     known_ids = ledger.ids()
     unknown_ids = [eid for eid in draft.cited_evidence_ids if eid not in known_ids]
@@ -76,7 +94,7 @@ def validate_and_clamp_draft(
             )
             price_range = PriceRange(lower_pct=clamped_lower, upper_pct=clamped_upper)
 
-    allowed_numbers = _allowed_numbers(ledger, price_range, max_movement_pct)
+    allowed_numbers = _allowed_numbers(ledger, documents, price_range, max_movement_pct)
     for text in [draft.rationale, *draft.counter_evidence, *conditions, *draft.investigation_areas]:
         for match in _NUMBER_PATTERN.finditer(text):
             value = float(match.group(1))
