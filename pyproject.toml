@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
     "streamlit>=1.36",
+    "duckdb>=1.0",
 ]
 
 [project.scripts]
@@ -50,6 +51,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "check_secrets"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "duckdb.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
