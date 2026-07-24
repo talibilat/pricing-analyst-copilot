@@ -1,46 +1,46 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class Product(str, Enum):
+class Product(StrEnum):
     PERSONAL_MOTOR = "personal_motor"
 
 
-class Region(str, Enum):
+class Region(StrEnum):
     NORTH_WEST = "north_west"
     SOUTH_EAST = "south_east"
 
 
-class Segment(str, Enum):
+class Segment(StrEnum):
     RENEWAL = "renewal"
     NEW_BUSINESS = "new_business"
 
 
-class ScenarioName(str, Enum):
+class ScenarioName(StrEnum):
     CONTROLLED_INCREASE = "controlled_increase"
     RETENTION_CONCERN = "retention_concern"
     CONFLICTING_EVIDENCE = "conflicting_evidence"
 
 
-class EvidenceDomain(str, Enum):
+class EvidenceDomain(StrEnum):
     CLAIMS = "claims"
     CONVERSION = "conversion"
     MARKET_INTELLIGENCE = "market_intelligence"
     PRICING_HISTORY = "pricing_history"
 
 
-class RecommendationAction(str, Enum):
+class RecommendationAction(StrEnum):
     INCREASE = "increase"
     DECREASE = "decrease"
     HOLD = "hold"
     INVESTIGATE = "investigate"
 
 
-class AnalystDecisionType(str, Enum):
+class AnalystDecisionType(StrEnum):
     APPROVE = "approve"
     APPROVE_WITH_CONDITIONS = "approve_with_conditions"
     REJECT = "reject"
@@ -52,7 +52,7 @@ class AnalysisPeriod(BaseModel):
     end_month: date
 
     @model_validator(mode="after")
-    def check_ordering(self) -> "AnalysisPeriod":
+    def check_ordering(self) -> AnalysisPeriod:
         if self.end_month < self.start_month:
             raise ValueError("end_month must not be before start_month")
         return self
@@ -84,7 +84,7 @@ class PriceRange(BaseModel):
     upper_pct: float
 
     @model_validator(mode="after")
-    def check_bounds(self) -> "PriceRange":
+    def check_bounds(self) -> PriceRange:
         if self.upper_pct < self.lower_pct:
             raise ValueError("upper_pct must not be below lower_pct")
         return self

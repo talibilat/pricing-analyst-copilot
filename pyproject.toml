@@ -48,6 +48,10 @@ files = ["src", "tests"]
 module = "streamlit.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "check_secrets"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

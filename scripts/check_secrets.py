@@ -16,6 +16,7 @@ PATTERNS: dict[str, re.Pattern[str]] = {
 }
 
 EXCLUDED_SUFFIXES = {".lock", ".png", ".jpg", ".jpeg", ".ico", ".svg"}
+ALLOWLIST_MARKER = "nosecret"
 
 
 def find_secret_matches(paths: list[str]) -> list[str]:
@@ -30,6 +31,8 @@ def find_secret_matches(paths: list[str]) -> list[str]:
             continue
         for name, pattern in PATTERNS.items():
             for lineno, line in enumerate(text.splitlines(), start=1):
+                if ALLOWLIST_MARKER in line:
+                    continue
                 if pattern.search(line):
                     matches.append(f"{path}:{lineno}: possible {name}")
     return matches

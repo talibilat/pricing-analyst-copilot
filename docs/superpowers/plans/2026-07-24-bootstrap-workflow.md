@@ -1116,7 +1116,7 @@ from check_secrets import find_secret_matches  # noqa: E402
 
 def test_flags_an_aws_style_key(tmp_path):
     suspect = tmp_path / "config.py"
-    suspect.write_text('AWS_KEY = "AKIAABCDEFGHIJKLMNOP"\n')
+    suspect.write_text('AWS_KEY = "AKIAABCDEFGHIJKLMNOP"\n')  # nosecret
     matches = find_secret_matches([str(suspect)])
     assert matches
 

@@ -27,7 +27,7 @@ def _question(region: Region = Region.NORTH_WEST) -> PortfolioQuestion:
     )
 
 
-def test_supported_question_returns_investigate_with_missing_evidence():
+def test_supported_question_returns_investigate_with_missing_evidence() -> None:
     result = run_portfolio_workflow(_question())
 
     assert result.recommendation.action is RecommendationAction.INVESTIGATE
@@ -49,7 +49,7 @@ def test_supported_question_returns_investigate_with_missing_evidence():
     assert result.governance_outcome.approved is True
 
 
-def test_unsupported_question_is_rejected_with_clear_message():
+def test_unsupported_question_is_rejected_with_clear_message() -> None:
     with pytest.raises(UnsupportedPortfolioError) as exc_info:
         run_portfolio_workflow(_question(region=Region.SOUTH_EAST))
     assert "south_east" in str(exc_info.value)

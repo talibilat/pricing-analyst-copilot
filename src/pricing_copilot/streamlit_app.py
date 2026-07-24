@@ -41,6 +41,13 @@ with st.form("portfolio_question"):
     submitted = st.form_submit_button("Run analysis")
 
 if submitted:
+    if (
+        not isinstance(product, Product)
+        or not isinstance(region, Region)
+        or not isinstance(segment, Segment)
+    ):
+        raise TypeError("Product, region, and segment selectors must always return a value.")
+
     try:
         question = PortfolioQuestion(
             product=product,

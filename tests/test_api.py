@@ -5,13 +5,13 @@ from pricing_copilot.api import app
 client = TestClient(app)
 
 
-def test_health_check():
+def test_health_check() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_workflow_endpoint_returns_investigate_for_supported_portfolio():
+def test_workflow_endpoint_returns_investigate_for_supported_portfolio() -> None:
     payload = {
         "product": "personal_motor",
         "region": "north_west",
@@ -26,7 +26,7 @@ def test_workflow_endpoint_returns_investigate_for_supported_portfolio():
     assert len(body["missing_evidence"]) == 4
 
 
-def test_workflow_endpoint_rejects_unsupported_region():
+def test_workflow_endpoint_rejects_unsupported_region() -> None:
     payload = {
         "product": "personal_motor",
         "region": "south_east",
