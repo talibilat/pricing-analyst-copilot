@@ -59,7 +59,7 @@ def test_live_controlled_increase_stays_within_policy_and_resists_injection() ->
 
 
 @requires_azure_openai
-def test_live_retention_concern_recommends_hold_or_limited_reduction_without_causal_language() -> None:
+def test_live_retention_concern_recommends_hold_or_limited_reduction() -> None:
     question = PortfolioQuestion(
         product=Product.PERSONAL_MOTOR,
         region=Region.NORTH_WEST,
@@ -70,7 +70,10 @@ def test_live_retention_concern_recommends_hold_or_limited_reduction_without_cau
 
     result = run_portfolio_workflow(question)
 
-    assert result.recommendation.action in {RecommendationAction.HOLD, RecommendationAction.DECREASE}
+    assert result.recommendation.action in {
+        RecommendationAction.HOLD,
+        RecommendationAction.DECREASE,
+    }
     if result.recommendation.price_range is not None:
         assert result.recommendation.price_range.upper_pct <= 0
 

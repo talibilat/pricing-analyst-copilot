@@ -133,7 +133,10 @@ def test_retention_concern_scenario_recommends_hold_with_elasticity_investigatio
     result = run_portfolio_workflow(question, synthesizer=FakeRecommendationSynthesizer())
 
     assert result.missing_evidence == []
-    assert result.recommendation.action in (RecommendationAction.HOLD, RecommendationAction.DECREASE)
+    assert result.recommendation.action in (
+        RecommendationAction.HOLD,
+        RecommendationAction.DECREASE,
+    )
     assert result.recommendation.price_range is None or (
         result.recommendation.price_range.upper_pct <= 0
     )

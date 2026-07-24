@@ -77,7 +77,7 @@ def test_fake_synthesizer_cites_only_ids_present_in_the_ledger() -> None:
     assert draft.price_range.upper_pct <= 5.0
 
 
-def test_fake_synthesizer_recommends_hold_when_retention_declines_and_loss_ratio_is_stable() -> None:
+def test_fake_synthesizer_recommends_hold_when_retention_declines_and_loss_ratio_stable() -> None:
     analytics = _analytics(ScenarioName.RETENTION_CONCERN)
     documents = retrieve_documents(
         scenario=ScenarioName.RETENTION_CONCERN,

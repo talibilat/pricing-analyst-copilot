@@ -347,7 +347,9 @@ def _generate_conflicting_evidence_competitors(
     return records
 
 
-def _generate_conflicting_evidence_pricing_history(periods: list[date]) -> list[PricingActionRecord]:
+def _generate_conflicting_evidence_pricing_history(
+    periods: list[date],
+) -> list[PricingActionRecord]:
     return [
         PricingActionRecord(
             period=periods[5],

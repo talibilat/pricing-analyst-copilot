@@ -29,7 +29,9 @@ def _document(
 
 def test_no_issues_for_fresh_consistent_documents() -> None:
     documents = [
-        _document("d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 12, 1)),
+        _document(
+            "d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 12, 1)
+        ),
         _document("d2", SourceType.BROKER_NOTE, DocumentSentiment.NEUTRAL, date(2025, 11, 15)),
     ]
     assert (
@@ -42,7 +44,9 @@ def test_no_issues_for_fresh_consistent_documents() -> None:
 
 def test_stale_document_is_flagged() -> None:
     documents = [
-        _document("d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 1, 1)),
+        _document(
+            "d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 1, 1)
+        ),
     ]
     issues = detect_material_evidence_issues(
         documents, analysis_period_end=date(2025, 12, 15), max_evidence_age_days=120
@@ -54,8 +58,12 @@ def test_stale_document_is_flagged() -> None:
 
 def test_conflicting_same_type_documents_are_flagged() -> None:
     documents = [
-        _document("d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 12, 1)),
-        _document("d2", SourceType.MARKET_REPORT, DocumentSentiment.AGAINST_INCREASE, date(2025, 12, 1)),
+        _document(
+            "d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 12, 1)
+        ),
+        _document(
+            "d2", SourceType.MARKET_REPORT, DocumentSentiment.AGAINST_INCREASE, date(2025, 12, 1)
+        ),
     ]
     issues = detect_material_evidence_issues(
         documents, analysis_period_end=date(2025, 12, 15), max_evidence_age_days=120
@@ -66,8 +74,15 @@ def test_conflicting_same_type_documents_are_flagged() -> None:
 
 def test_conflicting_different_type_documents_are_not_flagged() -> None:
     documents = [
-        _document("d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 12, 1)),
-        _document("d2", SourceType.CUSTOMER_FEEDBACK, DocumentSentiment.AGAINST_INCREASE, date(2025, 12, 1)),
+        _document(
+            "d1", SourceType.MARKET_REPORT, DocumentSentiment.SUPPORTS_INCREASE, date(2025, 12, 1)
+        ),
+        _document(
+            "d2",
+            SourceType.CUSTOMER_FEEDBACK,
+            DocumentSentiment.AGAINST_INCREASE,
+            date(2025, 12, 1),
+        ),
     ]
     assert (
         detect_material_evidence_issues(
