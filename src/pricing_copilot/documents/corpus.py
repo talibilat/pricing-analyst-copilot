@@ -146,7 +146,144 @@ CONTROLLED_INCREASE_DOCUMENTS: list[DocumentRecord] = [
 ]
 
 
+RETENTION_CONCERN_DOCUMENTS: list[DocumentRecord] = [
+    DocumentRecord(
+        document_id="doc-market-retention",
+        source_type=SourceType.MARKET_REPORT,
+        title="North West Personal Motor Market Pulse - Retention Watch",
+        body=(
+            "Fictional competitor observations for illustrative purposes only. Meridian Insure, "
+            "Northgate Cover, and Bracken Mutual have each reduced personal motor renewal "
+            "pricing by roughly four to six percent over the past quarter, softening the "
+            "competitive backdrop for any further increase."
+        ),
+        source_date=date(2025, 11, 20),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-feedback-retention-1",
+        source_type=SourceType.CUSTOMER_FEEDBACK,
+        title="Aggregate North West Renewal Feedback Themes - November 2025",
+        body=(
+            "Aggregate, anonymised theme summary only. Price is now the most frequently "
+            "referenced theme in renewal feedback this period, a repeated pattern rather than "
+            "an isolated comment."
+        ),
+        source_date=date(2025, 11, 10),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-feedback-retention-2",
+        source_type=SourceType.CUSTOMER_FEEDBACK,
+        title="Aggregate North West Renewal Feedback Themes - December 2025",
+        body=(
+            "Aggregate, anonymised theme summary only. Consistent with November: price-related "
+            "comments remain the dominant theme, repeated across renewal cycles rather than "
+            "concentrated in a single month."
+        ),
+        source_date=date(2025, 12, 1),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-broker-retention",
+        source_type=SourceType.BROKER_NOTE,
+        title="Broker Panel Observations - Retention Risk",
+        body=(
+            "Broker panel note (synthetic). Panel members report a noticeable rise in renewal "
+            "shopping-around behaviour following the previous portfolio-level increase, with "
+            "several brokers flagging retention risk if pricing firms further."
+        ),
+        source_date=date(2025, 12, 5),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-repair-cost-retention",
+        source_type=SourceType.REPAIR_COST_REPORT,
+        title="Synthetic UK Vehicle Repair Cost Index - Retention Period",
+        body=(
+            "Illustrative repair-cost intelligence. Cost trends this period are broadly in line "
+            "with historical norms, without a clear signal in either direction for claims "
+            "severity."
+        ),
+        source_date=date(2025, 11, 1),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.NEUTRAL,
+    ),
+]
+
+CONFLICTING_EVIDENCE_DOCUMENTS: list[DocumentRecord] = [
+    DocumentRecord(
+        document_id="doc-market-conflict-stale",
+        source_type=SourceType.MARKET_REPORT,
+        title="North West Market Briefing - Prior Quarter Snapshot",
+        body=(
+            "Fictional market briefing, illustrative only. As of this (now dated) snapshot, "
+            "fictional competitors were continuing to raise personal motor pricing, suggesting "
+            "room for further portfolio-level increases."
+        ),
+        source_date=date(2025, 3, 1),
+        scenario=ScenarioName.CONFLICTING_EVIDENCE,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.SUPPORTS_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-market-conflict-fresh",
+        source_type=SourceType.MARKET_REPORT,
+        title="North West Market Briefing - Latest Repricing Signal",
+        body=(
+            "Fictional market briefing, illustrative only. The latest signal directly "
+            "contradicts the prior-quarter snapshot: fictional competitors have sharply cut "
+            "personal motor pricing in response to a softening market."
+        ),
+        source_date=date(2025, 12, 5),
+        scenario=ScenarioName.CONFLICTING_EVIDENCE,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-repair-cost-conflict",
+        source_type=SourceType.REPAIR_COST_REPORT,
+        title="Synthetic UK Vehicle Repair Cost Index - Deterioration Signal",
+        body=(
+            "Illustrative repair-cost intelligence. Parts and labour costs have risen sharply "
+            "this period, consistent with the observed deterioration in claims severity."
+        ),
+        source_date=date(2025, 11, 25),
+        scenario=ScenarioName.CONFLICTING_EVIDENCE,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.SUPPORTS_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="doc-feedback-conflict",
+        source_type=SourceType.CUSTOMER_FEEDBACK,
+        title="Aggregate North West Renewal Feedback Themes - Sparse Period",
+        body=(
+            "Aggregate, anonymised theme summary only. Feedback volume was noticeably lower "
+            "than usual this period, limiting how much weight this theme summary can carry."
+        ),
+        source_date=date(2025, 12, 1),
+        scenario=ScenarioName.CONFLICTING_EVIDENCE,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.NEUTRAL,
+    ),
+]
+
+_SCENARIO_DOCUMENTS: dict[ScenarioName, list[DocumentRecord]] = {
+    ScenarioName.CONTROLLED_INCREASE: CONTROLLED_INCREASE_DOCUMENTS,
+    ScenarioName.RETENTION_CONCERN: RETENTION_CONCERN_DOCUMENTS,
+    ScenarioName.CONFLICTING_EVIDENCE: CONFLICTING_EVIDENCE_DOCUMENTS,
+}
+
+
 def documents_for_scenario(scenario: ScenarioName, region: Region) -> list[DocumentRecord]:
-    if scenario is not ScenarioName.CONTROLLED_INCREASE:
-        return []
-    return [d for d in CONTROLLED_INCREASE_DOCUMENTS if d.region == region]
+    corpus = _SCENARIO_DOCUMENTS.get(scenario, [])
+    return [d for d in corpus if d.region == region]

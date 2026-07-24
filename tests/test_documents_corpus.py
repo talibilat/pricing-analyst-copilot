@@ -28,8 +28,30 @@ def test_corpus_includes_an_adversarial_prompt_injection_fixture() -> None:
     assert adversarial[0].source_type == SourceType.MARKET_REPORT
 
 
-def test_unimplemented_scenario_has_no_documents() -> None:
-    assert documents_for_scenario(ScenarioName.RETENTION_CONCERN, Region.NORTH_WEST) == []
+def test_retention_concern_corpus_has_documents_all_against_increase_or_neutral() -> None:
+    documents = documents_for_scenario(ScenarioName.RETENTION_CONCERN, Region.NORTH_WEST)
+    assert documents
+    assert all(
+        d.sentiment in (DocumentSentiment.AGAINST_INCREASE, DocumentSentiment.NEUTRAL)
+        for d in documents
+    )
+    feedback_docs = [d for d in documents if d.source_type == SourceType.CUSTOMER_FEEDBACK]
+    assert len(feedback_docs) >= 2
+
+
+def test_conflicting_evidence_corpus_has_two_conflicting_market_reports() -> None:
+    documents = documents_for_scenario(ScenarioName.CONFLICTING_EVIDENCE, Region.NORTH_WEST)
+    market_reports = [d for d in documents if d.source_type == SourceType.MARKET_REPORT]
+    sentiments = {d.sentiment for d in market_reports}
+    assert DocumentSentiment.SUPPORTS_INCREASE in sentiments
+    assert DocumentSentiment.AGAINST_INCREASE in sentiments
+
+
+def test_conflicting_evidence_corpus_has_a_stale_document() -> None:
+    from datetime import date
+
+    documents = documents_for_scenario(ScenarioName.CONFLICTING_EVIDENCE, Region.NORTH_WEST)
+    assert any((date(2025, 12, 15) - d.source_date).days > 120 for d in documents)
 
 
 def test_documents_are_filtered_by_region() -> None:
