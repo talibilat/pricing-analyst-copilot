@@ -29,7 +29,10 @@ class DecisionStore:
     @classmethod
     def from_path(cls, path: Path) -> "DecisionStore":
         path.parent.mkdir(parents=True, exist_ok=True)
-        connection = sqlite3.connect(str(path))
+        # check_same_thread=False: FastAPI/Streamlit may serve requests from a worker
+        # thread different from the one that opened the connection. This prototype has
+        # no concurrent writers, so relaxing SQLite's default thread affinity is safe.
+        connection = sqlite3.connect(str(path), check_same_thread=False)
         return cls(connection)
 
     def save(self, decision: AnalystDecision) -> None:

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
+from pydantic import ValidationError
 
 from pricing_copilot.catalog import UnsupportedPortfolioError
-from pricing_copilot.contracts import PortfolioQuestion, WorkflowResult
+from pricing_copilot.config import get_settings
+from pricing_copilot.contracts import AnalystDecision, DecisionRequest, PortfolioQuestion, WorkflowResult
+from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.workflow import run_portfolio_workflow
 
 app = FastAPI(
@@ -23,3 +26,19 @@ def submit_portfolio_question(question: PortfolioQuestion) -> WorkflowResult:
         return run_portfolio_workflow(question)
     except UnsupportedPortfolioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/decisions", response_model=AnalystDecision)
+def submit_decision(request: DecisionRequest) -> AnalystDecision:
+    try:
+        return record_analyst_decision(request, get_settings(), get_decision_store())
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/decisions/{record_id}", response_model=AnalystDecision)
+def fetch_decision(record_id: str) -> AnalystDecision:
+    decision = get_decision_store().get(record_id)
+    if decision is None:
+        raise HTTPException(status_code=404, detail=f"No decision record found for id {record_id}.")
+    return decision
