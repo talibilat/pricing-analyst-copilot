@@ -70,6 +70,7 @@ class Settings(BaseSettings):
     agents_sdk_tracing_enabled: bool = True
     trace_directory: Path = Path("var/traces")
     replay_directory: Path = Path("var/replay")
+    evaluation_directory: Path = Path("var/evaluation")
     analytics_database_path: Path = Path("var/synthetic_portfolio.duckdb")
     policy: PolicySettings = PolicySettings()
     cost: CostSettings = CostSettings()
