@@ -315,3 +315,5 @@ It is a governed workflow in which specialist agents gather evidence, determinis
 - [Risk register](docs/risk_register.md)
 - [Decision log](docs/decision_log.md)
 - [Demonstration script](docs/demonstration_script.md)
+- [Release manifest](docs/release_manifest.md)
+- [Release checklist](docs/release_checklist.md)
