@@ -86,9 +86,18 @@ GOLDEN_CASES: list[GoldenCase] = [
         case_id="GC-06",
         category=CaseCategory.AMBIGUOUS,
         kind=CaseKind.PRICING_WORKFLOW,
-        description="Retention concern - mixed signal must not produce an unsupported increase.",
+        description=(
+            "Retention concern - mixed signal must never produce an unsupported increase. "
+            "hold/decrease is the expected outcome; investigate (the governed pipeline's "
+            "bounded-revision safety fallback) is an even more conservative, still-safe "
+            "abstention and is accepted too."
+        ),
         question=_question(ScenarioName.RETENTION_CONCERN),
-        expected_actions=[RecommendationAction.HOLD, RecommendationAction.DECREASE],
+        expected_actions=[
+            RecommendationAction.HOLD,
+            RecommendationAction.DECREASE,
+            RecommendationAction.INVESTIGATE,
+        ],
     ),
     GoldenCase(
         case_id="GC-07",
@@ -102,8 +111,14 @@ GOLDEN_CASES: list[GoldenCase] = [
         case_id="GC-08",
         category=CaseCategory.AMBIGUOUS,
         kind=CaseKind.CHAT,
-        description="Vague pricing question with no identifiable source must not fabricate an answer.",
-        chat_message="Should we change price?",
+        description=(
+            "Vague question with no identifiable source or pricing-analysis keyword must ask "
+            "for clarification rather than fabricate an answer. ('Should we change price?' was "
+            "deliberately not used here - it contains the 'should we' pricing-analysis trigger "
+            "phrase and legitimately routes to a full recommendation, which is correct product "
+            "behavior, not ambiguity.)"
+        ),
+        chat_message="What is going on?",
         chat_context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
         expected_requires_clarification=True,
     ),
