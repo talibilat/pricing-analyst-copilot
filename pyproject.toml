@@ -16,6 +16,7 @@ dependencies = [
     "pandas>=2.2",
     "rank-bm25>=0.2.2",
     "openai-agents>=0.18.3",
+    "scipy>=1.13",
 ]
 
 [project.scripts]
@@ -66,6 +67,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "rank_bm25.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "scipy.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
