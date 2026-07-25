@@ -107,12 +107,12 @@ Hybrid vector retrieval remains stretch work until the core workflow is stable.
 
 ## Evaluation strategy
 
-The golden evaluation set will contain at least fifteen versioned cases:
+The golden evaluation set (`src/pricing_copilot/evaluation/golden_set.py`, `GOLDEN_SET_VERSION`) contains seventeen versioned cases, exceeding the fifteen-case minimum:
 
 - Five normal pricing cases.
 - Three ambiguous or conflicting cases.
 - Two missing-data cases.
-- Two prompt-injection cases.
+- Four prompt-injection or adversarial security cases (exceeding the two-case minimum).
 - Two extreme-value cases.
 - One stale-data case.
 
@@ -127,8 +127,18 @@ The hard targets are:
 - At least 90 percent correct specialist routing.
 - Zero unsupported pricing recommendations.
 
-The single-agent baseline and governed multi-agent workflow will run against the same cases.
-The comparison will report quality, unsupported claims, tool use, latency, token use, estimated cost, governance rejection, and safe abstention.
+The single-agent baseline and governed multi-agent workflow run against the same cases.
+The benchmark report separates configured targets (`EvaluationTargets`) from actual measured results (`EvaluationActuals`) and covers quality, unsupported claims, tool use, latency, token use, estimated cost, governance rejection, and safe abstention.
+
+### Running the evaluation
+
+The evaluation is a companion command, separate from the quality command below, because it can make live model calls and is not a fast, credential-free check:
+
+```bash
+uv run pricing-copilot --evaluate
+```
+
+This runs every golden case on the governed multi-agent architecture (and, where architecturally comparable, the single-agent baseline), saves a machine-readable report to `var/evaluation/latest.json`, and prints a human-readable pass/fail/error summary. The chat interface can then answer "show me the evaluation results," rendering the same report as a targets-vs-actuals table - the interview evaluation view is reachable from the same chat surface used for everything else, with no separate UI.
 
 ## Drift and release governance
 
