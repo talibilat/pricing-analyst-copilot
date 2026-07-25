@@ -51,6 +51,21 @@ class CostSettings(BaseModel):
     output_cost_per_million_tokens_gbp: float = Field(default=0.0, ge=0.0)
 
 
+class DriftPolicySettings(BaseModel):
+    psi_threshold: float = Field(default=0.2, gt=0.0)
+    ks_p_value_threshold: float = Field(default=0.05, gt=0.0, lt=1.0)
+    percentage_movement_threshold_pct: float = Field(default=20.0, gt=0.0)
+    z_score_threshold: float = Field(default=2.0, gt=0.0)
+    minimum_baseline_months: int = Field(default=6, ge=1)
+    routing_accuracy_floor_pct: float = Field(default=90.0, ge=0.0, le=100.0)
+    citation_coverage_floor_pct: float = Field(default=95.0, ge=0.0, le=100.0)
+    safe_abstention_floor_pct: float = Field(default=95.0, ge=0.0, le=100.0)
+    governance_rejection_ceiling_count: int = Field(default=0, ge=0)
+    golden_suite_pass_floor_pct: float = Field(default=100.0, ge=0.0, le=100.0)
+    latency_p95_ceiling_seconds: float = Field(default=30.0, gt=0.0)
+    tool_failure_ceiling_pct: float = Field(default=5.0, ge=0.0, le=100.0)
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="PRICING_COPILOT_",
@@ -71,8 +86,10 @@ class Settings(BaseSettings):
     trace_directory: Path = Path("var/traces")
     replay_directory: Path = Path("var/replay")
     evaluation_directory: Path = Path("var/evaluation")
+    drift_directory: Path = Path("var/drift")
     analytics_database_path: Path = Path("var/synthetic_portfolio.duckdb")
     policy: PolicySettings = PolicySettings()
+    drift: DriftPolicySettings = DriftPolicySettings()
     cost: CostSettings = CostSettings()
     decision_store_path: str = "var/decisions.sqlite3"
 
