@@ -15,6 +15,8 @@ from pricing_copilot.contracts import (
     Recommendation,
     RecommendationAction,
     Region,
+    ResultSource,
+    ScenarioName,
     Segment,
 )
 from pricing_copilot.decisions.service import record_analyst_decision
@@ -22,7 +24,10 @@ from pricing_copilot.decisions.store import DecisionStore
 
 
 def _request(
-    decision: AnalystDecisionType, rationale: str, conditions: list[str] | None = None
+    decision: AnalystDecisionType,
+    rationale: str,
+    conditions: list[str] | None = None,
+    source: ResultSource = ResultSource.LIVE,
 ) -> DecisionRequest:
     return DecisionRequest(
         question=PortfolioQuestion(
@@ -43,6 +48,7 @@ def _request(
         decision=decision,
         rationale=rationale,
         conditions=conditions or [],
+        source=source,
     )
 
 
@@ -87,3 +93,52 @@ def test_record_decision_rejects_conditions_missing_for_approve_with_conditions(
             Settings(),
             store,
         )
+
+
+def test_recorded_decision_preserves_the_replay_source(tmp_path: Path) -> None:
+    store = DecisionStore.from_path(tmp_path / "decisions.sqlite3")
+    settings = Settings()
+
+    recorded = record_analyst_decision(
+        _request(
+            AnalystDecisionType.APPROVE,
+            "Evidence supports the recommendation.",
+            source=ResultSource.REPLAY,
+        ),
+        settings,
+        store,
+    )
+
+    assert recorded.source is ResultSource.REPLAY
+    assert store.get(recorded.record_id).source is ResultSource.REPLAY
+
+
+def test_replaying_an_analysis_never_creates_a_decision_record_by_itself(tmp_path: Path) -> None:
+    from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
+    from pricing_copilot.contracts import AnalysisPeriod as _AnalysisPeriod
+    from pricing_copilot.contracts import PortfolioQuestion as _PortfolioQuestion
+
+    store = DecisionStore.from_path(tmp_path / "decisions.sqlite3")
+    replay_settings = Settings(replay_directory=tmp_path / "replay")
+    question = _PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=_AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.RETENTION_CONCERN,
+    )
+
+    from pricing_copilot.replay.store import ReplayArtifactMissingError
+
+    with pytest.raises(ReplayArtifactMissingError):
+        run_replay_portfolio_workflow(question, replay_settings)
+
+    assert store.list_for_question(Product.PERSONAL_MOTOR, Region.NORTH_WEST, Segment.RENEWAL) == []
+
+    record_analyst_decision(
+        _request(AnalystDecisionType.APPROVE, "Explicit approval."), Settings(), store
+    )
+    assert (
+        len(store.list_for_question(Product.PERSONAL_MOTOR, Region.NORTH_WEST, Segment.RENEWAL))
+        == 1
+    )
