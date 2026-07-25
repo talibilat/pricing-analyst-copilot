@@ -6,31 +6,15 @@ from functools import lru_cache
 from pathlib import Path
 
 from pricing_copilot.config import Settings, get_settings
-from pricing_copilot.contracts import AnalystDecision, ConfigurationVersions, DecisionRequest
-from pricing_copilot.data.generation import DEFAULT_SCENARIO_SEED, DEFAULT_SCENARIO_VERSION
+from pricing_copilot.contracts import AnalystDecision, DecisionRequest
 from pricing_copilot.decisions.store import DecisionStore
-from pricing_copilot.governance.registry import AGENT_REGISTRY_VERSION
-from pricing_copilot.observability.trace import POLICY_VERSION, PROMPT_VERSION, TOOL_VERSION
-from pricing_copilot.orchestration.pipeline import GOVERNED_RECOMMENDATION_VERSION
-from pricing_copilot.recommendation.governance import GOVERNANCE_VERSION
+from pricing_copilot.versions import current_configuration_versions
 
 
 def record_analyst_decision(
     request: DecisionRequest, settings: Settings, store: DecisionStore
 ) -> AnalystDecision:
-    configuration_versions = ConfigurationVersions(
-        model_name=settings.model_name,
-        recommendation_version=GOVERNED_RECOMMENDATION_VERSION,
-        governance_version=GOVERNANCE_VERSION,
-        scenario_seed=DEFAULT_SCENARIO_SEED,
-        scenario_version=DEFAULT_SCENARIO_VERSION,
-        max_price_movement_pct=settings.policy.max_price_movement_pct,
-        prompt_version=PROMPT_VERSION,
-        agent_registry_version=AGENT_REGISTRY_VERSION,
-        tool_version=TOOL_VERSION,
-        dataset_version=DEFAULT_SCENARIO_VERSION,
-        recommendation_policy_version=POLICY_VERSION,
-    )
+    configuration_versions = current_configuration_versions(settings)
     decision = AnalystDecision(
         record_id=str(uuid.uuid4()),
         question=request.question,
@@ -42,6 +26,7 @@ def record_analyst_decision(
         conditions=request.conditions,
         decided_at=datetime.now(UTC),
         configuration_versions=configuration_versions,
+        source=request.source,
     )
     store.save(decision)
     return decision

@@ -51,6 +51,11 @@ class AnalystDecisionType(StrEnum):
     REQUEST_INVESTIGATION = "request_investigation"
 
 
+class ResultSource(StrEnum):
+    LIVE = "live"
+    REPLAY = "replay"
+
+
 class AnalysisPeriod(BaseModel):
     start_month: date
     end_month: date
@@ -126,6 +131,7 @@ class ConfigurationVersions(BaseModel):
     tool_version: str = "deterministic-tools-v1"
     dataset_version: str = "scenario-dataset-v1"
     recommendation_policy_version: str = "recommendation-policy-v1"
+    output_schema_version: str = "workflow-result-schema-v1"
 
 
 class AnalystDecision(BaseModel):
@@ -139,6 +145,7 @@ class AnalystDecision(BaseModel):
     conditions: list[str] = Field(default_factory=list)
     decided_at: datetime
     configuration_versions: ConfigurationVersions
+    source: ResultSource = ResultSource.LIVE
 
     @model_validator(mode="after")
     def check_material_decision_requirements(self) -> AnalystDecision:
@@ -163,6 +170,7 @@ class DecisionRequest(BaseModel):
     decision: AnalystDecisionType
     rationale: str
     conditions: list[str] = Field(default_factory=list)
+    source: ResultSource = ResultSource.LIVE
 
 
 class WorkflowResult(BaseModel):
@@ -174,3 +182,4 @@ class WorkflowResult(BaseModel):
     analytics: PortfolioAnalytics | None = None
     evidence_ledger: EvidenceLedger | None = None
     execution_trace: WorkflowExecutionTrace | None = None
+    source: ResultSource = ResultSource.LIVE

@@ -57,6 +57,7 @@ from pricing_copilot.recommendation.governance import (
     RecommendationValidationError,
     validate_and_clamp_draft,
 )
+from pricing_copilot.versions import GOVERNED_RECOMMENDATION_VERSION
 from pricing_copilot.workflow_common import (
     IMPLEMENTED_DATA_SCENARIOS,
     RETRIEVAL_QUERY,
@@ -64,8 +65,6 @@ from pricing_copilot.workflow_common import (
     data_quality_investigation_result,
     missing_evidence_workflow_result,
 )
-
-GOVERNED_RECOMMENDATION_VERSION = "governed-multi-agent-v1"
 
 SpecialistAgentsFactory = Callable[..., dict[EvidenceDomain, SpecialistAgent]]
 
