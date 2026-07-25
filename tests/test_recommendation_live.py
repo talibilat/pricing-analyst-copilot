@@ -84,6 +84,26 @@ def test_live_retention_concern_recommends_hold_or_limited_reduction() -> None:
         assert banned not in combined_text
 
 
+@requires_azure_openai
+def test_live_baseline_fallback_still_works() -> None:
+    question = PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=AnalysisPeriod(start_month=date(2024, 1, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+    )
+
+    result = run_portfolio_workflow(question, use_baseline=True)
+
+    assert result.recommendation.action in {
+        RecommendationAction.INCREASE,
+        RecommendationAction.HOLD,
+        RecommendationAction.INVESTIGATE,
+    }
+    assert result.evidence_ledger is not None
+
+
 def test_conflicting_evidence_never_requires_model_credentials() -> None:
     """The material-evidence-issues gate must short-circuit before any model call, so this
     scenario is always testable even with no Azure OpenAI credentials configured."""
