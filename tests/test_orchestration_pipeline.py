@@ -229,3 +229,17 @@ def test_missing_credentials_produces_a_safe_investigate_result_not_a_crash() ->
     assert result.missing_evidence
     assert "workflow:" in result.missing_evidence[0].reason
     assert "unavailable" in result.missing_evidence[0].reason.lower()
+
+
+def test_recommendation_agent_raising_a_model_behavior_error_fails_safely() -> None:
+    from agents.exceptions import ModelBehaviorError
+
+    class _BrokenRecommendationAgent(FakeRecommendationAgentRunner):
+        async def synthesize(self, **_kwargs: Any) -> RecommendationDraft:
+            raise ModelBehaviorError("invalid structured output")
+
+    result = run_governed_portfolio_workflow(
+        _question(ScenarioName.CONTROLLED_INCREASE),
+        orchestration=_bundle(recommendation=_BrokenRecommendationAgent()),
+    )
+    assert result.recommendation.action is RecommendationAction.INVESTIGATE

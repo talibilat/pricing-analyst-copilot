@@ -9,6 +9,7 @@ from pricing_copilot.contracts import (
     Product,
     RecommendationAction,
     Region,
+    ResultSource,
     ScenarioName,
     Segment,
 )
@@ -119,3 +120,19 @@ def test_conflicting_evidence_never_requires_model_credentials() -> None:
 
     assert result.recommendation.action is RecommendationAction.INVESTIGATE
     assert result.recommendation.price_range is None
+
+
+def test_replay_of_the_committed_artifact_matches_expectations_without_credentials() -> None:
+    """The committed var/replay/controlled_increase.json artifact must stay servable and
+    correct even with no Azure OpenAI credentials configured - that is the entire point of
+    replay as a resilient fallback."""
+    question = PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+    )
+    result = run_portfolio_workflow(question, replay=True)
+    assert result.source is ResultSource.REPLAY
+    assert result.recommendation.action is RecommendationAction.INCREASE

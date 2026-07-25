@@ -72,3 +72,18 @@ def test_replay_keyword_shows_a_prominent_replay_label(tmp_path, monkeypatch) ->
     assert not app.exception
     warnings = "\n".join(w.body for w in app.warning)
     assert "REPLAY MODE" in warnings
+
+
+def test_replay_of_an_unrecorded_scenario_fails_gracefully_in_the_interface(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(tmp_path / "replay"))
+
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("Replay the retention concern scenario")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "not available" in markdown.lower() or "not" in markdown.lower()
