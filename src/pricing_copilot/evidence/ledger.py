@@ -45,6 +45,21 @@ def build_evidence_ledger(
                 f"{analytics.conversion.quote_to_sale_conversion.current:.1%}."
             ),
         ),
+        EvidenceLedgerEntry(
+            evidence_id=f"retention-{region.value}-{analytics.conversion.period_end.isoformat()}",
+            source_type="structured_metric",
+            source_reference="Deterministic conversion analytics",
+            period_start=analytics.conversion.period_start,
+            period_end=analytics.conversion.period_end,
+            metric_name="renewal_retention",
+            value=analytics.conversion.renewal_retention.current,
+            baseline_value=analytics.conversion.renewal_retention.baseline,
+            interpretation=(
+                "Renewal retention moved from "
+                f"{analytics.conversion.renewal_retention.baseline:.1%} to "
+                f"{analytics.conversion.renewal_retention.current:.1%}."
+            ),
+        ),
     ]
 
     if analytics.competitors.competitors:
