@@ -22,3 +22,21 @@ def load_benchmark_report(settings: Settings) -> BenchmarkReport | None:
     if not path.exists():
         return None
     return BenchmarkReport.model_validate_json(path.read_text())
+
+
+def _promoted_report_path(settings: Settings) -> Path:
+    return Path(settings.evaluation_directory) / "promoted.json"
+
+
+def save_promoted_report(report: BenchmarkReport, settings: Settings) -> Path:
+    path = _promoted_report_path(settings)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(report.model_dump_json(indent=2))
+    return path
+
+
+def load_promoted_report(settings: Settings) -> BenchmarkReport | None:
+    path = _promoted_report_path(settings)
+    if not path.exists():
+        return None
+    return BenchmarkReport.model_validate_json(path.read_text())
