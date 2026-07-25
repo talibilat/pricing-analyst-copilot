@@ -4,13 +4,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from pricing_copilot.contracts import ScenarioName, WorkflowResult
+from pricing_copilot.contracts import ResultSource, ScenarioName, WorkflowResult
 
 
 class ChatIntent(StrEnum):
     DATA_RETRIEVAL = "data_retrieval"
     MULTI_SOURCE_SUMMARY = "multi_source_summary"
     PRICING_ANALYSIS = "pricing_analysis"
+    REPLAY = "replay"
     EVALUATION = "evaluation"
     DRIFT = "drift"
     HELP = "help"
@@ -50,6 +51,7 @@ class ChatContext(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     scenario: ScenarioName = ScenarioName.CONTROLLED_INCREASE
+    force_replay: bool = False
 
 
 class ChatRequest(BaseModel):
@@ -72,3 +74,4 @@ class ChatResponse(BaseModel):
     requires_clarification: bool = False
     refused: bool = False
     workflow_result: WorkflowResult | None = None
+    source: ResultSource = ResultSource.LIVE

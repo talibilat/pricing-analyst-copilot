@@ -417,7 +417,10 @@ def run_governed_portfolio_workflow(
         active = orchestration
     else:
         try:
-            active = get_default_orchestration(settings, event_listener=event_listener)
+            if event_listener is None:
+                active = get_default_orchestration(settings)
+            else:
+                active = get_default_orchestration(settings, event_listener=event_listener)
         except RuntimeError as exc:
             return data_quality_investigation_result(
                 question, f"workflow: model API is unavailable ({exc})."

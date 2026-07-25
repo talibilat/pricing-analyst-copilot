@@ -21,6 +21,7 @@ from pricing_copilot.contracts import (
     PortfolioQuestion,
     Product,
     Region,
+    ResultSource,
     ScenarioName,
     Segment,
 )
@@ -33,6 +34,11 @@ from pricing_copilot.documents.corpus import SourceType
 from pricing_copilot.documents.retrieval import retrieve_documents
 from pricing_copilot.governance.security import quarantine_unsafe_documents
 from pricing_copilot.observability.contracts import TraceEvent, TraceEventKind
+from pricing_copilot.replay.store import (
+    ReplayArtifactIncompatibleError,
+    ReplayArtifactMissingError,
+    load_replay_artifact,
+)
 from pricing_copilot.workflow import run_portfolio_workflow
 
 ActivityListener = Callable[[ChatActivity], None]
@@ -106,11 +112,14 @@ class ChatService:
             )
 
         active_context = ChatContext(
-            scenario=self._scenario_for(normalized, active_context.scenario)
+            scenario=self._scenario_for(normalized, active_context.scenario),
+            force_replay=active_context.force_replay,
         )
-        intent = self._intent_for(normalized)
+        intent = ChatIntent.REPLAY if active_context.force_replay else self._intent_for(normalized)
         sources = self._sources_for(normalized)
 
+        if intent is ChatIntent.REPLAY:
+            return self._run_replay(active_context, on_activity)
         if intent is ChatIntent.EVALUATION:
             return self._unavailable(
                 intent,
@@ -196,8 +205,10 @@ class ChatService:
     @staticmethod
     def _intent_for(message: str) -> ChatIntent:
         lowered = message.lower()
-        if any(word in lowered for word in ("evaluate", "evaluation", "golden case", "replay")):
+        if any(word in lowered for word in ("evaluate", "evaluation", "golden case")):
             return ChatIntent.EVALUATION
+        if any(phrase in lowered for phrase in ("replay", "cached run", "use the cache")):
+            return ChatIntent.REPLAY
         if any(word in lowered for word in ("drift", "monitoring", "monitor model")):
             return ChatIntent.DRIFT
         if any(word in lowered for word in ("help", "what can you", "how do i")):
@@ -248,6 +259,57 @@ class ChatService:
         activities: list[ChatActivity] = []
         self._emit(activity, activities, listener)
         return ChatResponse(intent=intent, message=message, context=context, activities=activities)
+
+    def _run_replay(
+        self, context: ChatContext, listener: ActivityListener | None
+    ) -> ChatResponse:
+        activities: list[ChatActivity] = []
+        try:
+            artifact = load_replay_artifact(context.scenario, self.settings)
+        except (ReplayArtifactMissingError, ReplayArtifactIncompatibleError) as exc:
+            self._emit(
+                ChatActivity(
+                    status=ActivityStatus.UNAVAILABLE,
+                    label="Replay is not available for this scenario",
+                    purpose="Reporting that no valid replay artifact is recorded.",
+                ),
+                activities,
+                listener,
+            )
+            return ChatResponse(
+                intent=ChatIntent.REPLAY,
+                context=context,
+                message=(
+                    f"A replay is not available for the {context.scenario.value} scenario yet "
+                    f"({exc}). Ask for a live recommendation instead, or record a replay "
+                    "artifact first."
+                ),
+                activities=activities,
+            )
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.COMPLETED,
+                label="Replaying a previously validated cached run",
+                purpose="Serving a version-checked replay artifact instead of a live model call.",
+            ),
+            activities,
+            listener,
+        )
+        response = artifact.chat_response
+        return response.model_copy(
+            update={
+                "intent": ChatIntent.REPLAY,
+                "message": f"**[REPLAY - not a live analysis]** {response.message}",
+                "activities": activities,
+                "source": ResultSource.REPLAY,
+                "workflow_result": (
+                    response.workflow_result.model_copy(update={"source": ResultSource.REPLAY})
+                    if response.workflow_result is not None
+                    else None
+                ),
+                "context": context,
+            }
+        )
 
     def _retrieve_sources(
         self,
@@ -436,6 +498,34 @@ class ChatService:
             scenario=context.scenario,
         )
         result = run_portfolio_workflow(question, self.settings, event_listener=record_trace_event)
+        live_failure_reason = next(
+            (
+                item.reason
+                for item in result.missing_evidence
+                if item.reason.startswith("workflow:")
+            ),
+            None,
+        )
+        if live_failure_reason is not None:
+            self._emit(
+                ChatActivity(
+                    status=ActivityStatus.FAILED,
+                    label="Live analysis is currently unavailable",
+                    purpose="Reporting a live failure without silently switching to replay.",
+                ),
+                activities,
+                listener,
+            )
+            return ChatResponse(
+                intent=ChatIntent.PRICING_ANALYSIS,
+                context=context,
+                message=(
+                    f"Live analysis could not complete right now ({live_failure_reason}). Ask "
+                    f"me to 'replay the {context.scenario.value} scenario' to see a previously "
+                    "validated, clearly labeled cached run instead."
+                ),
+                activities=activities,
+            )
         recommendation = result.recommendation
         message_summary = (
             f"The governed workflow recommends **{recommendation.action.value}**. "
