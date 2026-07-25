@@ -183,3 +183,25 @@ def test_cli_replay_flag_serves_a_recorded_artifact(
     payload = json.loads(out)
     assert payload["source"] == "replay"
     assert payload["recommendation"]["action"] == "increase"
+
+
+def test_cli_evaluate_flag_runs_the_deterministic_subset_offline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from pricing_copilot.config import get_settings
+    from pricing_copilot.evaluation import golden_set
+    from pricing_copilot.evaluation.contracts import CaseKind
+
+    monkeypatch.setenv("PRICING_COPILOT_EVALUATION_DIRECTORY", str(tmp_path / "evaluation"))
+    deterministic_only = [c for c in golden_set.GOLDEN_CASES if c.kind == CaseKind.DETERMINISTIC]
+    monkeypatch.setattr("pricing_copilot.evaluation.runner.GOLDEN_CASES", deterministic_only)
+
+    get_settings.cache_clear()
+    try:
+        exit_code = main(["--evaluate"])
+    finally:
+        get_settings.cache_clear()
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Governed:" in out
+    assert (tmp_path / "evaluation" / "latest.json").exists()

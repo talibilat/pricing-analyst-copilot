@@ -61,6 +61,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run all three supported scenarios live and save their replay artifacts.",
     )
+    parser.add_argument(
+        "--evaluate",
+        action="store_true",
+        help="Run the golden evaluation benchmark on both architectures and save the report.",
+    )
     return parser
 
 
@@ -105,6 +110,30 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             save_replay_artifact(response, get_settings())
             print(f"Recorded replay artifact for {scenario.value}.")
+        return 0
+
+    if args.evaluate:
+        from pricing_copilot.evaluation.runner import run_benchmark
+        from pricing_copilot.evaluation.store import save_benchmark_report
+
+        report = run_benchmark(get_settings())
+        path = save_benchmark_report(report, get_settings())
+        print(
+            f"Golden set: {report.golden_set_version} "
+            f"({len(report.governed.case_results)} governed cases)"
+        )
+        print(
+            f"Governed: {report.governed.actuals.cases_passed} passed, "
+            f"{report.governed.actuals.cases_failed} failed, "
+            f"{report.governed.actuals.cases_errored} errored"
+        )
+        if report.baseline is not None:
+            print(
+                f"Baseline: {report.baseline.actuals.cases_passed} passed, "
+                f"{report.baseline.actuals.cases_failed} failed, "
+                f"{report.baseline.actuals.cases_errored} errored"
+            )
+        print(f"Saved to {path}")
         return 0
 
     required_arguments = ("product", "region", "segment", "start_month", "end_month")

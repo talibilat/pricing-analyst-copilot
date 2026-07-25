@@ -121,13 +121,7 @@ class ChatService:
         if intent is ChatIntent.REPLAY:
             return self._run_replay(active_context, on_activity)
         if intent is ChatIntent.EVALUATION:
-            return self._unavailable(
-                intent,
-                active_context,
-                "Evaluation replay is not available yet. This chat can retrieve governed portfolio "
-                "data and run the current governed pricing workflow.",
-                on_activity,
-            )
+            return self._report_evaluation(active_context, on_activity)
         if intent is ChatIntent.DRIFT:
             return self._unavailable(
                 intent,
@@ -309,6 +303,66 @@ class ChatService:
                 ),
                 "context": context,
             }
+        )
+
+    def _report_evaluation(
+        self, context: ChatContext, listener: ActivityListener | None
+    ) -> ChatResponse:
+        from pricing_copilot.evaluation.store import load_benchmark_report
+
+        activities: list[ChatActivity] = []
+        report = load_benchmark_report(self.settings)
+        if report is None:
+            self._emit(
+                ChatActivity(
+                    status=ActivityStatus.UNAVAILABLE,
+                    label="No evaluation report is recorded yet",
+                    purpose="Reporting the current evaluation capability boundary.",
+                ),
+                activities,
+                listener,
+            )
+            return ChatResponse(
+                intent=ChatIntent.EVALUATION,
+                context=context,
+                message=(
+                    "No evaluation has been run yet. Run the CLI with --evaluate to generate a "
+                    "report, then ask again."
+                ),
+                activities=activities,
+            )
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.COMPLETED,
+                label="Loaded the latest evaluation benchmark",
+                purpose="Reporting configured targets against actual measured results.",
+            ),
+            activities,
+            listener,
+        )
+        rows: list[list[str | int | float | None]] = [
+            [metric, target_value, getattr(report.governed.actuals, metric, "n/a")]
+            for metric, target_value in report.governed.targets.model_dump().items()
+        ]
+        table = ChatTable(
+            title="Governed workflow - targets vs actuals",
+            columns=["metric", "target", "actual"],
+            rows=rows,
+        )
+        message = (
+            f"Latest evaluation ({report.golden_set_version}, generated "
+            f"{report.generated_at.date().isoformat()}): "
+            f"{report.governed.actuals.cases_passed} passed, "
+            f"{report.governed.actuals.cases_failed} failed, "
+            f"{report.governed.actuals.cases_errored} errored out of "
+            f"{len(report.governed.case_results)} governed cases."
+        )
+        return ChatResponse(
+            intent=ChatIntent.EVALUATION,
+            context=context,
+            message=message,
+            activities=activities,
+            tables=[table],
         )
 
     def _retrieve_sources(
