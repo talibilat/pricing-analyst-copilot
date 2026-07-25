@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from pricing_copilot.config import Settings
 from pricing_copilot.drift.contracts import DriftAlertCategory, DriftDomain
 from pricing_copilot.drift.data_detector import detect_data_drift
 
 
-def test_detect_data_drift_returns_one_alert_per_domain(tmp_path) -> None:
+def test_detect_data_drift_returns_one_alert_per_domain(tmp_path: Path) -> None:
     settings = Settings(analytics_database_path=tmp_path / "test.duckdb")
     alerts = detect_data_drift(settings)
     domains = {alert.domain for alert in alerts}

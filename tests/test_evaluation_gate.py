@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from pricing_copilot.config import Settings
 from pricing_copilot.evaluation.contracts import (
@@ -16,7 +17,7 @@ from pricing_copilot.versions import current_configuration_versions
 
 
 def _actuals(**overrides: object) -> EvaluationActuals:
-    base = dict(
+    base = EvaluationActuals(
         deterministic_accuracy_pct=100.0,
         output_schema_valid_pct=100.0,
         citation_coverage_pct=100.0,
@@ -35,8 +36,7 @@ def _actuals(**overrides: object) -> EvaluationActuals:
         cases_failed=0,
         cases_errored=0,
     )
-    base.update(overrides)
-    return EvaluationActuals(**base)
+    return base.model_copy(update=overrides)
 
 
 def _report(
@@ -90,7 +90,7 @@ def test_promotion_gate_records_failing_case_ids() -> None:
     assert result.failing_case_ids == ["GC-99"]
 
 
-def test_promoted_report_round_trips_through_disk(tmp_path) -> None:
+def test_promoted_report_round_trips_through_disk(tmp_path: Path) -> None:
     settings = Settings(evaluation_directory=tmp_path / "evaluation")
     assert load_promoted_report(settings) is None
     save_promoted_report(_report(_actuals()), settings)

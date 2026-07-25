@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from pricing_copilot.config import Settings
 from pricing_copilot.contracts import ConfigurationVersions
@@ -22,7 +23,7 @@ def _versions() -> ConfigurationVersions:
     )
 
 
-def test_drift_report_round_trips_through_disk(tmp_path) -> None:
+def test_drift_report_round_trips_through_disk(tmp_path: Path) -> None:
     settings = Settings(drift_directory=tmp_path / "drift")
     report = DriftReport(
         report_version="drift-report-v1",
@@ -36,12 +37,12 @@ def test_drift_report_round_trips_through_disk(tmp_path) -> None:
     assert loaded.report_version == "drift-report-v1"
 
 
-def test_load_drift_report_returns_none_when_absent(tmp_path) -> None:
+def test_load_drift_report_returns_none_when_absent(tmp_path: Path) -> None:
     settings = Settings(drift_directory=tmp_path / "drift")
     assert load_drift_report(settings) is None
 
 
-def test_previous_configuration_round_trips_through_disk(tmp_path) -> None:
+def test_previous_configuration_round_trips_through_disk(tmp_path: Path) -> None:
     settings = Settings(drift_directory=tmp_path / "drift")
     assert load_previous_configuration(settings) is None
     save_previous_configuration(_versions(), settings)

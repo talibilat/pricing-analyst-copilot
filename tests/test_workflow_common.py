@@ -30,8 +30,16 @@ def _question(scenario: ScenarioName | None = None) -> PortfolioQuestion:
     )
 
 
-def test_implemented_data_scenarios_covers_all_three_scenarios() -> None:
-    assert IMPLEMENTED_DATA_SCENARIOS == frozenset(ScenarioName)
+def test_implemented_data_scenarios_covers_the_three_priceable_scenarios() -> None:
+    assert IMPLEMENTED_DATA_SCENARIOS == {
+        ScenarioName.CONTROLLED_INCREASE,
+        ScenarioName.RETENTION_CONCERN,
+        ScenarioName.CONFLICTING_EVIDENCE,
+    }
+
+
+def test_drift_monitoring_scenario_is_deliberately_not_priceable() -> None:
+    assert ScenarioName.DRIFT_MONITORING not in IMPLEMENTED_DATA_SCENARIOS
 
 
 def test_missing_evidence_workflow_result_investigates_with_all_domains_missing() -> None:

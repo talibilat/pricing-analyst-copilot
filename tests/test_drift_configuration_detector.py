@@ -3,7 +3,7 @@ from pricing_copilot.drift.configuration_detector import detect_configuration_dr
 
 
 def _versions(**overrides: object) -> ConfigurationVersions:
-    base = dict(
+    base = ConfigurationVersions(
         model_name="gpt-test",
         recommendation_version="v1",
         governance_version="v1",
@@ -11,8 +11,7 @@ def _versions(**overrides: object) -> ConfigurationVersions:
         scenario_version="v1",
         max_price_movement_pct=5.0,
     )
-    base.update(overrides)
-    return ConfigurationVersions(**base)
+    return base.model_copy(update=overrides)
 
 
 def test_detect_configuration_drift_flags_no_previous_snapshot_as_insufficient_sample() -> None:

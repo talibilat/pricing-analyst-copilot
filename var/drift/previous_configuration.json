@@ -1,0 +1,14 @@
+{
+  "model_name": "gpt-5.4",
+  "recommendation_version": "governed-multi-agent-v1",
+  "governance_version": "deterministic-governance-v1",
+  "scenario_seed": 20260101,
+  "scenario_version": "v1",
+  "max_price_movement_pct": 5.0,
+  "prompt_version": "governed-prompts-v2",
+  "agent_registry_version": "approved-agent-registry-v1",
+  "tool_version": "deterministic-read-only-tools-v2",
+  "dataset_version": "v1",
+  "recommendation_policy_version": "recommendation-policy-v2",
+  "output_schema_version": "workflow-result-schema-v1"
+}

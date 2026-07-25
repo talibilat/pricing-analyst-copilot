@@ -13,7 +13,7 @@ from pricing_copilot.versions import current_configuration_versions
 
 
 def _actuals(**overrides: object) -> EvaluationActuals:
-    base = dict(
+    base = EvaluationActuals(
         deterministic_accuracy_pct=100.0,
         output_schema_valid_pct=100.0,
         citation_coverage_pct=100.0,
@@ -32,8 +32,7 @@ def _actuals(**overrides: object) -> EvaluationActuals:
         cases_failed=0,
         cases_errored=0,
     )
-    base.update(overrides)
-    return EvaluationActuals(**base)
+    return base.model_copy(update=overrides)
 
 
 def _report(actuals: EvaluationActuals) -> BenchmarkReport:

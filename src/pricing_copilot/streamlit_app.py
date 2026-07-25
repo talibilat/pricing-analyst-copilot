@@ -288,7 +288,9 @@ with tab_chat:
                     retry_context = ChatContext(
                         scenario=response.context.scenario, force_replay=True
                     )
-                    response = ChatService().submit(prompt, retry_context, on_activity=show_activity)
+                    response = ChatService().submit(
+                        prompt, retry_context, on_activity=show_activity
+                    )
             if response.activities:
                 with st.expander("Activity trace", expanded=True):
                     st.write(

@@ -480,8 +480,10 @@ def generate_feedback_topic_series(
 
     Not part of ScenarioDataset/the persistent DuckDB store - this is purpose-built,
     lightweight time series data consumed directly by the drift data detector.
+    Deliberately unjittered (unlike the other generators) so the topic-share PSI
+    signal is exact and reproducible without depending on `seed`.
     """
-    rng = random.Random(seed + 1)  # nosec B311
+    del seed
     periods = _month_periods(SCENARIO_START_MONTH, months)
     records = []
     for index, period in enumerate(periods):

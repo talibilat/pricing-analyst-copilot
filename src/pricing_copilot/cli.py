@@ -172,15 +172,15 @@ def main(argv: list[str] | None = None) -> int:
         if benchmark_report is None:
             print("No evaluation report is recorded yet. Run --evaluate first.", file=sys.stderr)
             return 1
-        result = evaluate_promotion_gate(benchmark_report)
-        if result.promoted:
+        gate_result = evaluate_promotion_gate(benchmark_report)
+        if gate_result.promoted:
             path = save_promoted_report(benchmark_report, get_settings())
-            print(f"Promoted: {result.detail} Saved to {path}")
+            print(f"Promoted: {gate_result.detail} Saved to {path}")
             return 0
-        print(f"Not promoted: {result.detail}", file=sys.stderr)
-        for metric in result.failing_metrics:
+        print(f"Not promoted: {gate_result.detail}", file=sys.stderr)
+        for metric in gate_result.failing_metrics:
             print(f"  - failing metric: {metric}", file=sys.stderr)
-        for case_id in result.failing_case_ids:
+        for case_id in gate_result.failing_case_ids:
             print(f"  - failing case: {case_id}", file=sys.stderr)
         return 1
 

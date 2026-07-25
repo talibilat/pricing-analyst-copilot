@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from pricing_copilot.config import Settings
 from pricing_copilot.drift.contracts import DriftAlertCategory
@@ -48,14 +49,14 @@ def _benchmark_report(settings: Settings) -> BenchmarkReport:
     )
 
 
-def test_run_drift_monitoring_produces_alerts_across_all_four_categories(tmp_path) -> None:
+def test_run_drift_monitoring_produces_alerts_across_all_four_categories(tmp_path: Path) -> None:
     settings = Settings(drift_directory=tmp_path / "drift")
     report = run_drift_monitoring(settings, _benchmark_report(settings))
     categories = {alert.category for alert in report.alerts}
     assert categories == set(DriftAlertCategory)
 
 
-def test_run_drift_monitoring_saves_the_current_configuration_for_next_time(tmp_path) -> None:
+def test_run_drift_monitoring_saves_the_current_configuration_for_next_time(tmp_path: Path) -> None:
     from pricing_copilot.drift.store import load_previous_configuration
 
     settings = Settings(drift_directory=tmp_path / "drift")

@@ -46,7 +46,9 @@ def detect_behavior_drift(report: BenchmarkReport, settings: Settings) -> list[D
         ),
     ]
 
-    rejection_breached = actuals.governance_rejection_count > policy.governance_rejection_ceiling_count
+    rejection_breached = (
+        actuals.governance_rejection_count > policy.governance_rejection_ceiling_count
+    )
     alerts.append(
         DriftAlert(
             category=DriftAlertCategory.BEHAVIOR,

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import date as date_type
+from typing import cast
+
 from pricing_copilot.config import Settings
 from pricing_copilot.contracts import ScenarioName
 from pricing_copilot.data.generation import DRIFT_CURRENT_INDEX, generate_feedback_topic_series
@@ -93,7 +96,9 @@ def _z_and_movement_alert(
     )
 
 
-def _claims_metrics(database: PersistentAnalyticsDatabase) -> tuple[list[float], list[float], list[float]]:
+def _claims_metrics(
+    database: PersistentAnalyticsDatabase,
+) -> tuple[list[float], list[float], list[float]]:
     result = database.query_source(
         "claims",
         ScenarioName.DRIFT_MONITORING,
@@ -105,10 +110,10 @@ def _claims_metrics(database: PersistentAnalyticsDatabase) -> tuple[list[float],
             "policies_in_force",
         ),
     )
-    rows = sorted(result.rows, key=lambda row: row[0])
-    severities = [row[2] / row[1] for row in rows]
-    frequencies = [row[1] / row[4] for row in rows]
-    loss_ratios = [row[2] / row[3] for row in rows]
+    rows = sorted(result.rows, key=lambda row: cast(date_type, row[0]))
+    severities = [float(cast(float, row[2])) / float(cast(int, row[1])) for row in rows]
+    frequencies = [float(cast(int, row[1])) / float(cast(int, row[4])) for row in rows]
+    loss_ratios = [float(cast(float, row[2])) / float(cast(float, row[3])) for row in rows]
     return severities, frequencies, loss_ratios
 
 
@@ -118,8 +123,8 @@ def _conversion_metric(database: PersistentAnalyticsDatabase) -> list[float]:
         ScenarioName.DRIFT_MONITORING,
         columns=("period", "quotes", "sales"),
     )
-    rows = sorted(result.rows, key=lambda row: row[0])
-    return [row[2] / row[1] for row in rows]
+    rows = sorted(result.rows, key=lambda row: cast(date_type, row[0]))
+    return [float(cast(int, row[2])) / float(cast(int, row[1])) for row in rows]
 
 
 def _competitor_readings(
@@ -128,10 +133,12 @@ def _competitor_readings(
     result = database.query_source(
         "competitors", ScenarioName.DRIFT_MONITORING, columns=("period", "price_index")
     )
-    rows = sorted(result.rows, key=lambda row: row[0])
-    ordered_periods = sorted({row[0] for row in rows})
-    by_period: dict = {period: [] for period in ordered_periods}
-    for period, price_index in rows:
+    rows = sorted(result.rows, key=lambda row: cast(date_type, row[0]))
+    ordered_periods = sorted({cast(date_type, row[0]) for row in rows})
+    by_period: dict[date_type, list[float]] = {period: [] for period in ordered_periods}
+    for row in rows:
+        period = cast(date_type, row[0])
+        price_index = float(cast(float, row[1]))
         by_period[period].append(price_index)
 
     baseline_periods = ordered_periods[BASELINE_START_INDEX:BASELINE_END_INDEX]
@@ -189,7 +196,10 @@ def _competitor_alert(database: PersistentAnalyticsDatabase, settings: Settings)
         confidence_impact=0.3 if breached else 0.0,
         baseline_window=BASELINE_WINDOW_LABEL,
         current_window=CURRENT_WINDOW_LABEL,
-        detail=f"Competitor price index moved {round(movement, 1)}%; KS p-value {round(p_value, 4)}.",
+        detail=(
+            f"Competitor price index moved {round(movement, 1)}%; "
+            f"KS p-value {round(p_value, 4)}."
+        ),
     )
 
 
@@ -226,7 +236,9 @@ def _feedback_topics_alert(settings: Settings) -> DriftAlert:
             unit="PSI",
             threshold=policy.psi_threshold,
             breached=psi_breached,
-            comparison_period=f"{CURRENT_WINDOW_LABEL} vs {BASELINE_WINDOW_LABEL} average topic mix",
+            comparison_period=(
+                f"{CURRENT_WINDOW_LABEL} vs {BASELINE_WINDOW_LABEL} average topic mix"
+            ),
         ),
         DriftMeasurement(
             measure_kind=DriftMeasureKind.PERCENTAGE_MOVEMENT,

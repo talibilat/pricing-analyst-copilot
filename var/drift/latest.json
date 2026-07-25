@@ -1,0 +1,343 @@
+{
+  "report_version": "drift-report-v1",
+  "generated_at": "2026-07-25T19:44:13.534252Z",
+  "configuration_versions": {
+    "model_name": "gpt-5.4",
+    "recommendation_version": "governed-multi-agent-v1",
+    "governance_version": "deterministic-governance-v1",
+    "scenario_seed": 20260101,
+    "scenario_version": "v1",
+    "max_price_movement_pct": 5.0,
+    "prompt_version": "governed-prompts-v2",
+    "agent_registry_version": "approved-agent-registry-v1",
+    "tool_version": "deterministic-read-only-tools-v2",
+    "dataset_version": "v1",
+    "recommendation_policy_version": "recommendation-policy-v2",
+    "output_schema_version": "workflow-result-schema-v1"
+  },
+  "alerts": [
+    {
+      "category": "data",
+      "metric_name": "claim_severity",
+      "domain": "claim_severity",
+      "measurements": [
+        {
+          "measure_kind": "rolling_z_score",
+          "value": 36.6006,
+          "unit": "standard deviations",
+          "threshold": 2.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        },
+        {
+          "measure_kind": "percentage_movement",
+          "value": 44.38,
+          "unit": "%",
+          "threshold": 20.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        }
+      ],
+      "breached": true,
+      "investigation_required": true,
+      "confidence_impact": 0.4,
+      "insufficient_sample": false,
+      "baseline_window": "months 13-24",
+      "current_window": "month 25",
+      "detail": "Claim Severity moved 44.4% (36.6 standard deviations) between months 13-24 and month 25, GBP per claim basis."
+    },
+    {
+      "category": "data",
+      "metric_name": "claim_frequency",
+      "domain": "claim_frequency",
+      "measurements": [
+        {
+          "measure_kind": "rolling_z_score",
+          "value": 21.8543,
+          "unit": "standard deviations",
+          "threshold": 2.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        },
+        {
+          "measure_kind": "percentage_movement",
+          "value": 32.83,
+          "unit": "%",
+          "threshold": 20.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        }
+      ],
+      "breached": true,
+      "investigation_required": true,
+      "confidence_impact": 0.4,
+      "insufficient_sample": false,
+      "baseline_window": "months 13-24",
+      "current_window": "month 25",
+      "detail": "Claim Frequency moved 32.8% (21.85 standard deviations) between months 13-24 and month 25, claims per policy basis."
+    },
+    {
+      "category": "data",
+      "metric_name": "loss_ratio",
+      "domain": "loss_ratio",
+      "measurements": [
+        {
+          "measure_kind": "rolling_z_score",
+          "value": 32.0246,
+          "unit": "standard deviations",
+          "threshold": 2.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        },
+        {
+          "measure_kind": "percentage_movement",
+          "value": 93.18,
+          "unit": "%",
+          "threshold": 20.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        }
+      ],
+      "breached": true,
+      "investigation_required": true,
+      "confidence_impact": 0.4,
+      "insufficient_sample": false,
+      "baseline_window": "months 13-24",
+      "current_window": "month 25",
+      "detail": "Loss Ratio moved 93.2% (32.02 standard deviations) between months 13-24 and month 25, incurred loss / earned premium basis."
+    },
+    {
+      "category": "data",
+      "metric_name": "conversion",
+      "domain": "conversion",
+      "measurements": [
+        {
+          "measure_kind": "rolling_z_score",
+          "value": -16.1529,
+          "unit": "standard deviations",
+          "threshold": 2.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        },
+        {
+          "measure_kind": "percentage_movement",
+          "value": -31.23,
+          "unit": "%",
+          "threshold": 20.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24"
+        }
+      ],
+      "breached": true,
+      "investigation_required": true,
+      "confidence_impact": 0.4,
+      "insufficient_sample": false,
+      "baseline_window": "months 13-24",
+      "current_window": "month 25",
+      "detail": "Conversion moved -31.2% (-16.15 standard deviations) between months 13-24 and month 25, sales / quotes basis."
+    },
+    {
+      "category": "data",
+      "metric_name": "competitor_index",
+      "domain": "competitor_index",
+      "measurements": [
+        {
+          "measure_kind": "percentage_movement",
+          "value": 19.83,
+          "unit": "%",
+          "threshold": 20.0,
+          "breached": false,
+          "comparison_period": "month 25 vs months 13-24"
+        },
+        {
+          "measure_kind": "kolmogorov_smirnov",
+          "value": 0.000219,
+          "unit": "p-value",
+          "threshold": 0.05,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24 (KS statistic 1.0)"
+        }
+      ],
+      "breached": true,
+      "investigation_required": true,
+      "confidence_impact": 0.3,
+      "insufficient_sample": false,
+      "baseline_window": "months 13-24",
+      "current_window": "month 25",
+      "detail": "Competitor price index moved 19.8%; KS p-value 0.0002."
+    },
+    {
+      "category": "data",
+      "metric_name": "feedback_topics",
+      "domain": "feedback_topics",
+      "measurements": [
+        {
+          "measure_kind": "population_stability_index",
+          "value": 0.4955,
+          "unit": "PSI",
+          "threshold": 0.2,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24 average topic mix"
+        },
+        {
+          "measure_kind": "percentage_movement",
+          "value": 200.0,
+          "unit": "%",
+          "threshold": 20.0,
+          "breached": true,
+          "comparison_period": "month 25 vs months 13-24 (price-related share)"
+        }
+      ],
+      "breached": true,
+      "investigation_required": true,
+      "confidence_impact": 0.3,
+      "insufficient_sample": false,
+      "baseline_window": "months 13-24",
+      "current_window": "month 25",
+      "detail": "Feedback topic mix PSI is 0.496; price-related share moved 200.0%."
+    },
+    {
+      "category": "behavior",
+      "metric_name": "specialist_routing_accuracy_pct",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "golden-suite target",
+      "current_window": "latest governed benchmark run",
+      "detail": "specialist_routing_accuracy_pct is 100.0%, floor is 90.0%."
+    },
+    {
+      "category": "behavior",
+      "metric_name": "citation_coverage_pct",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "golden-suite target",
+      "current_window": "latest governed benchmark run",
+      "detail": "citation_coverage_pct is 100.0%, floor is 95.0%."
+    },
+    {
+      "category": "behavior",
+      "metric_name": "ambiguous_abstention_pct",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "golden-suite target",
+      "current_window": "latest governed benchmark run",
+      "detail": "ambiguous_abstention_pct is 100.0%, floor is 95.0%."
+    },
+    {
+      "category": "behavior",
+      "metric_name": "governance_rejection_count",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "golden-suite target",
+      "current_window": "latest governed benchmark run",
+      "detail": "Governance rejections: 0, ceiling is 0."
+    },
+    {
+      "category": "behavior",
+      "metric_name": "golden_suite_pass_rate_pct",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "golden-suite target",
+      "current_window": "latest governed benchmark run",
+      "detail": "Golden-suite pass rate is 100.0%, floor is 100.0%."
+    },
+    {
+      "category": "behavior",
+      "metric_name": "recommendation_distribution",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "golden-suite target",
+      "current_window": "latest governed benchmark run",
+      "detail": "Recommendation action distribution across governed cases: {'increase': 3, 'decrease': 1, 'investigate': 2}."
+    },
+    {
+      "category": "operational",
+      "metric_name": "latency_p95_seconds",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "operational policy ceiling",
+      "current_window": "latest governed benchmark run",
+      "detail": "P95 latency is 17.004s, ceiling is 30.0s."
+    },
+    {
+      "category": "operational",
+      "metric_name": "tool_call_failure_pct",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "operational policy ceiling",
+      "current_window": "latest governed benchmark run",
+      "detail": "Tool call failure rate is 0.0%, ceiling is 5.0%."
+    },
+    {
+      "category": "operational",
+      "metric_name": "output_schema_valid_pct",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "operational policy ceiling",
+      "current_window": "latest governed benchmark run",
+      "detail": "Output schema validity is 100.0%, target is 100%."
+    },
+    {
+      "category": "operational",
+      "metric_name": "token_and_cost_usage",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "operational policy ceiling",
+      "current_window": "latest governed benchmark run",
+      "detail": "Total tokens: 48857, estimated cost: GBP 0.0."
+    },
+    {
+      "category": "configuration",
+      "metric_name": "configuration_versions",
+      "domain": null,
+      "measurements": [],
+      "breached": false,
+      "investigation_required": false,
+      "confidence_impact": 0.0,
+      "insufficient_sample": false,
+      "baseline_window": "previously recorded configuration",
+      "current_window": "current configuration",
+      "detail": "No configuration fields changed since the previous snapshot."
+    }
+  ]
+}
