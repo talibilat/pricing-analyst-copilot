@@ -294,7 +294,9 @@ def _activity_text(activity: ChatActivity) -> str:
     return f"{activity.status.value.title()}: {activity.label}{duration}"
 
 
-st.set_page_config(page_title="Pricing Decision Copilot", layout="wide")
+st.set_page_config(
+    page_title="Pricing Decision Copilot", layout="wide", initial_sidebar_state="collapsed"
+)
 st.title("Pricing Decision Copilot")
 st.caption(
     "Chat-first, governed portfolio decision support. The copilot retrieves only permitted "
