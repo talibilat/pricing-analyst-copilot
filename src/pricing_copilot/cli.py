@@ -66,6 +66,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Run the golden evaluation benchmark on both architectures and save the report.",
     )
+    parser.add_argument(
+        "--monitor-drift",
+        action="store_true",
+        help="Run drift monitoring against the latest evaluation report and save a drift report.",
+    )
+    parser.add_argument(
+        "--check-promotion",
+        action="store_true",
+        help="Check the latest evaluation report against its targets and promote it if it passes.",
+    )
     return parser
 
 
@@ -135,6 +145,44 @@ def main(argv: list[str] | None = None) -> int:
             )
         print(f"Saved to {path}")
         return 0
+
+    if args.monitor_drift:
+        from pricing_copilot.drift.monitor import run_drift_monitoring
+        from pricing_copilot.drift.store import save_drift_report
+        from pricing_copilot.evaluation.store import load_benchmark_report
+
+        benchmark_report = load_benchmark_report(get_settings())
+        if benchmark_report is None:
+            print("No evaluation report is recorded yet. Run --evaluate first.", file=sys.stderr)
+            return 1
+        drift_report = run_drift_monitoring(get_settings(), benchmark_report)
+        path = save_drift_report(drift_report, get_settings())
+        material = drift_report.material_alerts
+        print(f"Drift report: {len(drift_report.alerts)} alert(s), {len(material)} material.")
+        for alert in material:
+            print(f"  - {alert.category.value}/{alert.metric_name}: {alert.detail}")
+        print(f"Saved to {path}")
+        return 0
+
+    if args.check_promotion:
+        from pricing_copilot.evaluation.gate import evaluate_promotion_gate
+        from pricing_copilot.evaluation.store import load_benchmark_report, save_promoted_report
+
+        benchmark_report = load_benchmark_report(get_settings())
+        if benchmark_report is None:
+            print("No evaluation report is recorded yet. Run --evaluate first.", file=sys.stderr)
+            return 1
+        result = evaluate_promotion_gate(benchmark_report)
+        if result.promoted:
+            path = save_promoted_report(benchmark_report, get_settings())
+            print(f"Promoted: {result.detail} Saved to {path}")
+            return 0
+        print(f"Not promoted: {result.detail}", file=sys.stderr)
+        for metric in result.failing_metrics:
+            print(f"  - failing metric: {metric}", file=sys.stderr)
+        for case_id in result.failing_case_ids:
+            print(f"  - failing case: {case_id}", file=sys.stderr)
+        return 1
 
     required_arguments = ("product", "region", "segment", "start_month", "end_month")
     missing = [

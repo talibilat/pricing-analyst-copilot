@@ -205,3 +205,108 @@ def test_cli_evaluate_flag_runs_the_deterministic_subset_offline(
     assert exit_code == 0
     assert "Governed:" in out
     assert (tmp_path / "evaluation" / "latest.json").exists()
+
+
+def test_cli_monitor_drift_flag_requires_an_evaluation_report_first(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from pricing_copilot.config import get_settings
+
+    monkeypatch.setenv("PRICING_COPILOT_EVALUATION_DIRECTORY", str(tmp_path / "evaluation"))
+    monkeypatch.setenv("PRICING_COPILOT_DRIFT_DIRECTORY", str(tmp_path / "drift"))
+    get_settings.cache_clear()
+    try:
+        exit_code = main(["--monitor-drift"])
+    finally:
+        get_settings.cache_clear()
+    assert exit_code == 1
+    assert "no evaluation report" in capsys.readouterr().err.lower()
+
+
+def test_cli_monitor_drift_flag_runs_after_an_evaluation_report_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from pricing_copilot.config import get_settings
+    from pricing_copilot.evaluation import golden_set
+    from pricing_copilot.evaluation.contracts import CaseKind
+    from pricing_copilot.evaluation.runner import run_benchmark
+    from pricing_copilot.evaluation.store import save_benchmark_report
+
+    monkeypatch.setenv("PRICING_COPILOT_EVALUATION_DIRECTORY", str(tmp_path / "evaluation"))
+    monkeypatch.setenv("PRICING_COPILOT_DRIFT_DIRECTORY", str(tmp_path / "drift"))
+    monkeypatch.setattr(
+        "pricing_copilot.evaluation.runner.GOLDEN_CASES",
+        [c for c in golden_set.GOLDEN_CASES if c.kind == CaseKind.DETERMINISTIC],
+    )
+    get_settings.cache_clear()
+    try:
+        settings = get_settings()
+        save_benchmark_report(run_benchmark(settings, include_baseline=False), settings)
+        exit_code = main(["--monitor-drift"])
+    finally:
+        get_settings.cache_clear()
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    assert "material" in out.lower()
+    assert (tmp_path / "drift" / "latest.json").exists()
+
+
+def test_cli_check_promotion_flag_promotes_a_passing_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from datetime import UTC, datetime
+
+    from pricing_copilot.config import Settings, get_settings
+    from pricing_copilot.evaluation.contracts import (
+        BenchmarkReport,
+        EvaluationActuals,
+        EvaluationReport,
+        EvaluationTargets,
+    )
+    from pricing_copilot.evaluation.store import save_benchmark_report
+    from pricing_copilot.versions import current_configuration_versions
+
+    monkeypatch.setenv("PRICING_COPILOT_EVALUATION_DIRECTORY", str(tmp_path / "evaluation"))
+    get_settings.cache_clear()
+    try:
+        settings = get_settings()
+        actuals = EvaluationActuals(
+            deterministic_accuracy_pct=100.0,
+            output_schema_valid_pct=100.0,
+            citation_coverage_pct=100.0,
+            ambiguous_abstention_pct=100.0,
+            prompt_injection_success_pct=0.0,
+            critical_guardrail_pass_pct=100.0,
+            specialist_routing_accuracy_pct=100.0,
+            unsupported_recommendation_count=0,
+            latency_p95_seconds=10.0,
+            tool_call_failure_pct=0.0,
+            total_estimated_cost_gbp=0.0,
+            total_tokens=0,
+            governance_rejection_count=0,
+            safe_abstention_count=0,
+            cases_passed=10,
+            cases_failed=0,
+            cases_errored=0,
+        )
+        governed = EvaluationReport(
+            architecture="governed",
+            generated_at=datetime.now(UTC),
+            targets=EvaluationTargets(),
+            actuals=actuals,
+            case_results=[],
+        )
+        report = BenchmarkReport(
+            report_version="benchmark-report-v1",
+            golden_set_version="golden-set-v1",
+            generated_at=datetime.now(UTC),
+            configuration_versions=current_configuration_versions(Settings()),
+            governed=governed,
+        )
+        save_benchmark_report(report, settings)
+        exit_code = main(["--check-promotion"])
+    finally:
+        get_settings.cache_clear()
+    assert exit_code == 0
+    assert "promoted" in capsys.readouterr().out.lower()
+    assert (tmp_path / "evaluation" / "promoted.json").exists()
