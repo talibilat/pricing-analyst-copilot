@@ -123,14 +123,7 @@ class ChatService:
         if intent is ChatIntent.EVALUATION:
             return self._report_evaluation(active_context, on_activity)
         if intent is ChatIntent.DRIFT:
-            return self._unavailable(
-                intent,
-                active_context,
-                "Continuous evaluation and model-drift monitoring will be available after "
-                "evaluation replay is implemented. No drift result is being inferred from "
-                "this chat.",
-                on_activity,
-            )
+            return self._report_drift(active_context, on_activity)
         if intent is ChatIntent.HELP:
             return ChatResponse(
                 intent=intent,
@@ -359,6 +352,73 @@ class ChatService:
         )
         return ChatResponse(
             intent=ChatIntent.EVALUATION,
+            context=context,
+            message=message,
+            activities=activities,
+            tables=[table],
+        )
+
+    def _report_drift(
+        self, context: ChatContext, listener: ActivityListener | None
+    ) -> ChatResponse:
+        from pricing_copilot.drift.store import load_drift_report
+
+        activities: list[ChatActivity] = []
+        report = load_drift_report(self.settings)
+        if report is None:
+            self._emit(
+                ChatActivity(
+                    status=ActivityStatus.UNAVAILABLE,
+                    label="No drift report is recorded yet",
+                    purpose="Reporting the current monitoring capability boundary.",
+                ),
+                activities,
+                listener,
+            )
+            return ChatResponse(
+                intent=ChatIntent.DRIFT,
+                context=context,
+                message=(
+                    "No drift monitoring run has been recorded yet. Run the CLI with "
+                    "--monitor-drift to generate a report, then ask again."
+                ),
+                activities=activities,
+            )
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.COMPLETED,
+                label="Loaded the latest drift monitoring report",
+                purpose="Reporting which measures moved and which thresholds were crossed.",
+            ),
+            activities,
+            listener,
+        )
+        material = report.material_alerts
+        rows: list[list[str | int | float | None]] = [
+            [
+                alert.category.value,
+                alert.metric_name,
+                alert.breached,
+                alert.investigation_required,
+                alert.detail,
+            ]
+            for alert in report.alerts
+        ]
+        table = ChatTable(
+            title="Drift monitoring - data, behavior, operational, and configuration alerts",
+            columns=["category", "metric", "breached", "investigation_required", "detail"],
+            rows=rows,
+        )
+        if material:
+            message = (
+                f"{len(material)} measure(s) crossed their threshold and require investigation: "
+                + "; ".join(f"{a.metric_name} ({a.category.value})" for a in material)
+                + "."
+            )
+        else:
+            message = "No material drift was detected in the latest monitoring run."
+        return ChatResponse(
+            intent=ChatIntent.DRIFT,
             context=context,
             message=message,
             activities=activities,

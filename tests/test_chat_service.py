@@ -38,6 +38,7 @@ def service(tmp_path: Path) -> ChatService:
             analytics_database_path=tmp_path / "synthetic.duckdb",
             replay_directory=tmp_path / "replay",
             evaluation_directory=tmp_path / "evaluation",
+            drift_directory=tmp_path / "drift",
         )
     )
 
@@ -255,3 +256,40 @@ def test_evaluation_intent_without_a_stored_report_says_so(service: ChatService)
     response = service.submit("Show the evaluation results")
     assert response.intent is ChatIntent.EVALUATION
     assert "no evaluation" in response.message.lower()
+
+
+def test_drift_intent_reports_no_report_recorded_yet_honestly(service: ChatService) -> None:
+    response = service.submit("Show me drift monitoring", ChatContext())
+    assert response.intent is ChatIntent.DRIFT
+    assert "no drift monitoring run" in response.message.lower()
+
+
+def test_drift_intent_reports_material_alerts_from_a_saved_report(service: ChatService) -> None:
+    from datetime import UTC, datetime
+
+    from pricing_copilot.drift.contracts import DriftAlert, DriftAlertCategory, DriftReport
+    from pricing_copilot.drift.store import save_drift_report
+    from pricing_copilot.versions import current_configuration_versions
+
+    report = DriftReport(
+        report_version="drift-report-v1",
+        generated_at=datetime.now(UTC),
+        configuration_versions=current_configuration_versions(service.settings),
+        alerts=[
+            DriftAlert(
+                category=DriftAlertCategory.DATA,
+                metric_name="claim_severity",
+                breached=True,
+                investigation_required=True,
+                baseline_window="months 13-24",
+                current_window="month 25",
+                detail="Claim severity moved sharply.",
+            )
+        ],
+    )
+    save_drift_report(report, service.settings)
+
+    response = service.submit("Show me drift monitoring", ChatContext())
+    assert response.intent is ChatIntent.DRIFT
+    assert "1 measure" in response.message.lower()
+    assert response.tables
