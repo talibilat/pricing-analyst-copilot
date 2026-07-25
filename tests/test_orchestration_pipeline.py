@@ -1,6 +1,7 @@
 import asyncio
 from datetime import date
 from typing import Any
+from unittest.mock import patch
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.config import Settings
@@ -215,3 +216,16 @@ def test_prompt_injection_guardrail_is_visible_and_quarantined_from_the_ledger()
     assert versions["tool_version"]
     assert versions["dataset_version"]
     assert versions["recommendation_policy_version"]
+
+
+def test_missing_credentials_produces_a_safe_investigate_result_not_a_crash() -> None:
+    with patch(
+        "pricing_copilot.orchestration.pipeline.get_default_orchestration",
+        side_effect=RuntimeError("Azure OpenAI credentials are not configured."),
+    ):
+        result = run_governed_portfolio_workflow(_question(ScenarioName.CONTROLLED_INCREASE))
+
+    assert result.recommendation.action is RecommendationAction.INVESTIGATE
+    assert result.missing_evidence
+    assert "workflow:" in result.missing_evidence[0].reason
+    assert "unavailable" in result.missing_evidence[0].reason.lower()
