@@ -37,6 +37,7 @@ def test_cli_prints_investigate_result_for_supported_portfolio(
             "2026-01-01",
             "--end-month",
             "2026-06-01",
+            "--json",
         ]
     )
     assert exit_code == 0
@@ -85,3 +86,100 @@ def test_cli_save_trace_flag_writes_a_file(tmp_path: Path) -> None:
     )
     assert exit_code == 0
     assert trace_path.exists()
+
+
+def test_cli_default_output_is_a_readable_summary_not_raw_json(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = main(
+        [
+            "--product",
+            "personal_motor",
+            "--region",
+            "north_west",
+            "--segment",
+            "renewal",
+            "--start-month",
+            "2026-01-01",
+            "--end-month",
+            "2026-06-01",
+        ]
+    )
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Recommendation:" in out
+    with pytest.raises(json.JSONDecodeError):
+        json.loads(out)
+
+
+def test_cli_replay_flag_serves_a_recorded_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from datetime import date
+
+    from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
+    from pricing_copilot.config import Settings
+    from pricing_copilot.contracts import (
+        AnalysisPeriod,
+        GovernanceOutcome,
+        PortfolioQuestion,
+        Product,
+        Recommendation,
+        RecommendationAction,
+        Region,
+        ScenarioName,
+        Segment,
+        WorkflowResult,
+    )
+    from pricing_copilot.replay.store import save_replay_artifact
+
+    replay_dir = tmp_path / "replay"
+    monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(replay_dir))
+    question = PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+    )
+    save_replay_artifact(
+        ChatResponse(
+            intent=ChatIntent.PRICING_ANALYSIS,
+            context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+            message="Recommends increase.",
+            workflow_result=WorkflowResult(
+                question=question,
+                specialist_reports=[],
+                recommendation=Recommendation(
+                    action=RecommendationAction.INCREASE, rationale="Loss ratio rose."
+                ),
+                governance_outcome=GovernanceOutcome(approved=True),
+                missing_evidence=[],
+            ),
+        ),
+        Settings(replay_directory=replay_dir),
+    )
+
+    exit_code = main(
+        [
+            "--product",
+            "personal_motor",
+            "--region",
+            "north_west",
+            "--segment",
+            "renewal",
+            "--start-month",
+            "2025-07-01",
+            "--end-month",
+            "2025-12-01",
+            "--scenario",
+            "controlled_increase",
+            "--replay",
+            "--json",
+        ]
+    )
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    payload = json.loads(out)
+    assert payload["source"] == "replay"
+    assert payload["recommendation"]["action"] == "increase"
