@@ -33,7 +33,12 @@ from pricing_copilot.replay.store import save_replay_artifact
 
 @pytest.fixture
 def service(tmp_path: Path) -> ChatService:
-    return ChatService(Settings(analytics_database_path=tmp_path / "synthetic.duckdb"))
+    return ChatService(
+        Settings(
+            analytics_database_path=tmp_path / "synthetic.duckdb",
+            replay_directory=tmp_path / "replay",
+        )
+    )
 
 
 def _record_controlled_increase_replay(service: ChatService) -> None:

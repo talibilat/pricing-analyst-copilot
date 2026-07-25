@@ -1,7 +1,7 @@
 {
   "schema_version": "replay-artifact-schema-v1",
   "scenario": "controlled_increase",
-  "recorded_at": "2026-07-25T17:23:04.073914Z",
+  "recorded_at": "2026-07-25T17:32:48.719379Z",
   "configuration_versions": {
     "model_name": "gpt-5.4",
     "recommendation_version": "governed-multi-agent-v1",
@@ -18,7 +18,7 @@
   },
   "chat_response": {
     "intent": "pricing_analysis",
-    "message": "The governed workflow recommends **increase**. A modest portfolio-level price increase could be considered because underwriting performance deteriorated, with loss ratio moving from 71.8% to 82.4%, while quote-to-sale conversion moved from 21.9% to 22.0% and renewal retention moved from 88.0% to 88.1%, indicating little current evidence of broad volume stress at portfolio level [claims-north_west-2025-12-01, conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External market context was also associated with room for a modest move, with tracked competitors showing average price-index movement of +2.5% and supporting market and broker evidence describing a firming market, stable positioning, and limited reported resistance to a further small adjustment [competitors-north_west-2025-12-01, doc-market-2025-11, doc-broker-2025-12, doc-broker-2025-09]. Repair-cost intelligence was consistent with ongoing severity pressure in the background [doc-repair-cost-2025-10]. The suggested range remains within the stated policy limit of +/-5% and should be treated as decision support for analyst review, not an implemented change [competitors-north_west-2025-12-01, claims-north_west-2025-12-01]. This is decision support only and needs an analyst’s explicit confirmation before any action is recorded.",
+    "message": "The governed workflow recommends **increase**. A modest increase appears supportable because claims performance weakened while trading indicators and market context remained broadly stable. The loss ratio moved from 71.8% to 82.4%, indicating materially weaker profitability, and the claims specialist also reported higher average severity and incurred loss with broadly stable frequency, so deterioration was associated more with claim cost than volume [claims-north_west-2025-12-01]. At the same time, quote-to-sale conversion moved from 21.9% to 22.0% and renewal retention moved from 88.0% to 88.1%, which suggests no clear evidence of current trading stress in aggregate [conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External positioning is also consistent with a modest upward move: tracked competitors showed average price-index movement of +2.5%, and supporting market, broker, repair-cost, and feedback evidence described moderate market firming, stable competitive positioning, repair-cost inflation, limited broker pushback, and no concentrated pattern of price complaints [competitors-north_west-2025-12-01, doc-market-2025-11, doc-repair-cost-2025-10, doc-broker-2025-12, doc-broker-2025-09, doc-feedback-2025-11]. The proposed 2% to 4% range stays within the stated policy limit and is directionally consistent with the prior recorded +2.0% pricing action [pricing-history-2024-06-01]. This is decision support only and needs an analyst’s explicit confirmation before any action is recorded.",
     "context": {
       "scenario": "controlled_increase",
       "force_replay": false
@@ -80,33 +80,6 @@
       },
       {
         "status": "working",
-        "label": "Getting information from claims performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": null,
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "completed",
-        "label": "Getting information from claims performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": null,
-        "source": null,
-        "trace_id": null,
-        "duration_ms": 0.3493339754641056
-      },
-      {
-        "status": "working",
-        "label": "Getting information from claims performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "claims-specialist",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "working",
         "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
@@ -121,13 +94,40 @@
         "agent": null,
         "source": null,
         "trace_id": null,
-        "duration_ms": 0.7896251045167446
+        "duration_ms": 0.3387080505490303
       },
       {
         "status": "working",
         "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "pricing-history-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 0.2655000425875187
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "claims-specialist",
         "source": null,
         "trace_id": null,
         "duration_ms": null
@@ -157,7 +157,7 @@
         "agent": null,
         "source": null,
         "trace_id": null,
-        "duration_ms": 0.641584163531661
+        "duration_ms": 0.3292500041425228
       },
       {
         "status": "completed",
@@ -166,7 +166,7 @@
         "agent": null,
         "source": null,
         "trace_id": null,
-        "duration_ms": 0.6364160217344761
+        "duration_ms": 0.32654195092618465
       },
       {
         "status": "working",
@@ -193,7 +193,7 @@
         "agent": null,
         "source": null,
         "trace_id": null,
-        "duration_ms": 0.648624962195754
+        "duration_ms": 0.27658301405608654
       },
       {
         "status": "working",
@@ -220,7 +220,7 @@
         "agent": "pricing-history-specialist",
         "source": null,
         "trace_id": null,
-        "duration_ms": 3431.5357920713723
+        "duration_ms": 3219.784958055243
       },
       {
         "status": "completed",
@@ -238,25 +238,7 @@
         "agent": "claims-specialist",
         "source": null,
         "trace_id": null,
-        "duration_ms": 3478.717542020604
-      },
-      {
-        "status": "completed",
-        "label": "Getting information from conversion performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "conversion-specialist",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "completed",
-        "label": "Getting information from conversion performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "conversion-specialist",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": 6522.228209068999
+        "duration_ms": 3718.573624966666
       },
       {
         "status": "completed",
@@ -274,7 +256,25 @@
         "agent": "market-intelligence-specialist",
         "source": null,
         "trace_id": null,
-        "duration_ms": 7499.162542168051
+        "duration_ms": 6460.634083021432
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "conversion-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "conversion-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 7142.3124158754945
       },
       {
         "status": "working",
@@ -301,34 +301,7 @@
         "agent": "recommendation-agent",
         "source": null,
         "trace_id": null,
-        "duration_ms": 10868.96379198879
-      },
-      {
-        "status": "working",
-        "label": "Preparing a governed pricing recommendation",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "recommendation-agent",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "completed",
-        "label": "Preparing a governed pricing recommendation",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "recommendation-agent",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "completed",
-        "label": "Preparing a governed pricing recommendation",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "recommendation-agent",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": 10682.862874818966
+        "duration_ms": 10898.011041805148
       },
       {
         "status": "working",
@@ -355,7 +328,7 @@
         "agent": "governance-agent",
         "source": null,
         "trace_id": null,
-        "duration_ms": 1487.257916945964
+        "duration_ms": 1328.4342088736594
       }
     ],
     "tables": [],
@@ -365,17 +338,17 @@
       "retention-north_west-2025-12-01",
       "competitors-north_west-2025-12-01",
       "pricing-history-2024-06-01",
+      "doc-market-2025-11",
       "doc-repair-cost-2025-10",
       "doc-broker-2025-12",
       "doc-broker-2025-09",
-      "doc-feedback-2025-11",
-      "doc-market-2025-11"
+      "doc-feedback-2025-11"
     ],
     "investigation_areas": [
-      "Validate whether the loss-ratio deterioration is persistent in the most recent months or affected by timing/noise within the observed period [claims-north_west-2025-12-01].",
-      "Check whether the flat-to-slightly-weaker new business conversion trend differs materially from renewal behavior before finalizing any portfolio-level adjustment [conversion-north_west-2025-12-01].",
-      "Review competitor monitoring for any change from the current stable ranking and +2.5% average movement before final analyst sign-off [competitors-north_west-2025-12-01, doc-market-2025-11].",
-      "Reassess customer and broker signals for any emerging affordability or fairness themes that were not concentrated in the current feedback set [doc-feedback-2025-11, doc-broker-2025-12, doc-broker-2025-09]."
+      "Segment-level price elasticity for new business versus renewals, given mixed conversion movement in the specialist summary [conversion-north_west-2025-12-01].",
+      "Current severity drivers and whether repair-cost inflation remains consistent with recent claims experience [claims-north_west-2025-12-01, doc-repair-cost-2025-10].",
+      "Competitor follow-through after the observed +2.5% average index movement, to confirm market positioning remains stable if analysts consider the upper end of the range [competitors-north_west-2025-12-01, doc-market-2025-11].",
+      "Broker and customer reactions after any analyst-selected change, since prior broker notes and feedback were calm but not uniformly conclusive across all customers [doc-broker-2025-12, doc-broker-2025-09, doc-feedback-2025-11]."
     ],
     "requires_clarification": false,
     "refused": false,
@@ -397,7 +370,7 @@
           "evidence_ids": [
             "claims-north_west-2025-12-01"
           ],
-          "summary": "For the period 2024-01-01 to 2025-12-01, claim frequency was broadly stable, moving from 0.0844 to 0.0840, a decrease of 0.55%. Average severity increased from £1,615.2992 to £1,863.9629, up 15.39%. Incurred loss increased from £682,120.0492 to £781,847.0825, up 14.62%. Loss ratio increased from 0.7183 to 0.8244, up 14.77%. Overall, the deterioration in incurred loss and loss ratio coincided with materially higher average severity, while claim frequency was essentially flat.",
+          "summary": "For the period 2024-01-01 to 2025-12-01, claim frequency was broadly stable, moving from 0.0844 to 0.0840, a change of -0.55%. Average severity increased from £1,615.2992 to £1,863.9629, up 15.39%. Incurred loss increased from £682,120.0492 to £781,847.0825, up 14.62%. Loss ratio increased from 0.7183 to 0.8244, up 14.77%. Overall, weaker claims performance was associated with materially higher average severity, higher incurred loss, and a higher loss ratio, while claim frequency remained essentially flat.",
           "missing_evidence": []
         },
         {
@@ -406,7 +379,7 @@
           "evidence_ids": [
             "conversion-north_west-2025-12-01"
           ],
-          "summary": "For the period 2024-01-01 to 2025-12-01, quote-to-sale conversion was 21.85% at baseline and 21.95% currently, a 0.46% increase. Renewal retention was 87.97% at baseline and 88.06% currently, a 0.11% increase. Average quoted premium moved from £621.58 to £620.91, a 0.11% decrease. The small improvement in conversion coincided with a slight reduction in average quoted premium. Segment results were mixed: new business conversion was broadly flat, moving from 14.99% to 14.98% (-0.06%), while the renewal segment improved from 21.85% to 21.95% (0.46%). Overall, the portfolio showed marginally stronger conversion and retention, with improvement concentrated in renewals rather than new business.",
+          "summary": "For the period 2024-01-01 to 2025-12-01, quote-to-sale conversion was 21.85% at baseline and 21.95% currently, a 0.46% increase. Renewal retention was 87.97% at baseline and 88.06% currently, a 0.11% increase. Average quoted premium was £621.5842 at baseline and £620.9067 currently, a 0.11% decrease.\n\nThe small improvement in quote-to-sale conversion coincided with a slight reduction in average quoted premium. Retention was broadly stable, with only a marginal uplift over the period.\n\nBy segment, new business conversion was 14.99% at baseline and 14.98% currently, a 0.06% decrease, while the renewal segment moved from 21.85% to 21.95%, a 0.46% increase. This indicates the stronger movement was in renewals, while new business was essentially flat to slightly weaker.",
           "missing_evidence": []
         },
         {
@@ -415,12 +388,12 @@
           "evidence_ids": [
             "competitors-north_west-2025-12-01",
             "doc-market-2025-11",
+            "doc-repair-cost-2025-10",
             "doc-broker-2025-12",
             "doc-broker-2025-09",
-            "doc-feedback-2025-11",
-            "doc-repair-cost-2025-10"
+            "doc-feedback-2025-11"
           ],
-          "summary": "Across the period from 2024-01-01 to 2025-12-01, the fictional competitor set showed modest upward price-index movement with stable rank positions. Northgate Cover increased its price index by 2.62% and remained rank 1, Meridian Insure increased by 2.37% and remained rank 2, and Bracken Mutual increased by 2.43% and remained rank 3. This indicates a broadly firming fictional market with no change in relative ordering among those peers. \n\nRetrieved market intelligence was consistent with that pattern. A market report stated that fictional competitors Meridian Insure, Northgate Cover, and Bracken Mutual had each firmed personal motor renewal pricing by roughly 2% to 3% over the past quarter, with no fictional competitor reducing pricing in that window. Broker notes also said North West personal motor pricing remained competitively positioned relative to fictional peers despite modest recent increases across the market, and that no broker flagged retention risk from a further small adjustment. \n\nCustomer and broker signals were relatively stable in this period. Broker feedback said a previous 2% portfolio-level renewal increase earlier in the year was associated with limited customer pushback and no material shift in quote volumes. Aggregate customer feedback showed that most renewal comments focused on claims-handling speed and overall satisfaction, while only a small minority referenced price and there was no concentrated pattern of fairness or affordability complaints. \n\nCost-side intelligence also pointed to continued external pressure. A repair-cost report said parts and labour costs for common personal motor repairs had risen materially over the past twelve months, consistent with wider claims-severity inflation across the industry. \n\nOverall, the portfolio period was associated with a fictional competitor market that was firming by low single digits, stable competitive ranking, limited reported customer resistance to modest increases, and ongoing repair-cost inflation in the background. Taken together, the retrieved evidence was consistent with a modest pricing adjustment being in line with current fictional market conditions rather than an aggressive repositioning.",
+          "summary": "Across the portfolio period from 2024-01-01 to 2025-12-01, fictional competitors all showed modest upward price-index movement while maintaining unchanged rank positions. Northgate Cover remained rank 1 with a price-index movement of 2.62%, Meridian Insure remained rank 2 with movement of 2.37%, and Bracken Mutual remained rank 3 with movement of 2.43%. This indicates stable relative market positioning alongside moderate market-wide price firming rather than rank disruption. \n\nRetrieved market intelligence was consistent with that pattern. A market report noted that these fictional competitors had each firmed personal motor renewal pricing by roughly 2% to 3% over the past quarter, with no fictional competitor reducing pricing in that window, and described the overall market position as consistent with a modest portfolio-wide pricing adjustment rather than an aggressive move. Repair-cost reporting also stated that parts and labour costs for common personal motor repairs had risen materially over the past twelve months, which was associated with wider claims-severity inflation across the industry. \n\nBroker evidence suggested the portfolio remained competitively positioned relative to fictional peers despite modest recent increases across the market. Brokers also reported that an earlier 2% portfolio-level renewal increase coincided with limited customer pushback and no material shift in quote volumes. Customer feedback was similarly calm: most renewal comments focused on claims-handling speed and overall satisfaction, while only a small minority referenced price and there was no concentrated pattern of fairness or affordability complaints in this period. \n\nOverall, fictional competitor movement and retrieved intelligence together point to a market environment where modest pricing increases coincided with stable competitive ordering, continued broker support, and limited observable customer price sensitivity in this period.",
           "missing_evidence": []
         },
         {
@@ -429,36 +402,37 @@
           "evidence_ids": [
             "pricing-history-2024-06-01"
           ],
-          "summary": "On 2024-06-01, the portfolio recorded one prior pricing action: a 2.0% renewal price increase at portfolio level, noted as a response to early claims-inflation signals. This action was associated with a 0.6% decrease in conversion and a 1.0% decrease in loss ratio. [Evidence: pricing-history-2024-06-01]",
+          "summary": "On 2024-06-01, the portfolio recorded one prior pricing action: a 2.0% renewal price increase at portfolio level. The recorded rationale was to offset early claims-inflation signals. This action was associated with a 0.6% decrease in conversion and a 1.0% decrease in loss ratio.",
           "missing_evidence": []
         }
       ],
       "recommendation": {
         "action": "increase",
         "price_range": {
-          "lower_pct": 1.0,
-          "upper_pct": 3.0
+          "lower_pct": 2.0,
+          "upper_pct": 4.0
         },
-        "rationale": "A modest portfolio-level price increase could be considered because underwriting performance deteriorated, with loss ratio moving from 71.8% to 82.4%, while quote-to-sale conversion moved from 21.9% to 22.0% and renewal retention moved from 88.0% to 88.1%, indicating little current evidence of broad volume stress at portfolio level [claims-north_west-2025-12-01, conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External market context was also associated with room for a modest move, with tracked competitors showing average price-index movement of +2.5% and supporting market and broker evidence describing a firming market, stable positioning, and limited reported resistance to a further small adjustment [competitors-north_west-2025-12-01, doc-market-2025-11, doc-broker-2025-12, doc-broker-2025-09]. Repair-cost intelligence was consistent with ongoing severity pressure in the background [doc-repair-cost-2025-10]. The suggested range remains within the stated policy limit of +/-5% and should be treated as decision support for analyst review, not an implemented change [competitors-north_west-2025-12-01, claims-north_west-2025-12-01].",
+        "rationale": "A modest increase appears supportable because claims performance weakened while trading indicators and market context remained broadly stable. The loss ratio moved from 71.8% to 82.4%, indicating materially weaker profitability, and the claims specialist also reported higher average severity and incurred loss with broadly stable frequency, so deterioration was associated more with claim cost than volume [claims-north_west-2025-12-01]. At the same time, quote-to-sale conversion moved from 21.9% to 22.0% and renewal retention moved from 88.0% to 88.1%, which suggests no clear evidence of current trading stress in aggregate [conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External positioning is also consistent with a modest upward move: tracked competitors showed average price-index movement of +2.5%, and supporting market, broker, repair-cost, and feedback evidence described moderate market firming, stable competitive positioning, repair-cost inflation, limited broker pushback, and no concentrated pattern of price complaints [competitors-north_west-2025-12-01, doc-market-2025-11, doc-repair-cost-2025-10, doc-broker-2025-12, doc-broker-2025-09, doc-feedback-2025-11]. The proposed 2% to 4% range stays within the stated policy limit and is directionally consistent with the prior recorded +2.0% pricing action [pricing-history-2024-06-01].",
         "counter_evidence": [
-          "Claim frequency was described as broadly stable rather than worsening, so the claims deterioration appears concentrated in severity rather than frequency [claims-north_west-2025-12-01].",
-          "Average quoted premium was described as slightly lower while conversion improved only marginally, so current demand evidence is supportive but not emphatic [conversion-north_west-2025-12-01].",
-          "New business conversion was described as broadly flat to slightly weaker, with improvement concentrated in renewals, which is a mixed signal for broader elasticity [conversion-north_west-2025-12-01].",
-          "The competitor evidence points to low-single-digit market firming rather than a large repricing window, which argues for modesty rather than an aggressive move [competitors-north_west-2025-12-01, doc-market-2025-11].",
-          "A prior portfolio-level +2.0% pricing action was associated with a 0.6% decrease in conversion, which indicates some risk of softer demand response after another increase [pricing-history-2024-06-01].",
-          "Customer feedback was described as mostly focused on service themes rather than price, but that does not rule out latent sensitivity if pricing is pushed too far [doc-feedback-2025-11]."
+          "Quote-to-sale conversion improved slightly from 21.9% to 22.0%, which means current aggregate conversion does not itself indicate a need for urgent corrective pricing action [conversion-north_west-2025-12-01].",
+          "Renewal retention was broadly stable at 88.0% to 88.1%, so customer stickiness has not weakened materially in the measured period [retention-north_west-2025-12-01].",
+          "The conversion specialist reported that average quoted premium was slightly lower while conversion improved slightly, and new business conversion was essentially flat to slightly weaker, so trading performance is mixed rather than uniformly strong [conversion-north_west-2025-12-01].",
+          "The prior +2.0% pricing action was associated with a 0.6% decrease in conversion, so another increase may coincide with some trading softening even though the same record also noted a 1.0% decrease in loss ratio [pricing-history-2024-06-01].",
+          "Market intelligence described the environment as consistent with a modest pricing adjustment rather than an aggressive move, which argues against using the full policy limit without further support [competitors-north_west-2025-12-01, doc-market-2025-11].",
+          "Customer feedback was calm rather than explicitly price-insensitive, so the absence of concentrated complaints should not be treated as proof that all segments would absorb an increase equally well [doc-feedback-2025-11]."
         ],
         "conditions": [
-          "Keep any consideration to a portfolio-level adjustment within +1.0% to +3.0%, which is inside the policy limit and broadly aligned with the observed competitor average movement of +2.5% [competitors-north_west-2025-12-01].",
-          "Analyst review should confirm that renewal retention and quote-to-sale conversion remain near current levels after any contemplated move, given the prior +2.0% action was associated with a 0.6% decrease in conversion [conversion-north_west-2025-12-01, retention-north_west-2025-12-01, pricing-history-2024-06-01].",
-          "Analyst review should ensure the rationale remains supported by ongoing severity and repair-cost monitoring, since the core underwriting pressure appears linked to claims-cost inflation rather than frequency movement [claims-north_west-2025-12-01, doc-repair-cost-2025-10].",
+          "Keep any proposed adjustment within a modest range aligned to observed competitor movement and the policy limit [competitors-north_west-2025-12-01].",
+          "A qualified analyst should review segment-level impacts, especially because the conversion specialist reported renewals were firmer while new business was essentially flat to slightly weaker [conversion-north_west-2025-12-01].",
+          "Monitor post-change conversion and retention closely given the recorded prior association between a +2.0% increase and a 0.6% decrease in conversion [pricing-history-2024-06-01].",
+          "Give particular attention to whether claims severity trends remain elevated, since the claims deterioration was associated with higher claim cost rather than higher frequency [claims-north_west-2025-12-01].",
           "Requires explicit approval from a qualified pricing analyst before any action; the copilot cannot execute a pricing change."
         ],
         "investigation_areas": [
-          "Validate whether the loss-ratio deterioration is persistent in the most recent months or affected by timing/noise within the observed period [claims-north_west-2025-12-01].",
-          "Check whether the flat-to-slightly-weaker new business conversion trend differs materially from renewal behavior before finalizing any portfolio-level adjustment [conversion-north_west-2025-12-01].",
-          "Review competitor monitoring for any change from the current stable ranking and +2.5% average movement before final analyst sign-off [competitors-north_west-2025-12-01, doc-market-2025-11].",
-          "Reassess customer and broker signals for any emerging affordability or fairness themes that were not concentrated in the current feedback set [doc-feedback-2025-11, doc-broker-2025-12, doc-broker-2025-09]."
+          "Segment-level price elasticity for new business versus renewals, given mixed conversion movement in the specialist summary [conversion-north_west-2025-12-01].",
+          "Current severity drivers and whether repair-cost inflation remains consistent with recent claims experience [claims-north_west-2025-12-01, doc-repair-cost-2025-10].",
+          "Competitor follow-through after the observed +2.5% average index movement, to confirm market positioning remains stable if analysts consider the upper end of the range [competitors-north_west-2025-12-01, doc-market-2025-11].",
+          "Broker and customer reactions after any analyst-selected change, since prior broker notes and feedback were calm but not uniformly conclusive across all customers [doc-broker-2025-12, doc-broker-2025-09, doc-feedback-2025-11]."
         ],
         "cited_evidence_ids": [
           "claims-north_west-2025-12-01",
@@ -466,11 +440,11 @@
           "retention-north_west-2025-12-01",
           "competitors-north_west-2025-12-01",
           "pricing-history-2024-06-01",
+          "doc-market-2025-11",
           "doc-repair-cost-2025-10",
           "doc-broker-2025-12",
           "doc-broker-2025-09",
-          "doc-feedback-2025-11",
-          "doc-market-2025-11"
+          "doc-feedback-2025-11"
         ],
         "confidence": {
           "evidence_coverage": 1.0,
@@ -2147,7 +2121,7 @@
             "source_type": "repair_cost_report",
             "source_reference": "Synthetic UK Vehicle Repair Cost Index - Autumn 2025",
             "source_date": "2025-10-01",
-            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "retrieval_timestamp": "2026-07-25T17:32:36.478167Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
@@ -2160,7 +2134,7 @@
             "source_type": "broker_note",
             "source_reference": "Broker Panel Observations - Competitive Positioning",
             "source_date": "2025-12-05",
-            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "retrieval_timestamp": "2026-07-25T17:32:36.478167Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
@@ -2173,7 +2147,7 @@
             "source_type": "broker_note",
             "source_reference": "Broker Panel Observations - North West Motor Renewals",
             "source_date": "2025-09-01",
-            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "retrieval_timestamp": "2026-07-25T17:32:36.478167Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
@@ -2186,7 +2160,7 @@
             "source_type": "customer_feedback",
             "source_reference": "Aggregate North West Renewal Feedback Themes - November 2025",
             "source_date": "2025-11-15",
-            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "retrieval_timestamp": "2026-07-25T17:32:36.478167Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
@@ -2199,7 +2173,7 @@
             "source_type": "market_report",
             "source_reference": "North West Personal Motor Market Pulse - November 2025",
             "source_date": "2025-11-01",
-            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "retrieval_timestamp": "2026-07-25T17:32:36.478167Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
@@ -2210,10 +2184,10 @@
         ]
       },
       "execution_trace": {
-        "trace_id": "trace_02720b8178dd4c60a3b1e58fb3d111db",
+        "trace_id": "trace_c1f0dbbbffe54b95b04d616d9736ac9e",
         "workflow_name": "Governed Pricing Decision Copilot",
-        "started_at": "2026-07-25T17:22:32.506504Z",
-        "completed_at": "2026-07-25T17:23:04.071371Z",
+        "started_at": "2026-07-25T17:32:29.101833Z",
+        "completed_at": "2026-07-25T17:32:48.715493Z",
         "status": "completed",
         "configuration_versions": {
           "model_name": "gpt-5.4",
@@ -2236,16 +2210,16 @@
           "max_retries": 1
         },
         "usage": {
-          "requests": 11,
-          "input_tokens": 12834,
-          "output_tokens": 3337,
-          "total_tokens": 16171,
+          "requests": 10,
+          "input_tokens": 10370,
+          "output_tokens": 2221,
+          "total_tokens": 12591,
           "estimated_cost_gbp": 0.0,
           "pricing_configured": false
         },
         "events": [
           {
-            "timestamp": "2026-07-25T17:22:32.516459Z",
+            "timestamp": "2026-07-25T17:32:29.112917Z",
             "kind": "agents_sdk",
             "name": "trace",
             "status": "started",
@@ -2253,7 +2227,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:32.516509Z",
+            "timestamp": "2026-07-25T17:32:29.112961Z",
             "kind": "routing",
             "name": "portfolio-supervisor",
             "status": "started",
@@ -2263,7 +2237,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.520387Z",
+            "timestamp": "2026-07-25T17:32:29.332987Z",
             "kind": "guardrail",
             "name": "untrusted_document",
             "status": "blocked",
@@ -2274,7 +2248,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522027Z",
+            "timestamp": "2026-07-25T17:32:29.334722Z",
             "kind": "routing",
             "name": "claims",
             "status": "scheduled",
@@ -2284,7 +2258,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522036Z",
+            "timestamp": "2026-07-25T17:32:29.334734Z",
             "kind": "routing",
             "name": "conversion",
             "status": "scheduled",
@@ -2294,7 +2268,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522039Z",
+            "timestamp": "2026-07-25T17:32:29.334737Z",
             "kind": "routing",
             "name": "market_intelligence",
             "status": "scheduled",
@@ -2304,7 +2278,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522041Z",
+            "timestamp": "2026-07-25T17:32:29.334739Z",
             "kind": "routing",
             "name": "pricing_history",
             "status": "scheduled",
@@ -2314,7 +2288,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522384Z",
+            "timestamp": "2026-07-25T17:32:29.335144Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2322,7 +2296,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522620Z",
+            "timestamp": "2026-07-25T17:32:29.335397Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2330,7 +2304,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522744Z",
+            "timestamp": "2026-07-25T17:32:29.335529Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2338,7 +2312,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.522859Z",
+            "timestamp": "2026-07-25T17:32:29.335642Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2346,7 +2320,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523172Z",
+            "timestamp": "2026-07-25T17:32:29.335971Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2354,7 +2328,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523193Z",
+            "timestamp": "2026-07-25T17:32:29.335991Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2362,7 +2336,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523306Z",
+            "timestamp": "2026-07-25T17:32:29.336112Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2370,7 +2344,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523323Z",
+            "timestamp": "2026-07-25T17:32:29.336128Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2378,7 +2352,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523422Z",
+            "timestamp": "2026-07-25T17:32:29.336231Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2386,7 +2360,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523437Z",
+            "timestamp": "2026-07-25T17:32:29.336246Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2394,7 +2368,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523530Z",
+            "timestamp": "2026-07-25T17:32:29.336341Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2402,7 +2376,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.523545Z",
+            "timestamp": "2026-07-25T17:32:29.336356Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2410,7 +2384,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.524169Z",
+            "timestamp": "2026-07-25T17:32:29.337048Z",
             "kind": "model_call",
             "name": "claims-specialist",
             "status": "started",
@@ -2420,7 +2394,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.524182Z",
+            "timestamp": "2026-07-25T17:32:29.337066Z",
             "kind": "model_call",
             "name": "conversion-specialist",
             "status": "started",
@@ -2430,7 +2404,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.524187Z",
+            "timestamp": "2026-07-25T17:32:29.337072Z",
             "kind": "model_call",
             "name": "market-intelligence-specialist",
             "status": "started",
@@ -2440,7 +2414,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.524191Z",
+            "timestamp": "2026-07-25T17:32:29.337076Z",
             "kind": "model_call",
             "name": "pricing-history-specialist",
             "status": "started",
@@ -2450,7 +2424,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:33.524312Z",
+            "timestamp": "2026-07-25T17:32:29.337214Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2458,7 +2432,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.722284Z",
+            "timestamp": "2026-07-25T17:32:29.526322Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2466,7 +2440,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.731099Z",
+            "timestamp": "2026-07-25T17:32:29.526756Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2474,7 +2448,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:33.735405Z",
+            "timestamp": "2026-07-25T17:32:29.536076Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2482,7 +2456,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:34.973275Z",
+            "timestamp": "2026-07-25T17:32:30.828687Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2492,7 +2466,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:34.974061Z",
+            "timestamp": "2026-07-25T17:32:30.829290Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "started",
@@ -2500,92 +2474,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:34.974150Z",
-            "kind": "tool_call",
-            "name": "get_claims_metrics",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "agent": "claims-specialist",
-              "tool_call": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:34.974499Z",
-            "kind": "tool_call",
-            "name": "get_claims_metrics",
-            "status": "completed",
-            "duration_ms": 0.3493339754641056,
-            "details": {
-              "agent": "claims-specialist"
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:34.974580Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:34.974792Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:34.974958Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:22:34.975374Z",
-            "kind": "model_call",
-            "name": "claims-specialist",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "model_call": 2
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:34.975488Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:22:35.220682Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:35.221806Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:22:35.221977Z",
+            "timestamp": "2026-07-25T17:32:30.829360Z",
             "kind": "tool_call",
             "name": "get_pricing_history",
             "status": "started",
@@ -2596,17 +2485,17 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.222765Z",
+            "timestamp": "2026-07-25T17:32:30.829699Z",
             "kind": "tool_call",
             "name": "get_pricing_history",
             "status": "completed",
-            "duration_ms": 0.7896251045167446,
+            "duration_ms": 0.3387080505490303,
             "details": {
               "agent": "pricing-history-specialist"
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.222974Z",
+            "timestamp": "2026-07-25T17:32:30.829786Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "completed",
@@ -2616,7 +2505,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.223403Z",
+            "timestamp": "2026-07-25T17:32:30.829984Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2626,7 +2515,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.223756Z",
+            "timestamp": "2026-07-25T17:32:30.830134Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2634,7 +2523,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:35.224701Z",
+            "timestamp": "2026-07-25T17:32:30.830558Z",
             "kind": "model_call",
             "name": "pricing-history-specialist",
             "status": "started",
@@ -2644,7 +2533,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.225052Z",
+            "timestamp": "2026-07-25T17:32:30.830675Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2652,7 +2541,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:35.238131Z",
+            "timestamp": "2026-07-25T17:32:30.914415Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2662,7 +2551,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.238701Z",
+            "timestamp": "2026-07-25T17:32:30.915903Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "started",
@@ -2670,7 +2559,84 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:35.238779Z",
+            "timestamp": "2026-07-25T17:32:30.915959Z",
+            "kind": "tool_call",
+            "name": "get_claims_metrics",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "claims-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.916225Z",
+            "kind": "tool_call",
+            "name": "get_claims_metrics",
+            "status": "completed",
+            "duration_ms": 0.2655000425875187,
+            "details": {
+              "agent": "claims-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.916295Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.916440Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.916539Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.916845Z",
+            "kind": "model_call",
+            "name": "claims-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.916931Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.967312Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.967619Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "started",
@@ -2678,7 +2644,15 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:35.238835Z",
+            "timestamp": "2026-07-25T17:32:30.967652Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:32:30.967680Z",
             "kind": "tool_call",
             "name": "get_competitor_metrics",
             "status": "started",
@@ -2689,7 +2663,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.238862Z",
+            "timestamp": "2026-07-25T17:32:30.967692Z",
             "kind": "tool_call",
             "name": "get_market_intelligence_documents",
             "status": "started",
@@ -2700,27 +2674,27 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.239476Z",
+            "timestamp": "2026-07-25T17:32:30.968010Z",
             "kind": "tool_call",
             "name": "get_competitor_metrics",
             "status": "completed",
-            "duration_ms": 0.641584163531661,
+            "duration_ms": 0.3292500041425228,
             "details": {
               "agent": "market-intelligence-specialist"
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.239498Z",
+            "timestamp": "2026-07-25T17:32:30.968018Z",
             "kind": "tool_call",
             "name": "get_market_intelligence_documents",
             "status": "completed",
-            "duration_ms": 0.6364160217344761,
+            "duration_ms": 0.32654195092618465,
             "details": {
               "agent": "market-intelligence-specialist"
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.239617Z",
+            "timestamp": "2026-07-25T17:32:30.968110Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "completed",
@@ -2730,7 +2704,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.239635Z",
+            "timestamp": "2026-07-25T17:32:30.968124Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "completed",
@@ -2740,7 +2714,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.239866Z",
+            "timestamp": "2026-07-25T17:32:30.968272Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2750,7 +2724,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.240019Z",
+            "timestamp": "2026-07-25T17:32:30.968401Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2758,7 +2732,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:35.240548Z",
+            "timestamp": "2026-07-25T17:32:30.968744Z",
             "kind": "model_call",
             "name": "market-intelligence-specialist",
             "status": "started",
@@ -2768,7 +2742,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:35.240698Z",
+            "timestamp": "2026-07-25T17:32:30.968843Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2776,7 +2750,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:36.171416Z",
+            "timestamp": "2026-07-25T17:32:31.358210Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2786,7 +2760,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.171962Z",
+            "timestamp": "2026-07-25T17:32:31.358571Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "started",
@@ -2794,7 +2768,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:36.172042Z",
+            "timestamp": "2026-07-25T17:32:31.358617Z",
             "kind": "tool_call",
             "name": "get_conversion_metrics",
             "status": "started",
@@ -2805,17 +2779,17 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.172691Z",
+            "timestamp": "2026-07-25T17:32:31.358893Z",
             "kind": "tool_call",
             "name": "get_conversion_metrics",
             "status": "completed",
-            "duration_ms": 0.648624962195754,
+            "duration_ms": 0.27658301405608654,
             "details": {
               "agent": "conversion-specialist"
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.172833Z",
+            "timestamp": "2026-07-25T17:32:31.358967Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "completed",
@@ -2825,7 +2799,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.173092Z",
+            "timestamp": "2026-07-25T17:32:31.359104Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2835,7 +2809,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.173302Z",
+            "timestamp": "2026-07-25T17:32:31.359201Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2843,7 +2817,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:36.173967Z",
+            "timestamp": "2026-07-25T17:32:31.359666Z",
             "kind": "model_call",
             "name": "conversion-specialist",
             "status": "started",
@@ -2853,7 +2827,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.174161Z",
+            "timestamp": "2026-07-25T17:32:31.359763Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2861,7 +2835,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:36.953027Z",
+            "timestamp": "2026-07-25T17:32:32.553919Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2871,7 +2845,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.953942Z",
+            "timestamp": "2026-07-25T17:32:32.554892Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2881,7 +2855,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.954227Z",
+            "timestamp": "2026-07-25T17:32:32.555218Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -2891,7 +2865,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.954255Z",
+            "timestamp": "2026-07-25T17:32:32.555257Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -2901,7 +2875,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.954363Z",
+            "timestamp": "2026-07-25T17:32:32.555397Z",
             "kind": "model_call",
             "name": "pricing-history-specialist",
             "status": "completed",
@@ -2909,17 +2883,17 @@
             "details": {
               "requests": 2,
               "input_tokens": 980,
-              "output_tokens": 126,
-              "total_tokens": 1106,
+              "output_tokens": 113,
+              "total_tokens": 1093,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.954385Z",
+            "timestamp": "2026-07-25T17:32:32.555419Z",
             "kind": "routing",
             "name": "pricing-history-specialist",
             "status": "completed",
-            "duration_ms": 3431.5357920713723,
+            "duration_ms": 3219.784958055243,
             "details": {
               "turn_limit": 6,
               "tool_calls": 1,
@@ -2928,7 +2902,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:36.999351Z",
+            "timestamp": "2026-07-25T17:32:33.052187Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2938,7 +2912,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:37.000238Z",
+            "timestamp": "2026-07-25T17:32:33.052898Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2948,7 +2922,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:37.000628Z",
+            "timestamp": "2026-07-25T17:32:33.053232Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -2958,7 +2932,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:37.000697Z",
+            "timestamp": "2026-07-25T17:32:33.053280Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -2968,7 +2942,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:37.000819Z",
+            "timestamp": "2026-07-25T17:32:33.053388Z",
             "kind": "model_call",
             "name": "claims-specialist",
             "status": "completed",
@@ -2976,17 +2950,17 @@
             "details": {
               "requests": 2,
               "input_tokens": 1080,
-              "output_tokens": 195,
-              "total_tokens": 1275,
+              "output_tokens": 200,
+              "total_tokens": 1280,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:37.000855Z",
+            "timestamp": "2026-07-25T17:32:33.053417Z",
             "kind": "routing",
             "name": "claims-specialist",
             "status": "completed",
-            "duration_ms": 3478.717542020604,
+            "duration_ms": 3718.573624966666,
             "details": {
               "turn_limit": 6,
               "tool_calls": 1,
@@ -2995,7 +2969,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:40.044241Z",
+            "timestamp": "2026-07-25T17:32:35.795534Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -3005,7 +2979,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:40.044640Z",
+            "timestamp": "2026-07-25T17:32:35.795968Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -3015,7 +2989,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:40.044777Z",
+            "timestamp": "2026-07-25T17:32:35.796106Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -3025,7 +2999,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:40.044796Z",
+            "timestamp": "2026-07-25T17:32:35.796125Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -3035,74 +3009,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:40.044826Z",
-            "kind": "model_call",
-            "name": "conversion-specialist",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "requests": 2,
-              "input_tokens": 1135,
-              "output_tokens": 233,
-              "total_tokens": 1368,
-              "estimated_cost_gbp": 0.0
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:40.044840Z",
-            "kind": "routing",
-            "name": "conversion-specialist",
-            "status": "completed",
-            "duration_ms": 6522.228209068999,
-            "details": {
-              "turn_limit": 6,
-              "tool_calls": 1,
-              "model_calls": 2,
-              "attempt": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:41.020215Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:41.021323Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:41.021728Z",
-            "kind": "agents_sdk",
-            "name": "agent",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:41.021798Z",
-            "kind": "agents_sdk",
-            "name": "task",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:41.021888Z",
+            "timestamp": "2026-07-25T17:32:35.796157Z",
             "kind": "model_call",
             "name": "market-intelligence-specialist",
             "status": "completed",
@@ -3110,17 +3017,17 @@
             "details": {
               "requests": 2,
               "input_tokens": 1971,
-              "output_tokens": 533,
-              "total_tokens": 2504,
+              "output_tokens": 473,
+              "total_tokens": 2444,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:41.021925Z",
+            "timestamp": "2026-07-25T17:32:35.796168Z",
             "kind": "routing",
             "name": "market-intelligence-specialist",
             "status": "completed",
-            "duration_ms": 7499.162542168051,
+            "duration_ms": 6460.634083021432,
             "details": {
               "turn_limit": 6,
               "tool_calls": 2,
@@ -3129,7 +3036,74 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:41.024584Z",
+            "timestamp": "2026-07-25T17:32:36.475594Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:36.476959Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:36.477434Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:36.477498Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:36.477639Z",
+            "kind": "model_call",
+            "name": "conversion-specialist",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 2,
+              "input_tokens": 1135,
+              "output_tokens": 259,
+              "total_tokens": 1394,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:36.477707Z",
+            "kind": "routing",
+            "name": "conversion-specialist",
+            "status": "completed",
+            "duration_ms": 7142.3124158754945,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 1,
+              "model_calls": 2,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:32:36.478448Z",
             "kind": "guardrail",
             "name": "evidence_policy",
             "status": "passed",
@@ -3140,7 +3114,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:41.024864Z",
+            "timestamp": "2026-07-25T17:32:36.479286Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -3148,7 +3122,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:41.025476Z",
+            "timestamp": "2026-07-25T17:32:36.481227Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -3156,7 +3130,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:41.025499Z",
+            "timestamp": "2026-07-25T17:32:36.481320Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -3164,7 +3138,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:41.025992Z",
+            "timestamp": "2026-07-25T17:32:36.482552Z",
             "kind": "model_call",
             "name": "recommendation-agent",
             "status": "started",
@@ -3174,7 +3148,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:41.026098Z",
+            "timestamp": "2026-07-25T17:32:36.482827Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -3182,7 +3156,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:51.893063Z",
+            "timestamp": "2026-07-25T17:32:47.375383Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -3192,7 +3166,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:51.893489Z",
+            "timestamp": "2026-07-25T17:32:47.376356Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -3202,7 +3176,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:51.893636Z",
+            "timestamp": "2026-07-25T17:32:47.376613Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -3212,7 +3186,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:51.893657Z",
+            "timestamp": "2026-07-25T17:32:47.376657Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -3222,25 +3196,25 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:51.893691Z",
+            "timestamp": "2026-07-25T17:32:47.376717Z",
             "kind": "model_call",
             "name": "recommendation-agent",
             "status": "completed",
             "duration_ms": null,
             "details": {
               "requests": 1,
-              "input_tokens": 2393,
-              "output_tokens": 1095,
-              "total_tokens": 3488,
+              "input_tokens": 2352,
+              "output_tokens": 1124,
+              "total_tokens": 3476,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:51.893705Z",
+            "timestamp": "2026-07-25T17:32:47.376739Z",
             "kind": "routing",
             "name": "recommendation-agent",
             "status": "completed",
-            "duration_ms": 10868.96379198879,
+            "duration_ms": 10898.011041805148,
             "details": {
               "turn_limit": 6,
               "tool_calls": 0,
@@ -3249,7 +3223,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:22:51.894981Z",
+            "timestamp": "2026-07-25T17:32:47.381544Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -3257,7 +3231,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:51.895671Z",
+            "timestamp": "2026-07-25T17:32:47.382526Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -3265,7 +3239,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:51.895700Z",
+            "timestamp": "2026-07-25T17:32:47.382581Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -3273,116 +3247,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:22:51.896574Z",
-            "kind": "model_call",
-            "name": "recommendation-agent",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "model_call": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:22:51.896688Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.575949Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.577072Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.577523Z",
-            "kind": "agents_sdk",
-            "name": "agent",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.577591Z",
-            "kind": "agents_sdk",
-            "name": "task",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.577744Z",
-            "kind": "model_call",
-            "name": "recommendation-agent",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "requests": 1,
-              "input_tokens": 2428,
-              "output_tokens": 1081,
-              "total_tokens": 3509,
-              "estimated_cost_gbp": 0.0
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.577799Z",
-            "kind": "routing",
-            "name": "recommendation-agent",
-            "status": "completed",
-            "duration_ms": 10682.862874818966,
-            "details": {
-              "turn_limit": 6,
-              "tool_calls": 0,
-              "model_calls": 1,
-              "attempt": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.581443Z",
-            "kind": "agents_sdk",
-            "name": "task",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.582558Z",
-            "kind": "agents_sdk",
-            "name": "agent",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.582608Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:23:02.583239Z",
+            "timestamp": "2026-07-25T17:32:47.383721Z",
             "kind": "model_call",
             "name": "governance-agent",
             "status": "started",
@@ -3392,7 +3257,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:02.583427Z",
+            "timestamp": "2026-07-25T17:32:47.383855Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -3400,7 +3265,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:23:04.067129Z",
+            "timestamp": "2026-07-25T17:32:48.709286Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -3410,7 +3275,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:04.067891Z",
+            "timestamp": "2026-07-25T17:32:48.709576Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -3420,7 +3285,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:04.068121Z",
+            "timestamp": "2026-07-25T17:32:48.709668Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -3430,7 +3295,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:04.068165Z",
+            "timestamp": "2026-07-25T17:32:48.709686Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -3440,25 +3305,25 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:04.068213Z",
+            "timestamp": "2026-07-25T17:32:48.709707Z",
             "kind": "model_call",
             "name": "governance-agent",
             "status": "completed",
             "duration_ms": null,
             "details": {
               "requests": 1,
-              "input_tokens": 2847,
-              "output_tokens": 74,
-              "total_tokens": 2921,
+              "input_tokens": 2852,
+              "output_tokens": 52,
+              "total_tokens": 2904,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:04.068234Z",
+            "timestamp": "2026-07-25T17:32:48.709716Z",
             "kind": "routing",
             "name": "governance-agent",
             "status": "completed",
-            "duration_ms": 1487.257916945964,
+            "duration_ms": 1328.4342088736594,
             "details": {
               "turn_limit": 6,
               "tool_calls": 0,
@@ -3467,7 +3332,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:04.071345Z",
+            "timestamp": "2026-07-25T17:32:48.715468Z",
             "kind": "agents_sdk",
             "name": "trace",
             "status": "completed",

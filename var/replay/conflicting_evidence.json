@@ -1,7 +1,7 @@
 {
   "schema_version": "replay-artifact-schema-v1",
   "scenario": "conflicting_evidence",
-  "recorded_at": "2026-07-25T17:23:34.380340Z",
+  "recorded_at": "2026-07-25T17:33:06.195128Z",
   "configuration_versions": {
     "model_name": "gpt-5.4",
     "recommendation_version": "governed-multi-agent-v1",
@@ -100,10 +100,10 @@
       "analytics": null,
       "evidence_ledger": null,
       "execution_trace": {
-        "trace_id": "trace_3fa84db88a6c4d9bb46c62d8b43066aa",
+        "trace_id": "trace_f66e4be3291c4251b6c7cf156243814e",
         "workflow_name": "Governed Pricing Decision Copilot",
-        "started_at": "2026-07-25T17:23:34.340123Z",
-        "completed_at": "2026-07-25T17:23:34.379385Z",
+        "started_at": "2026-07-25T17:33:06.160264Z",
+        "completed_at": "2026-07-25T17:33:06.194300Z",
         "status": "safe_investigation",
         "configuration_versions": {
           "model_name": "gpt-5.4",
@@ -135,7 +135,7 @@
         },
         "events": [
           {
-            "timestamp": "2026-07-25T17:23:34.355989Z",
+            "timestamp": "2026-07-25T17:33:06.171476Z",
             "kind": "agents_sdk",
             "name": "trace",
             "status": "started",
@@ -143,7 +143,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:23:34.356029Z",
+            "timestamp": "2026-07-25T17:33:06.171507Z",
             "kind": "routing",
             "name": "portfolio-supervisor",
             "status": "started",
@@ -153,7 +153,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:23:34.379366Z",
+            "timestamp": "2026-07-25T17:33:06.194286Z",
             "kind": "agents_sdk",
             "name": "trace",
             "status": "completed",
