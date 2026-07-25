@@ -8,6 +8,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from pricing_copilot.catalog import UnsupportedPortfolioError
+from pricing_copilot.config import get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
     PortfolioQuestion,
@@ -16,6 +17,7 @@ from pricing_copilot.contracts import (
     ScenarioName,
     Segment,
 )
+from pricing_copilot.data.persistent import build_analytics_database
 from pricing_copilot.recommendation.trace import save_baseline_trace
 from pricing_copilot.workflow import run_portfolio_workflow
 
@@ -25,11 +27,14 @@ def build_parser() -> argparse.ArgumentParser:
         prog="pricing-copilot",
         description="Submit a portfolio pricing question to the governed workflow.",
     )
-    parser.add_argument("--product", required=True, choices=[p.value for p in Product])
-    parser.add_argument("--region", required=True, choices=[r.value for r in Region])
-    parser.add_argument("--segment", required=True, choices=[s.value for s in Segment])
-    parser.add_argument("--start-month", required=True, help="YYYY-MM-DD")
-    parser.add_argument("--end-month", required=True, help="YYYY-MM-DD")
+    parser.add_argument(
+        "--build-data", action="store_true", help="Build the versioned synthetic DuckDB."
+    )
+    parser.add_argument("--product", choices=[p.value for p in Product])
+    parser.add_argument("--region", choices=[r.value for r in Region])
+    parser.add_argument("--segment", choices=[s.value for s in Segment])
+    parser.add_argument("--start-month", help="YYYY-MM-DD")
+    parser.add_argument("--end-month", help="YYYY-MM-DD")
     parser.add_argument(
         "--scenario", required=False, choices=[s.value for s in ScenarioName], default=None
     )
@@ -45,6 +50,21 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.build_data:
+        path = build_analytics_database(get_settings().analytics_database_path)
+        print(path)
+        return 0
+
+    required_arguments = ("product", "region", "segment", "start_month", "end_month")
+    missing = [
+        f"--{name.replace('_', '-')}" for name in required_arguments if not getattr(args, name)
+    ]
+    if missing:
+        parser.error(
+            "the following arguments are required unless --build-data is used: "
+            f"{', '.join(missing)}"
+        )
 
     try:
         question = PortfolioQuestion(

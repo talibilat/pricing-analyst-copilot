@@ -20,6 +20,7 @@ from pricing_copilot.evidence.confidence import calculate_confidence
 from pricing_copilot.evidence.fair_value import calculate_fair_value_status
 from pricing_copilot.evidence.ledger import build_evidence_ledger
 from pricing_copilot.evidence.policy import detect_material_evidence_issues
+from pricing_copilot.observability.trace import TraceEventListener
 from pricing_copilot.orchestration.pipeline import run_governed_portfolio_workflow
 from pricing_copilot.recommendation.governance import validate_and_clamp_draft
 from pricing_copilot.recommendation.synthesizer import (
@@ -42,7 +43,9 @@ def _specialist_reports(
         SpecialistReport(
             domain=EvidenceDomain.CLAIMS,
             status="completed",
-            evidence_ids=[f"claims-{question.region.value}-{analytics.claims.period_end.isoformat()}"],
+            evidence_ids=[
+                f"claims-{question.region.value}-{analytics.claims.period_end.isoformat()}"
+            ],
             summary=(
                 f"Loss ratio moved from {analytics.claims.loss_ratio.baseline:.1%} to "
                 f"{analytics.claims.loss_ratio.current:.1%} across "
@@ -203,6 +206,7 @@ def run_portfolio_workflow(
     synthesizer: RecommendationSynthesizer | None = None,
     *,
     use_baseline: bool = False,
+    event_listener: TraceEventListener | None = None,
 ) -> WorkflowResult:
     """Public entry point used by the API, CLI, and Streamlit interface. Defaults to the
     governed multi-agent pipeline; set use_baseline=True (or pass an explicit synthesizer) to
@@ -211,4 +215,4 @@ def run_portfolio_workflow(
         return run_baseline_portfolio_workflow(question, settings, synthesizer)
 
     validate_portfolio_combination(question.product, question.region, question.segment)
-    return run_governed_portfolio_workflow(question, settings)
+    return run_governed_portfolio_workflow(question, settings, event_listener=event_listener)

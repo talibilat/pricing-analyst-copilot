@@ -23,3 +23,10 @@ def test_streamlit_app_distinguishes_recommendation_from_decision() -> None:
 def test_streamlit_app_distinguishes_policy_review_from_regulatory_compliance() -> None:
     assert "policy-approved for qualified analyst review" in SOURCE
     assert "not a claim of regulatory compliance" in SOURCE
+
+
+def test_streamlit_app_is_chat_first_with_activity_feedback() -> None:
+    assert "st.chat_message" in SOURCE
+    assert "st.chat_input" in SOURCE
+    assert "st.spinner" in SOURCE
+    assert "activity trace" in SOURCE

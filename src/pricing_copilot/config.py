@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     local_tracing_enabled: bool = True
     agents_sdk_tracing_enabled: bool = True
     trace_directory: Path = Path("var/traces")
+    analytics_database_path: Path = Path("var/synthetic_portfolio.duckdb")
     policy: PolicySettings = PolicySettings()
     cost: CostSettings = CostSettings()
     decision_store_path: str = "var/decisions.sqlite3"

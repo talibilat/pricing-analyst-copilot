@@ -6,6 +6,22 @@ import pytest
 from pricing_copilot.cli import main
 
 
+def test_cli_build_data_creates_a_duckdb_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "synthetic.duckdb"
+    monkeypatch.setenv("PRICING_COPILOT_ANALYTICS_DATABASE_PATH", str(database_path))
+    from pricing_copilot.config import get_settings
+
+    get_settings.cache_clear()
+    try:
+        assert main(["--build-data"]) == 0
+    finally:
+        get_settings.cache_clear()
+    assert Path(capsys.readouterr().out.strip()) == database_path
+    assert database_path.exists()
+
+
 def test_cli_prints_investigate_result_for_supported_portfolio(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

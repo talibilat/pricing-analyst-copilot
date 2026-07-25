@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import threading
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from time import monotonic
@@ -26,15 +27,23 @@ POLICY_VERSION = "recommendation-policy-v2"
 _PROCESSOR_LOCK = threading.Lock()
 _PROCESSOR_CONFIGURED = False
 _ACTIVE_RECORDERS: dict[str, WorkflowTraceRecorder] = {}
+TraceEventListener = Callable[[TraceEvent], None]
 
 
 class WorkflowTraceRecorder:
-    def __init__(self, settings: Settings, configuration_versions: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        configuration_versions: dict[str, Any],
+        *,
+        event_listener: TraceEventListener | None = None,
+    ) -> None:
         self.settings = settings
         self.trace_id = gen_trace_id()
         self.started_at = datetime.now(UTC)
         self._started_monotonic = monotonic()
         self._events: list[TraceEvent] = []
+        self._event_listener = event_listener
         self._usage = TokenUsage(
             pricing_configured=(
                 settings.cost.input_cost_per_million_tokens_gbp > 0
@@ -57,16 +66,21 @@ class WorkflowTraceRecorder:
         duration_ms: float | None = None,
         details: dict[str, str | int | float | bool | None] | None = None,
     ) -> None:
-        self._events.append(
-            TraceEvent(
-                timestamp=datetime.now(UTC),
-                kind=kind,
-                name=name,
-                status=status,
-                duration_ms=duration_ms,
-                details=details or {},
-            )
+        event = TraceEvent(
+            timestamp=datetime.now(UTC),
+            kind=kind,
+            name=name,
+            status=status,
+            duration_ms=duration_ms,
+            details=details or {},
         )
+        self._events.append(event)
+        if self._event_listener is not None:
+            try:
+                self._event_listener(event)
+            except Exception:
+                # Observability must never affect a governed workflow result.
+                return
 
     def add_usage(
         self, *, requests: int, input_tokens: int, output_tokens: int, agent_name: str

@@ -4,6 +4,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import ValidationError
 
 from pricing_copilot.catalog import UnsupportedPortfolioError
+from pricing_copilot.chat.contracts import ChatRequest, ChatResponse
+from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
 from pricing_copilot.contracts import (
     AnalystDecision,
@@ -31,6 +33,12 @@ def submit_portfolio_question(question: PortfolioQuestion) -> WorkflowResult:
         return run_portfolio_workflow(question)
     except UnsupportedPortfolioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/chat", response_model=ChatResponse)
+def submit_chat_message(request: ChatRequest) -> ChatResponse:
+    """Submit a safe, natural-language portfolio query to the chat service."""
+    return ChatService().submit(request.message, request.context)
 
 
 @app.post("/decisions", response_model=AnalystDecision)

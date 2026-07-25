@@ -44,6 +44,21 @@ def test_health_check() -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_chat_endpoint_returns_permitted_source_data() -> None:
+    response = client.post("/chat", json={"message": "Show claims and conversion performance"})
+
+    assert response.status_code == 200
+    assert response.json()["intent"] == "multi_source_summary"
+    assert [table["title"] for table in response.json()["tables"]] == ["Claims", "Conversion"]
+
+
+def test_chat_endpoint_refuses_raw_sql() -> None:
+    response = client.post("/chat", json={"message": "SELECT * FROM claims"})
+
+    assert response.status_code == 200
+    assert response.json()["refused"]
+
+
 def test_workflow_endpoint_returns_investigate_for_supported_portfolio() -> None:
     payload = {
         "product": "personal_motor",

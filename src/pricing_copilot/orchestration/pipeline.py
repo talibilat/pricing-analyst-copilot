@@ -36,6 +36,7 @@ from pricing_copilot.observability.trace import (
     PROMPT_VERSION,
     TOOL_VERSION,
     WORKFLOW_NAME,
+    TraceEventListener,
     WorkflowTraceRecorder,
     configure_local_agents_sdk_tracing,
 )
@@ -80,9 +81,13 @@ class OrchestrationBundle:
     connection pool never outlives the asyncio event loop it was created on."""
 
 
-def get_default_orchestration(settings: Settings) -> OrchestrationBundle:
+def get_default_orchestration(
+    settings: Settings, *, event_listener: TraceEventListener | None = None
+) -> OrchestrationBundle:
     configure_local_agents_sdk_tracing()
-    recorder = WorkflowTraceRecorder(settings, _configuration_versions(settings))
+    recorder = WorkflowTraceRecorder(
+        settings, _configuration_versions(settings), event_listener=event_listener
+    )
     runtime = AgentRuntime(settings, recorder)
     azure_settings = get_azure_openai_settings()
     if not azure_settings.api_key or not azure_settings.endpoint:
@@ -402,17 +407,25 @@ def run_governed_portfolio_workflow(
     settings: Settings | None = None,
     *,
     orchestration: OrchestrationBundle | None = None,
+    event_listener: TraceEventListener | None = None,
 ) -> WorkflowResult:
     from pricing_copilot.config import get_settings
 
     settings = settings or get_settings()
     if question.scenario not in IMPLEMENTED_DATA_SCENARIOS:
         return missing_evidence_workflow_result(question)
-    active = orchestration or get_default_orchestration(settings)
+    if orchestration is not None:
+        active = orchestration
+    elif event_listener is None:
+        active = get_default_orchestration(settings)
+    else:
+        active = get_default_orchestration(settings, event_listener=event_listener)
     recorder = (
         active.runtime.recorder
         if active.runtime is not None
-        else WorkflowTraceRecorder(settings, _configuration_versions(settings))
+        else WorkflowTraceRecorder(
+            settings, _configuration_versions(settings), event_listener=event_listener
+        )
     )
     configure_local_agents_sdk_tracing()
     return asyncio.run(_run_and_close_client(question, settings, active, recorder))
