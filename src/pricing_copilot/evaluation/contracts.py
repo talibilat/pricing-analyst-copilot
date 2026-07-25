@@ -39,6 +39,7 @@ class GoldenCase(BaseModel):
     # CaseKind.CHAT
     chat_message: str | None = None
     chat_context: ChatContext | None = None
+    follow_up_chat_message: str | None = None
     expected_intent: ChatIntent | None = None
     expected_refused: bool | None = None
     expected_requires_clarification: bool | None = None

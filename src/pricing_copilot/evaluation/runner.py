@@ -27,7 +27,8 @@ REPORT_VERSION = "benchmark-report-v1"
 
 def _run_deterministic_case(case: GoldenCase) -> CaseResult:
     started = monotonic()
-    assert case.check_id is not None
+    if case.check_id is None:
+        raise ValueError(f"{case.case_id}: a deterministic case requires check_id")
     check = DETERMINISTIC_CHECKS[case.check_id]
     try:
         passed, detail = check()
@@ -54,9 +55,17 @@ def _run_chat_case(case: GoldenCase) -> CaseResult:
     started = monotonic()
     service = ChatService()
     context = case.chat_context or ChatContext()
-    assert case.chat_message is not None
+    if case.chat_message is None:
+        raise ValueError(f"{case.case_id}: a chat case requires chat_message")
     response = service.submit(case.chat_message, context)
     failures: list[str] = []
+
+    if case.follow_up_chat_message is not None:
+        if not response.requires_clarification:
+            failures.append(
+                "expected the opening turn to ask for clarification before the follow-up"
+            )
+        response = service.submit(case.follow_up_chat_message, context)
 
     if case.expected_intent is not None and response.intent != case.expected_intent:
         failures.append(f"intent: expected {case.expected_intent}, got {response.intent}")
@@ -111,7 +120,8 @@ def _run_chat_case(case: GoldenCase) -> CaseResult:
 
 def _run_pricing_workflow_case(case: GoldenCase, *, use_baseline: bool) -> CaseResult:
     started = monotonic()
-    assert case.question is not None
+    if case.question is None:
+        raise ValueError(f"{case.case_id}: a pricing-workflow case requires question")
     result = run_portfolio_workflow(case.question, use_baseline=use_baseline)
     failures: list[str] = []
 

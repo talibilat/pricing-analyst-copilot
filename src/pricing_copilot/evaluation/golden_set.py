@@ -122,6 +122,21 @@ GOLDEN_CASES: list[GoldenCase] = [
         chat_context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
         expected_requires_clarification=True,
     ),
+    GoldenCase(
+        case_id="GC-18",
+        category=CaseCategory.AMBIGUOUS,
+        kind=CaseKind.CHAT,
+        description=(
+            "Multi-turn follow-up: an ambiguous opener asks for clarification, then a concrete "
+            "follow-up in the same session must resolve to real data, proving the conversation "
+            "survives across two submitted turns."
+        ),
+        chat_message="What should I look at?",
+        follow_up_chat_message="Show claims performance",
+        chat_context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+        expected_intent=ChatIntent.DATA_RETRIEVAL,
+        expected_table_titles=["Claims"],
+    ),
     # --- missing data (2) ---
     GoldenCase(
         case_id="GC-09",

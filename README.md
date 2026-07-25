@@ -107,10 +107,10 @@ Hybrid vector retrieval remains stretch work until the core workflow is stable.
 
 ## Evaluation strategy
 
-The golden evaluation set (`src/pricing_copilot/evaluation/golden_set.py`, `GOLDEN_SET_VERSION`) contains seventeen versioned cases, exceeding the fifteen-case minimum:
+The golden evaluation set (`src/pricing_copilot/evaluation/golden_set.py`, `GOLDEN_SET_VERSION`) contains eighteen versioned cases, exceeding the fifteen-case minimum:
 
 - Five normal pricing cases.
-- Three ambiguous or conflicting cases.
+- Four ambiguous or conflicting cases, including one multi-turn case that opens with a clarification request and resolves after an in-session follow-up.
 - Two missing-data cases.
 - Four prompt-injection or adversarial security cases (exceeding the two-case minimum).
 - Two extreme-value cases.
