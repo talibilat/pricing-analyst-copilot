@@ -11,7 +11,9 @@ requires_azure_openai = pytest.mark.skipif(
 )
 
 
-def test_deterministic_only_case_set_scores_without_any_model_call(monkeypatch) -> None:
+def test_deterministic_only_case_set_scores_without_any_model_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     from pricing_copilot.evaluation import golden_set
 
     deterministic_only = [c for c in golden_set.GOLDEN_CASES if c.kind == CaseKind.DETERMINISTIC]

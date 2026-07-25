@@ -211,7 +211,7 @@ def _run_architecture(cases: list[GoldenCase], *, use_baseline: bool) -> Evaluat
     for case in cases:
         if case.kind == CaseKind.DETERMINISTIC:
             if use_baseline:
-                continue  # deterministic checks are architecture-agnostic; scored once, under governed
+                continue  # architecture-agnostic; scored once, under governed
             results.append(_run_deterministic_case(case))
         elif case.kind == CaseKind.PRICING_WORKFLOW:
             results.append(_run_pricing_workflow_case(case, use_baseline=use_baseline))

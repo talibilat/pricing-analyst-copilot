@@ -136,7 +136,8 @@ GOLDEN_CASES: list[GoldenCase] = [
         case_id="GC-10",
         category=CaseCategory.MISSING_DATA,
         kind=CaseKind.CHAT,
-        description="Ambiguous source request without a scenario keyword still asks, never fabricates.",
+        description="Ambiguous source request without a scenario keyword still asks, "
+        "never fabricates.",
         chat_message="Show me the numbers",
         chat_context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
         expected_requires_clarification=True,
@@ -191,7 +192,8 @@ GOLDEN_CASES: list[GoldenCase] = [
         case_id="GC-14",
         category=CaseCategory.EXTREME_VALUE,
         kind=CaseKind.DETERMINISTIC,
-        description="Zero-claim-count input must raise a calculation error, not a fabricated number.",
+        description="Zero-claim-count input must raise a calculation error, "
+        "not a fabricated number.",
         check_id="zero_claims_rejected",
     ),
     # --- stale data (1) ---

@@ -3,7 +3,6 @@ from pricing_copilot.evaluation.contracts import (
     CaseKind,
     CaseOutcome,
     CaseResult,
-    EvaluationActuals,
     EvaluationTargets,
     GoldenCase,
 )
