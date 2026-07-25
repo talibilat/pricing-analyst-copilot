@@ -65,14 +65,14 @@ if submitted:
     except UnsupportedPortfolioError as exc:
         st.error(str(exc))
         st.session_state.pop("workflow_result", None)
-        st.session_state.pop("portfolio_question", None)
+        st.session_state.pop("current_portfolio_question", None)
     else:
         st.session_state["workflow_result"] = result
-        st.session_state["portfolio_question"] = question
+        st.session_state["current_portfolio_question"] = question
         st.session_state.pop("decision_confirmation", None)
 
 result = st.session_state.get("workflow_result")
-question = st.session_state.get("portfolio_question")
+question = st.session_state.get("current_portfolio_question")
 
 if result is not None and question is not None:
     st.subheader("System recommendation")
