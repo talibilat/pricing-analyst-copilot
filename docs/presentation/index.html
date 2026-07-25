@@ -1,0 +1,692 @@
+<title>Pricing Decision Copilot - Interview Presentation</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --bg-raised: #ffffff;
+    --ink: #16212b;
+    --ink-soft: #4a5a66;
+    --line: #d3d9dd;
+    --accent: #2e6b57;
+    --accent-soft: #e4ede9;
+    --warn: #b8853b;
+    --warn-soft: #f4e9d8;
+    --critical: #a24b3f;
+    --critical-soft: #f3e0dc;
+    --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10161b;
+      --bg-raised: #161e24;
+      --ink: #e7edf1;
+      --ink-soft: #93a3ad;
+      --line: #28333b;
+      --accent: #6fbfa3;
+      --accent-soft: #16261f;
+      --warn: #d9a65c;
+      --warn-soft: #2c2416;
+      --critical: #d97b6c;
+      --critical-soft: #2c1e1b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10161b;
+    --bg-raised: #161e24;
+    --ink: #e7edf1;
+    --ink-soft: #93a3ad;
+    --line: #28333b;
+    --accent: #6fbfa3;
+    --accent-soft: #16261f;
+    --warn: #d9a65c;
+    --warn-soft: #2c2416;
+    --critical: #d97b6c;
+    --critical-soft: #2c1e1b;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f6f8;
+    --bg-raised: #ffffff;
+    --ink: #16212b;
+    --ink-soft: #4a5a66;
+    --line: #d3d9dd;
+    --accent: #2e6b57;
+    --accent-soft: #e4ede9;
+    --warn: #b8853b;
+    --warn-soft: #f4e9d8;
+    --critical: #a24b3f;
+    --critical-soft: #f3e0dc;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  .deck {
+    height: 100vh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+  }
+
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem clamp(1.5rem, 6vw, 6rem);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem 0;
+  }
+
+  h1, h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.08;
+    text-wrap: balance;
+    margin: 0 0 1rem 0;
+  }
+
+  h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+  h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); }
+
+  .lede {
+    font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+    color: var(--ink-soft);
+    max-width: 42rem;
+    line-height: 1.5;
+    margin: 0 0 2rem 0;
+  }
+
+  .slide-body {
+    max-width: 62rem;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .card {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.4rem 1.6rem;
+  }
+
+  .card h3 {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .card p {
+    margin: 0;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    font-size: 0.96rem;
+  }
+
+  .stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 1.75rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .stat .value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    color: var(--accent);
+  }
+
+  .stat .label {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  ul.plain {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  ul.plain li {
+    padding-left: 1.2rem;
+    position: relative;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  ul.plain li::before {
+    content: "-";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.75rem;
+    max-width: 40rem;
+  }
+
+  .flow-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .flow-box {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.88rem;
+    flex: 1 1 auto;
+  }
+
+  .flow-arrow {
+    text-align: center;
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 100px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+
+  .pill.warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+  .pill.critical { background: var(--critical-soft); color: var(--critical); border-color: var(--critical); }
+
+  .roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 1.75rem;
+    border-left: 2px solid var(--line);
+  }
+
+  .roadmap-step {
+    padding: 0 0 1.6rem 1.4rem;
+    position: relative;
+  }
+
+  .roadmap-step::before {
+    content: "";
+    position: absolute;
+    left: -0.4rem;
+    top: 0.2rem;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .roadmap-step h3 {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    margin: 0 0 0.3rem 0;
+  }
+
+  .roadmap-step p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.94rem;
+    line-height: 1.5;
+    max-width: 40rem;
+  }
+
+  footer.pacing {
+    position: absolute;
+    bottom: 1.5rem;
+    left: clamp(1.5rem, 6vw, 6rem);
+    right: clamp(1.5rem, 6vw, 6rem);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    opacity: 0.7;
+  }
+
+  table.data {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  table.data th, table.data td {
+    text-align: left;
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table.data th {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  table.data td.num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .appendix-marker {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  a { color: var(--accent); }
+
+  code {
+    font-family: var(--font-mono);
+    background: var(--accent-soft);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+
+  .closing-thesis {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 2.4vw, 1.7rem);
+    line-height: 1.4;
+    max-width: 44rem;
+    text-wrap: balance;
+  }
+</style>
+
+<div class="deck">
+
+  <!-- Slide 1: Title -->
+  <section class="slide">
+    <p class="eyebrow">01 / 10 - Interview presentation</p>
+    <h1>Pricing Decision Copilot</h1>
+    <p class="lede">A governed evidence workflow for UK personal motor portfolio pricing decisions - not an LLM acting as a pricing engine.</p>
+    <div class="stat-row">
+      <div class="stat"><span class="value">18/18</span><span class="label">golden cases passed</span></div>
+      <div class="stat"><span class="value">0</span><span class="label">pricing changes ever executed</span></div>
+      <div class="stat"><span class="value">4</span><span class="label">designed scenarios &amp; journeys</span></div>
+    </div>
+    <footer class="pacing"><span>Prototype - no real Aviva data</span><span>~90s</span></footer>
+  </section>
+
+  <!-- Slide 2: Business problem -->
+  <section class="slide">
+    <p class="eyebrow">02 / 10 - The business problem</p>
+    <h2>Evidence gathering is the bottleneck, not judgment</h2>
+    <p class="lede">A UK personal motor pricing analyst weighing a renewal-portfolio action needs claims, conversion, competitor, and market-intelligence evidence pulled together before they can even start reasoning about whether to act.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Scattered sources</h3>
+        <p>Claims performance, conversion and retention, competitor pricing, pricing history, market reports, broker notes, and aggregate customer feedback live in different places with different freshness.</p>
+      </div>
+      <div class="card">
+        <h3>Manual synthesis</h3>
+        <p>Pulling it together, checking it for contradictions, and writing a defensible rationale is slow, repetitive, and easy to do inconsistently under time pressure.</p>
+      </div>
+      <div class="card">
+        <h3>Accountability must stay put</h3>
+        <p>Whatever accelerates this cannot quietly become the decision-maker. The analyst's judgment and sign-off are the point, not an inconvenience to automate away.</p>
+      </div>
+    </div>
+    <footer class="pacing"><span>Framing</span><span>~90s</span></footer>
+  </section>
+
+  <!-- Slide 3: What this is not -->
+  <section class="slide">
+    <p class="eyebrow">03 / 10 - What this is not</p>
+    <h2>Three things this deliberately refuses to be</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Not a pricing engine</h3>
+        <p>No code path in this repository can execute a pricing change. Every recommendation is decision support pending analyst review.</p>
+      </div>
+      <div class="card">
+        <h3>Not trained on real data</h3>
+        <p>Every dataset is synthetic, seeded, and reproducible. No Aviva systems, customer data, or proprietary pricing models are used or imitated.</p>
+      </div>
+      <div class="card">
+        <h3>Not a single model's opinion</h3>
+        <p>Recommendation synthesis, evidence gathering, and governance review are three separate agents with three separate jobs - none of them grades its own work.</p>
+      </div>
+    </div>
+    <footer class="pacing"><span>Boundary-setting</span><span>~60s</span></footer>
+  </section>
+
+  <!-- Slide 4: Architecture -->
+  <section class="slide">
+    <p class="eyebrow">04 / 10 - Architecture</p>
+    <h2>Manager-style orchestration, not a free-form agent chat</h2>
+    <p class="lede">A supervisor coordinates four evidence specialists with typed inputs and outputs; the recommendation agent never touches raw data.</p>
+    <div class="flow">
+      <div class="flow-box">Pricing analyst asks a question in chat</div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-box">Portfolio Supervisor coordinates specialists</div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-row">
+        <div class="flow-box">Claims</div>
+        <div class="flow-box">Conversion</div>
+        <div class="flow-box">Market intelligence</div>
+        <div class="flow-box">Pricing history</div>
+      </div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-box">Versioned evidence ledger (typed, citable entries)</div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-box">Recommendation agent - sees only the ledger, never raw data</div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-box">Governance agent + deterministic policy checks</div>
+      <div class="flow-arrow">&#8595;</div>
+      <div class="flow-box">Human review &amp; versioned decision record</div>
+    </div>
+    <footer class="pacing"><span>See README - Architecture</span><span>~90s</span></footer>
+  </section>
+
+  <!-- Slide 5: Governance in depth -->
+  <section class="slide">
+    <p class="eyebrow">05 / 10 - Governance in depth</p>
+    <h2>Every control is code, not a prompt instruction</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Deterministic math</h3>
+        <p>Loss ratios, movement percentages, and every clamp are computed by plain Python. The model narrates already-computed numbers - it cannot hallucinate a figure.</p>
+      </div>
+      <div class="card">
+        <h3>Policy clamp</h3>
+        <p>No recommendation can propose more than a &#177;5% movement, enforced in code, independent of what any agent argues for.</p>
+      </div>
+      <div class="card">
+        <h3>Document quarantine</h3>
+        <p>Retrieved documents are untrusted data. Prompt-injection content is stripped before it ever reaches a model call.</p>
+      </div>
+      <div class="card">
+        <h3>Bounded execution</h3>
+        <p>Every agent run has enforced turn limits, tool-call limits, timeouts, and a bounded retry count - no runaway loops.</p>
+      </div>
+    </div>
+    <footer class="pacing"><span>See README - Governance and observability controls</span><span>~90s</span></footer>
+  </section>
+
+  <!-- Slide 6: Evidence and citations -->
+  <section class="slide">
+    <p class="eyebrow">06 / 10 - Evidence and citations</p>
+    <h2>Nothing is asserted without a citation</h2>
+    <p class="lede">Every material claim in a recommendation resolves to a specific evidence-ledger entry: source type, date, identifier, and the metric it supports.</p>
+    <ul class="plain">
+      <li>Counter-evidence is rendered as a prominent warning block, not buried beneath the recommendation - an analyst sees the case against the action as clearly as the case for it.</li>
+      <li>Confidence is reported as five separate components (evidence coverage, source freshness, specialist agreement, data quality, conflict penalty), not one opaque score.</li>
+      <li>Fair-value status flags when a recommendation needs closer review before rollout, with named follow-up actions.</li>
+    </ul>
+    <footer class="pacing"><span>Live in the Chat tab</span><span>~75s</span></footer>
+  </section>
+
+  <!-- Slide 7: Evaluation evidence -->
+  <section class="slide">
+    <p class="eyebrow">07 / 10 - Evaluation evidence</p>
+    <h2>Measured, not asserted</h2>
+    <p class="lede">An 18-case golden set, exceeding every stated minimum, run against both the governed workflow and a single-agent baseline for comparison.</p>
+    <div class="stat-row">
+      <div class="stat"><span class="value">18/18</span><span class="label">governed cases passed</span></div>
+      <div class="stat"><span class="value">0</span><span class="label">prompt-injection successes</span></div>
+      <div class="stat"><span class="value">17.0s</span><span class="label">p95 latency (30s target)</span></div>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Category</th><th>Cases</th><th>Includes</th></tr></thead>
+        <tbody>
+          <tr><td>Normal</td><td class="num">5</td><td>Single-source, multi-source, full recommendation</td></tr>
+          <tr><td>Ambiguous</td><td class="num">4</td><td>Including one multi-turn conversational case</td></tr>
+          <tr><td>Missing data</td><td class="num">2</td><td>No scenario, source-free question</td></tr>
+          <tr><td>Prompt injection</td><td class="num">4</td><td>Document-embedded, direct override, exfiltration, raw SQL</td></tr>
+          <tr><td>Extreme value</td><td class="num">2</td><td>Movement clamp, zero-claim rejection</td></tr>
+          <tr><td>Stale data</td><td class="num">1</td><td>Stale-document detection</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer class="pacing"><span>var/evaluation/latest.json</span><span>~90s</span></footer>
+  </section>
+
+  <!-- Slide 8: Drift monitoring -->
+  <section class="slide">
+    <p class="eyebrow">08 / 10 - Drift monitoring</p>
+    <h2>A reproducible month-25 dataset, engineered to drift</h2>
+    <p class="lede">Twenty-four stable months, then a deliberately shifted 25th month - the same run triggers the same alerts every time.</p>
+    <div class="stat-row">
+      <div class="stat"><span class="value">17</span><span class="label">total alerts</span></div>
+      <div class="stat"><span class="value">6</span><span class="label">material - all in the data category</span></div>
+      <div class="stat"><span class="value">0</span><span class="label">behavior / operational alerts breached</span></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Data <span class="pill critical">6 material</span></h3>
+        <p>Claim severity, claim frequency, loss ratio, conversion, competitor index, feedback topics - z-score, percentage movement, a genuine KS-test, and a genuine PSI, applied where each is statistically appropriate.</p>
+      </div>
+      <div class="card">
+        <h3>Behavior, operational, configuration <span class="pill">clean</span></h3>
+        <p>Routing accuracy, citation coverage, abstention, latency, cost, and configuration version diffs - all within target on the last real run.</p>
+      </div>
+    </div>
+    <footer class="pacing"><span>var/drift/latest.json - Monitoring tab</span><span>~90s</span></footer>
+  </section>
+
+  <!-- Slide 9: Delivery approach -->
+  <section class="slide">
+    <p class="eyebrow">09 / 10 - Delivery approach</p>
+    <h2>Built ticket by ticket, by a coding agent, against a written spec</h2>
+    <ul class="plain">
+      <li>Every ticket got its own implementation plan document before any code was written.</li>
+      <li>Strict TDD throughout: failing test, verified red, minimal implementation, verified green, commit - repeated per logical unit.</li>
+      <li>A full quality suite (lint, strict type checking, the full test suite, a security scanner, and a secret scan) gates every commit.</li>
+      <li>End-to-end UI tests exercise the actual rendered interface, not just service-layer logic underneath it - this caught and fixed two real bugs during this ticket alone.</li>
+    </ul>
+    <footer class="pacing"><span>See docs/decision_log.md</span><span>~75s</span></footer>
+  </section>
+
+  <!-- Slide 10: Production roadmap and commercial framing -->
+  <section class="slide">
+    <p class="eyebrow">10 / 10 - Roadmap and commercial framing</p>
+    <h2>From prototype to platform, one earned step at a time</h2>
+    <div class="roadmap">
+      <div class="roadmap-step">
+        <h3>Prototype - this</h3>
+        <p>Synthetic data, three designed scenarios, full governance and evaluation harness. Proves the architecture and the guardrails.</p>
+      </div>
+      <div class="roadmap-step">
+        <h3>Shadow mode</h3>
+        <p>Run alongside human analysts on real (governed-access) data with no influence on outcomes. Measure agreement rate and time-to-first-recommendation as hypotheses to be tested, not savings to be assumed.</p>
+      </div>
+      <div class="roadmap-step">
+        <h3>Limited pilot</h3>
+        <p>A small analyst cohort, human-in-the-loop only, with the same decision-record and governance controls proven here.</p>
+      </div>
+      <div class="roadmap-step">
+        <h3>Platform scale</h3>
+        <p>Only after shadow-mode and pilot evidence justifies it - the data warehouse and decision-audit swap points are already designed into the contracts.</p>
+      </div>
+    </div>
+    <p class="lede" style="margin-top: 1.5rem;">Commercial value is a measurement plan, not a number: "time-to-first-recommendation reduced by X%, to be measured" - never an invented saving or loss-ratio figure.</p>
+    <footer class="pacing"><span>Closing</span><span>~75s</span></footer>
+  </section>
+
+  <!-- Appendix intro -->
+  <section class="slide">
+    <p class="eyebrow appendix-marker">Technical appendix</p>
+    <h2 class="closing-thesis">This is a governed evidence workflow with a human decision-maker at the end - not an LLM acting as a pricing engine.</h2>
+    <p class="lede">Every number is deterministic Python. Every model output is checked by an independent governance step. Nothing here ever executes a price change. The following pages are reference material, available on request.</p>
+    <footer class="pacing"><span>Closing thesis</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Data model -->
+  <section class="slide">
+    <p class="eyebrow">Appendix A - Data model</p>
+    <h2>Four structured sources, one unstructured corpus</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Structured (DuckDB, versioned)</h3>
+        <p>Claims, conversion, competitor, and pricing-history monthly records, materialized into a persistent, checksum-verified, versioned analytics database with an explicit permitted-column allowlist per source.</p>
+      </div>
+      <div class="card">
+        <h3>Unstructured (BM25-retrieved)</h3>
+        <p>Market reports, repair-cost intelligence, broker notes, and aggregate customer feedback - retrieved, quarantined against injected content, and cited by document ID.</p>
+      </div>
+    </div>
+    <footer class="pacing"><span>src/pricing_copilot/data/, documents/</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Prompt injection defense -->
+  <section class="slide">
+    <p class="eyebrow">Appendix B - Prompt-injection defense</p>
+    <h2>Defense in depth, measured, not assumed</h2>
+    <ul class="plain">
+      <li><code>quarantine_unsafe_documents</code> strips flagged content from retrieved documents before any model call sees it.</li>
+      <li>The chat layer refuses raw SQL, customer-level requests, protected-attribute use, and direct override attempts with a plain-language explanation, before any retrieval happens.</li>
+      <li>Four dedicated golden-set cases exercise document-embedded injection, direct override, data exfiltration, and raw-SQL attempts.</li>
+      <li>Measured result on the last live run: <span class="pill">0% success</span> across all four.</li>
+    </ul>
+    <footer class="pacing"><span>governance/security.py</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Evaluation case catalogue -->
+  <section class="slide">
+    <p class="eyebrow">Appendix C - Evaluation case catalogue</p>
+    <h2>Eighteen cases, by category</h2>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>ID</th><th>Category</th><th>What it proves</th></tr></thead>
+        <tbody>
+          <tr><td class="num">GC-01 - GC-05</td><td>Normal</td><td>Single-source, multi-source, and full recommendation paths work</td></tr>
+          <tr><td class="num">GC-06 - GC-08, GC-18</td><td>Ambiguous</td><td>Safe abstention and clarification, including across a follow-up turn</td></tr>
+          <tr><td class="num">GC-09 - GC-10</td><td>Missing data</td><td>Honest "no evidence" rather than a fabricated answer</td></tr>
+          <tr><td class="num">GC-11, GC-12, GC-16, GC-17</td><td>Prompt injection</td><td>Zero successful attacks across four distinct attack shapes</td></tr>
+          <tr><td class="num">GC-13 - GC-14</td><td>Extreme value</td><td>Movement clamp and zero-claim rejection are exact</td></tr>
+          <tr><td class="num">GC-15</td><td>Stale data</td><td>Stale evidence is flagged, not silently used</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer class="pacing"><span>src/pricing_copilot/evaluation/golden_set.py</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Coding-agent delivery model -->
+  <section class="slide">
+    <p class="eyebrow">Appendix D - Coding-agent delivery model</p>
+    <h2>One ticket, one plan, one TDD cycle at a time</h2>
+    <ul class="plain">
+      <li>Each GitHub issue is implemented from a written plan document under <code>docs/superpowers/plans/</code>, produced before any code is touched.</li>
+      <li>Every logical change follows: write the failing test, confirm it fails for the right reason, implement the minimal fix, confirm it passes, commit.</li>
+      <li>The full quality suite (lint, strict types, tests, security scan, secret scan) runs before any ticket is considered closed.</li>
+      <li>Manual browser verification supplements automated tests for anything genuinely visual or interaction-order-dependent - this is exactly what caught the two UI bugs fixed while building this deck.</li>
+    </ul>
+    <footer class="pacing"><span>docs/superpowers/plans/</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Risk register summary -->
+  <section class="slide">
+    <p class="eyebrow">Appendix E - Risk register summary</p>
+    <h2>Nine risk categories, each with a real, code-level mitigation</h2>
+    <div class="grid-2">
+      <div class="card"><h3>Model &amp; arithmetic</h3><p>Model failure, arithmetic error</p></div>
+      <div class="card"><h3>Security &amp; data</h3><p>Prompt injection, stale or missing data</p></div>
+      <div class="card"><h3>Human factors</h3><p>Automation bias</p></div>
+      <div class="card"><h3>Operational</h3><p>Latency, cost, interface failure, demo failure</p></div>
+    </div>
+    <p class="lede" style="margin-top:1.5rem;">Full detail, including likelihood, impact, and the specific code-level mitigation for each: <a href="../risk_register.md">docs/risk_register.md</a>.</p>
+    <footer class="pacing"><span>docs/risk_register.md</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Production architecture -->
+  <section class="slide">
+    <p class="eyebrow">Appendix F - Production architecture</p>
+    <h2>The swap points are already designed into the contracts</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Analytics store</h3>
+        <p><code>PersistentAnalyticsDatabase</code> would be replaced by a read replica of the real pricing data warehouse, behind the same typed <code>query_source</code> interface used today.</p>
+      </div>
+      <div class="card">
+        <h3>Decision audit</h3>
+        <p>The SQLite decision store would be replaced by the real underwriting decision-audit system - <code>DecisionRequest</code>/<code>AnalystDecision</code> are already shaped for that swap.</p>
+      </div>
+      <div class="card">
+        <h3>Model routing</h3>
+        <p>A single Azure OpenAI dev deployment would move to production model routing, rate limits, and regional failover.</p>
+      </div>
+      <div class="card">
+        <h3>What stays the same</h3>
+        <p>The typed contracts, the governance checks, the evidence ledger, and the evaluation harness - the parts that make this trustworthy do not change with scale.</p>
+      </div>
+    </div>
+    <footer class="pacing"><span>README - Architecture</span><span>on request</span></footer>
+  </section>
+
+  <!-- Appendix: Cost and latency drivers -->
+  <section class="slide">
+    <p class="eyebrow">Appendix G - Cost and latency drivers</p>
+    <h2>Every call is measured, nothing is estimated after the fact</h2>
+    <div class="stat-row">
+      <div class="stat"><span class="value">48,857</span><span class="label">total tokens, last full eval run</span></div>
+      <div class="stat"><span class="value">17.0s</span><span class="label">p95 latency (30s target)</span></div>
+      <div class="stat"><span class="value">&#163;0.00</span><span class="label">estimated cost at configured dev rate</span></div>
+    </div>
+    <p class="lede" style="margin-top: 1.5rem;">Latency is bounded by explicit per-agent turn limits, tool-call limits, and timeouts (<code>orchestration/runtime.py</code>); token and cost tracking is built into every trace (<code>TokenUsage</code>), not reconstructed afterward.</p>
+    <footer class="pacing"><span>var/evaluation/latest.json</span><span>on request</span></footer>
+  </section>
+
+</div>
