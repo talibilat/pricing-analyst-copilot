@@ -40,6 +40,20 @@ def test_multi_turn_chat_case_resolves_after_a_clarifying_follow_up(
     assert report.governed.actuals.cases_failed == 0
 
 
+def test_deterministic_only_case_set_leaves_action_and_tool_failures_at_their_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from pricing_copilot.evaluation import golden_set
+
+    deterministic_only = [c for c in golden_set.GOLDEN_CASES if c.kind == CaseKind.DETERMINISTIC]
+    monkeypatch.setattr("pricing_copilot.evaluation.runner.GOLDEN_CASES", deterministic_only)
+
+    report = run_benchmark(get_settings(), include_baseline=False)
+
+    assert all(result.action is None for result in report.governed.case_results)
+    assert all(result.tool_call_failures == 0 for result in report.governed.case_results)
+
+
 @requires_azure_openai
 def test_full_golden_set_runs_on_both_architectures_and_reports_actuals() -> None:
     report = run_benchmark(get_settings())

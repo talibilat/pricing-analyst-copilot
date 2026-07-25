@@ -75,6 +75,7 @@ class CaseResult(BaseModel):
     duration_ms: float
     failure_reasons: list[str] = Field(default_factory=list)
     trace_id: str | None = None
+    action: RecommendationAction | None = None
     tool_call_total: int = 0
     tool_call_failures: int = 0
     total_tokens: int = 0

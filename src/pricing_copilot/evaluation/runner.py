@@ -19,10 +19,21 @@ from pricing_copilot.evaluation.contracts import (
 )
 from pricing_copilot.evaluation.golden_set import GOLDEN_CASES, GOLDEN_SET_VERSION
 from pricing_copilot.evaluation.scoring import DETERMINISTIC_CHECKS
+from pricing_copilot.observability.contracts import TraceEventKind, WorkflowExecutionTrace
 from pricing_copilot.versions import current_configuration_versions
 from pricing_copilot.workflow import run_portfolio_workflow
 
 REPORT_VERSION = "benchmark-report-v1"
+
+
+def _tool_call_failures(execution_trace: WorkflowExecutionTrace | None) -> int:
+    if execution_trace is None:
+        return 0
+    return sum(
+        1
+        for event in execution_trace.events
+        if event.kind in (TraceEventKind.RETRY, TraceEventKind.FAILURE)
+    )
 
 
 def _run_deterministic_case(case: GoldenCase) -> CaseResult:
@@ -95,14 +106,14 @@ def _run_chat_case(case: GoldenCase) -> CaseResult:
         if pattern.search(combined_text):
             failures.append(f"prohibited pattern matched: {pattern.pattern}")
 
-    trace_id = (
-        response.workflow_result.execution_trace.trace_id
-        if response.workflow_result is not None and response.workflow_result.execution_trace
-        else None
+    execution_trace = (
+        response.workflow_result.execution_trace if response.workflow_result is not None else None
     )
-    usage = (
-        response.workflow_result.execution_trace.usage
-        if response.workflow_result is not None and response.workflow_result.execution_trace
+    trace_id = execution_trace.trace_id if execution_trace else None
+    usage = execution_trace.usage if execution_trace else None
+    action = (
+        response.workflow_result.recommendation.action
+        if response.workflow_result is not None
         else None
     )
     return CaseResult(
@@ -113,6 +124,8 @@ def _run_chat_case(case: GoldenCase) -> CaseResult:
         duration_ms=(monotonic() - started) * 1000,
         failure_reasons=failures,
         trace_id=trace_id,
+        action=action,
+        tool_call_failures=_tool_call_failures(execution_trace),
         total_tokens=usage.total_tokens if usage else 0,
         estimated_cost_gbp=usage.estimated_cost_gbp if usage else 0.0,
     )
@@ -148,6 +161,8 @@ def _run_pricing_workflow_case(case: GoldenCase, *, use_baseline: bool) -> CaseR
         duration_ms=(monotonic() - started) * 1000,
         failure_reasons=failures,
         trace_id=trace_id,
+        action=result.recommendation.action,
+        tool_call_failures=_tool_call_failures(result.execution_trace),
         total_tokens=usage.total_tokens if usage else 0,
         estimated_cost_gbp=usage.estimated_cost_gbp if usage else 0.0,
     )
