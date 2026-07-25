@@ -16,3 +16,59 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
     markdown = "\n".join(item.value for item in app.markdown)
     assert "Getting information from claims performance data" in markdown
     assert "Getting information from conversion performance data" in markdown
+
+
+def test_replay_keyword_shows_a_prominent_replay_label(tmp_path, monkeypatch) -> None:
+    from datetime import date
+
+    from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
+    from pricing_copilot.config import Settings
+    from pricing_copilot.contracts import (
+        AnalysisPeriod,
+        GovernanceOutcome,
+        PortfolioQuestion,
+        Product,
+        Recommendation,
+        RecommendationAction,
+        Region,
+        ScenarioName,
+        Segment,
+        WorkflowResult,
+    )
+    from pricing_copilot.replay.store import save_replay_artifact
+
+    replay_dir = tmp_path / "replay"
+    monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(replay_dir))
+    question = PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+    )
+    save_replay_artifact(
+        ChatResponse(
+            intent=ChatIntent.PRICING_ANALYSIS,
+            context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+            message="Recommends increase.",
+            workflow_result=WorkflowResult(
+                question=question,
+                specialist_reports=[],
+                recommendation=Recommendation(
+                    action=RecommendationAction.INCREASE, rationale="Loss ratio rose."
+                ),
+                governance_outcome=GovernanceOutcome(approved=True),
+                missing_evidence=[],
+            ),
+        ),
+        Settings(replay_directory=replay_dir),
+    )
+
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("Replay the controlled increase scenario")
+    app.run()
+
+    assert not app.exception
+    warnings = "\n".join(w.body for w in app.warning)
+    assert "REPLAY MODE" in warnings

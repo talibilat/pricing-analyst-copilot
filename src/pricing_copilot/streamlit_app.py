@@ -17,7 +17,12 @@ from pricing_copilot.chat.contracts import (
 )
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
-from pricing_copilot.contracts import AnalystDecisionType, DecisionRequest, WorkflowResult
+from pricing_copilot.contracts import (
+    AnalystDecisionType,
+    DecisionRequest,
+    ResultSource,
+    WorkflowResult,
+)
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 
 
@@ -149,6 +154,11 @@ def _render_decision_controls(result: WorkflowResult, message_number: int) -> No
 
 
 def _render_response(response: ChatResponse, message_number: int, *, can_record: bool) -> None:
+    if response.source is ResultSource.REPLAY:
+        st.warning(
+            "REPLAY MODE - this is a cached, previously validated run, not a live analysis.",
+            icon="🔁",
+        )
     st.markdown(response.message)
     for table in response.tables:
         _render_table(table)
@@ -226,6 +236,11 @@ if prompt := st.chat_input(
         with st.spinner("Working with governed portfolio sources..."):
             response = ChatService().submit(prompt, on_activity=show_activity)
         activity_box.empty()
+        if "Live analysis could not complete" in response.message:
+            message_number = len(st.session_state.chat_messages)
+            if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
+                retry_context = ChatContext(scenario=response.context.scenario, force_replay=True)
+                response = ChatService().submit(prompt, retry_context, on_activity=show_activity)
         if response.activities:
             with st.expander("Activity trace", expanded=True):
                 st.write(
