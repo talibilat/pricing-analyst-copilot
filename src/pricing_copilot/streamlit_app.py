@@ -25,6 +25,7 @@ from pricing_copilot.contracts import (
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
+from pricing_copilot.evidence.models import FairValueStatus
 
 
 def _render_time_series(
@@ -86,6 +87,33 @@ def _render_workflow_result(result: WorkflowResult) -> None:
         st.write("\n".join(f"- {item}" for item in recommendation.investigation_areas))
     if recommendation.cited_evidence_ids:
         st.caption("Citations: " + ", ".join(recommendation.cited_evidence_ids))
+
+    if recommendation.confidence is not None:
+        confidence = recommendation.confidence
+        st.markdown("**Confidence**")
+        cols = st.columns(5)
+        labels_and_values = [
+            ("Evidence coverage", confidence.evidence_coverage),
+            ("Source freshness", confidence.source_freshness),
+            ("Specialist agreement", confidence.specialist_agreement),
+            ("Data quality", confidence.data_quality),
+            ("Conflict penalty", confidence.conflict_penalty),
+        ]
+        for column, (label, value) in zip(cols, labels_and_values, strict=True):
+            column.metric(label, f"{value * 100:.0f}%")
+        st.caption(f"Overall confidence: {confidence.overall * 100:.0f}%")
+
+    if recommendation.fair_value_status is not None:
+        fair_value_labels = {
+            FairValueStatus.NO_CONCERN: "No concern",
+            FairValueStatus.REVIEW_RECOMMENDED: "Review recommended",
+            FairValueStatus.CONCERN_IDENTIFIED: "Concern identified",
+        }
+        st.markdown(
+            f"**Fair value status:** {fair_value_labels[recommendation.fair_value_status]}"
+        )
+        if recommendation.fair_value_follow_up:
+            st.write("\n".join(f"- {item}" for item in recommendation.fair_value_follow_up))
 
     analytics = result.analytics
     if analytics is None:

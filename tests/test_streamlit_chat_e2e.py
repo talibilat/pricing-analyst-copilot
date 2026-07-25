@@ -94,6 +94,18 @@ def test_replay_of_an_unrecorded_scenario_fails_gracefully_in_the_interface(
     assert "not available" in markdown.lower() or "not" in markdown.lower()
 
 
+def test_recommendation_response_shows_confidence_and_fair_value() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
+    app.run()
+    app.chat_input[0].set_value("Analyse everything and recommend a pricing action")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "Confidence" in markdown
+    assert "Fair value" in markdown or "Fair-value" in markdown
+
+
 def test_monitoring_tab_shows_an_honest_message_with_no_drift_report_recorded(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
