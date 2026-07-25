@@ -149,3 +149,27 @@ def test_confidence_with_no_documents_uses_full_freshness() -> None:
     )
     assert breakdown.source_freshness == 1.0
     assert breakdown.specialist_agreement == 1.0
+
+
+def test_drift_penalty_lowers_data_quality_and_overall_confidence() -> None:
+    analytics = _analytics()
+    ledger = build_evidence_ledger(
+        analytics=analytics, documents=[], region=Region.NORTH_WEST, retrieved_at=datetime.now(UTC)
+    )
+    baseline = calculate_confidence(
+        ledger=ledger,
+        documents=[],
+        analytics=analytics,
+        action=RecommendationAction.HOLD,
+        analysis_period_end=date(2025, 12, 1),
+    )
+    penalized = calculate_confidence(
+        ledger=ledger,
+        documents=[],
+        analytics=analytics,
+        action=RecommendationAction.HOLD,
+        analysis_period_end=date(2025, 12, 1),
+        drift_penalty=0.4,
+    )
+    assert penalized.data_quality < baseline.data_quality
+    assert penalized.overall < baseline.overall

@@ -19,6 +19,7 @@ def calculate_confidence(
     analytics: PortfolioAnalytics,
     action: RecommendationAction,
     analysis_period_end: date,
+    drift_penalty: float = 0.0,
 ) -> ConfidenceBreakdown:
     required_domains = {"claims", "conversion", "market_intelligence", "pricing_history"}
     covered: set[str] = set()
@@ -63,7 +64,7 @@ def calculate_confidence(
         checks = [True]
     specialist_agreement = sum(1 for c in checks if c) / len(checks)
 
-    data_quality = 1.0
+    data_quality = max(0.0, 1.0 - drift_penalty)
 
     if documents and action is RecommendationAction.INCREASE:
         against = sum(
