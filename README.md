@@ -13,9 +13,9 @@ The complete product specification is tracked in [Issue #1](https://github.com/t
 
 ## Current status
 
-Issues #2 through #8 are implemented on the delivery branch.
-The current application supports all three designed scenarios through controlled specialist-agent orchestration, independent governance review, deterministic safety policy, human decision recording, and inspectable local traces.
-The next dependency-ready implementation ticket is [Issue #9](https://github.com/talibilat/pricing-analyst-copilot/issues/9).
+Issues #2 through #11 are implemented and closed on the delivery branch: the governed multi-agent workflow across all three designed scenarios, transparent replay, a golden evaluation benchmark, and drift monitoring with an evaluated change-promotion gate.
+Issue #12 (interview experience polish, documentation, and the presentation package) is in progress.
+The next dependency-ready implementation ticket is [Issue #13](https://github.com/talibilat/pricing-analyst-copilot/issues/13).
 
 ## Product outcome
 
@@ -65,6 +65,14 @@ The supervisor uses a controlled manager pattern rather than a free-form agent g
 Specialists have typed inputs, typed outputs, and narrowly permitted read-only tools.
 The recommendation agent receives validated specialist reports and evidence references.
 The governance stage checks citations, numerical consistency, freshness, conflicts, movement limits, fairness constraints, and human-review wording.
+
+Human authority is structural, not a UI convention: no code path in this repository can execute a pricing change.
+`AnalystDecisionType` (approve, approve with conditions, reject, investigate) is recorded to a separate, append-only SQLite log (`decisions/store.py`) and nothing downstream of that log exists - there is no execution path for it to feed into.
+Every recommendation is explicitly captioned as decision support requiring qualified analyst review, not a claim of automated pricing authority.
+
+Production integration boundaries: this prototype's DuckDB analytics store and SQLite decision log stand in for a production data warehouse and a production decision-audit system respectively.
+A production integration would replace `PersistentAnalyticsDatabase` with a read replica of the real pricing data warehouse behind the same typed `query_source` interface, and would replace the SQLite decision store with the real underwriting decision-audit system.
+The `DecisionRequest`/`AnalystDecision` contracts are already shaped to make that swap a storage-layer change, not an application-logic change.
 
 ## Designed scenarios
 
@@ -301,3 +309,9 @@ The result includes measured evaluations, drift monitoring, polished presentatio
 
 This project is not an LLM pretending to understand insurance pricing.
 It is a governed workflow in which specialist agents gather evidence, deterministic tools calculate facts, an independent challenge stage tests the conclusion, and a qualified analyst remains accountable for the decision.
+
+## Supporting documents
+
+- [Risk register](docs/risk_register.md)
+- [Decision log](docs/decision_log.md)
+- [Demonstration script](docs/demonstration_script.md)
