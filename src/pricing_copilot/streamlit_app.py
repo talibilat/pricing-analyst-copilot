@@ -25,7 +25,7 @@ from pricing_copilot.contracts import (
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
-from pricing_copilot.evidence.models import FairValueStatus
+from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
 
 
 def _render_time_series(
@@ -62,6 +62,26 @@ def _render_table(table: ChatTable) -> None:
     st.dataframe(pd.DataFrame(table.rows, columns=table.columns), width="stretch", hide_index=True)
 
 
+def _render_evidence_detail(ledger: EvidenceLedger, cited_ids: list[str]) -> None:
+    cited_entries = [entry for entry in ledger.entries if entry.evidence_id in cited_ids]
+    if not cited_entries:
+        return
+    with st.expander(f"Evidence detail ({len(cited_entries)})", expanded=False):
+        for entry in cited_entries:
+            st.markdown(f"**{entry.evidence_id}** - {entry.source_type}")
+            detail_line = f"Source: {entry.source_reference}"
+            if entry.source_date is not None:
+                detail_line += f" | Date: {entry.source_date.isoformat()}"
+            st.caption(detail_line)
+            if entry.metric_name is not None:
+                metric_line = f"{entry.metric_name}: {entry.value}"
+                if entry.baseline_value is not None:
+                    metric_line += f" (baseline {entry.baseline_value})"
+                st.write(metric_line)
+            st.write(entry.interpretation)
+            st.divider()
+
+
 def _render_workflow_result(result: WorkflowResult) -> None:
     recommendation = result.recommendation
     st.caption(
@@ -87,6 +107,8 @@ def _render_workflow_result(result: WorkflowResult) -> None:
         st.write("\n".join(f"- {item}" for item in recommendation.investigation_areas))
     if recommendation.cited_evidence_ids:
         st.caption("Citations: " + ", ".join(recommendation.cited_evidence_ids))
+    if recommendation.cited_evidence_ids and result.evidence_ledger is not None:
+        _render_evidence_detail(result.evidence_ledger, recommendation.cited_evidence_ids)
 
     if recommendation.confidence is not None:
         confidence = recommendation.confidence

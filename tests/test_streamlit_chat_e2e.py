@@ -106,6 +106,18 @@ def test_recommendation_response_shows_confidence_and_fair_value() -> None:
     assert "Fair value" in markdown or "Fair-value" in markdown
 
 
+def test_recommendation_response_shows_expandable_evidence_detail() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
+    app.run()
+    app.chat_input[0].set_value("Analyse everything and recommend a pricing action")
+    app.run()
+
+    assert not app.exception
+    assert app.expander
+    expander_labels = [e.label for e in app.expander]
+    assert any("Evidence detail" in label for label in expander_labels)
+
+
 def test_monitoring_tab_shows_an_honest_message_with_no_drift_report_recorded(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
