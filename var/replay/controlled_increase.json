@@ -1,0 +1,3483 @@
+{
+  "schema_version": "replay-artifact-schema-v1",
+  "scenario": "controlled_increase",
+  "recorded_at": "2026-07-25T17:23:04.073914Z",
+  "configuration_versions": {
+    "model_name": "gpt-5.4",
+    "recommendation_version": "governed-multi-agent-v1",
+    "governance_version": "deterministic-governance-v1",
+    "scenario_seed": 20260101,
+    "scenario_version": "v1",
+    "max_price_movement_pct": 5.0,
+    "prompt_version": "governed-prompts-v2",
+    "agent_registry_version": "approved-agent-registry-v1",
+    "tool_version": "deterministic-read-only-tools-v2",
+    "dataset_version": "v1",
+    "recommendation_policy_version": "recommendation-policy-v2",
+    "output_schema_version": "workflow-result-schema-v1"
+  },
+  "chat_response": {
+    "intent": "pricing_analysis",
+    "message": "The governed workflow recommends **increase**. A modest portfolio-level price increase could be considered because underwriting performance deteriorated, with loss ratio moving from 71.8% to 82.4%, while quote-to-sale conversion moved from 21.9% to 22.0% and renewal retention moved from 88.0% to 88.1%, indicating little current evidence of broad volume stress at portfolio level [claims-north_west-2025-12-01, conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External market context was also associated with room for a modest move, with tracked competitors showing average price-index movement of +2.5% and supporting market and broker evidence describing a firming market, stable positioning, and limited reported resistance to a further small adjustment [competitors-north_west-2025-12-01, doc-market-2025-11, doc-broker-2025-12, doc-broker-2025-09]. Repair-cost intelligence was consistent with ongoing severity pressure in the background [doc-repair-cost-2025-10]. The suggested range remains within the stated policy limit of +/-5% and should be treated as decision support for analyst review, not an implemented change [competitors-north_west-2025-12-01, claims-north_west-2025-12-01]. This is decision support only and needs an analyst’s explicit confirmation before any action is recorded.",
+    "context": {
+      "scenario": "controlled_increase",
+      "force_replay": false
+    },
+    "activities": [
+      {
+        "status": "scheduled",
+        "label": "Supervisor coordinating specialist agents",
+        "purpose": "Coordinating market intelligence, claims, conversion, pricing history, recommendation, and governance.",
+        "agent": "portfolio-supervisor",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Supervisor coordinating specialist agents",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "claims-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "conversion-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "market-intelligence-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Checking previous pricing actions",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "pricing-history-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 0.3493339754641056
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "claims-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Checking previous pricing actions",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Checking previous pricing actions",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 0.7896251045167446
+      },
+      {
+        "status": "working",
+        "label": "Checking previous pricing actions",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "pricing-history-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from competitor information data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from competitor information data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 0.641584163531661
+      },
+      {
+        "status": "completed",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 0.6364160217344761
+      },
+      {
+        "status": "working",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "market-intelligence-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 0.648624962195754
+      },
+      {
+        "status": "working",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "conversion-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Checking previous pricing actions",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "pricing-history-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Checking previous pricing actions",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "pricing-history-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 3431.5357920713723
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "claims-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "claims-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 3478.717542020604
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "conversion-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from conversion performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "conversion-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 6522.228209068999
+      },
+      {
+        "status": "completed",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "market-intelligence-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "market-intelligence-specialist",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 7499.162542168051
+      },
+      {
+        "status": "working",
+        "label": "Preparing a governed pricing recommendation",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "recommendation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Preparing a governed pricing recommendation",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "recommendation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Preparing a governed pricing recommendation",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "recommendation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 10868.96379198879
+      },
+      {
+        "status": "working",
+        "label": "Preparing a governed pricing recommendation",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "recommendation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Preparing a governed pricing recommendation",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "recommendation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Preparing a governed pricing recommendation",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "recommendation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 10682.862874818966
+      },
+      {
+        "status": "working",
+        "label": "Checking recommendation governance",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "governance-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Checking recommendation governance",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "governance-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Checking recommendation governance",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "governance-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 1487.257916945964
+      }
+    ],
+    "tables": [],
+    "cited_evidence_ids": [
+      "claims-north_west-2025-12-01",
+      "conversion-north_west-2025-12-01",
+      "retention-north_west-2025-12-01",
+      "competitors-north_west-2025-12-01",
+      "pricing-history-2024-06-01",
+      "doc-repair-cost-2025-10",
+      "doc-broker-2025-12",
+      "doc-broker-2025-09",
+      "doc-feedback-2025-11",
+      "doc-market-2025-11"
+    ],
+    "investigation_areas": [
+      "Validate whether the loss-ratio deterioration is persistent in the most recent months or affected by timing/noise within the observed period [claims-north_west-2025-12-01].",
+      "Check whether the flat-to-slightly-weaker new business conversion trend differs materially from renewal behavior before finalizing any portfolio-level adjustment [conversion-north_west-2025-12-01].",
+      "Review competitor monitoring for any change from the current stable ranking and +2.5% average movement before final analyst sign-off [competitors-north_west-2025-12-01, doc-market-2025-11].",
+      "Reassess customer and broker signals for any emerging affordability or fairness themes that were not concentrated in the current feedback set [doc-feedback-2025-11, doc-broker-2025-12, doc-broker-2025-09]."
+    ],
+    "requires_clarification": false,
+    "refused": false,
+    "workflow_result": {
+      "question": {
+        "product": "personal_motor",
+        "region": "north_west",
+        "segment": "renewal",
+        "analysis_period": {
+          "start_month": "2025-07-01",
+          "end_month": "2025-12-01"
+        },
+        "scenario": "controlled_increase"
+      },
+      "specialist_reports": [
+        {
+          "domain": "claims",
+          "status": "completed",
+          "evidence_ids": [
+            "claims-north_west-2025-12-01"
+          ],
+          "summary": "For the period 2024-01-01 to 2025-12-01, claim frequency was broadly stable, moving from 0.0844 to 0.0840, a decrease of 0.55%. Average severity increased from £1,615.2992 to £1,863.9629, up 15.39%. Incurred loss increased from £682,120.0492 to £781,847.0825, up 14.62%. Loss ratio increased from 0.7183 to 0.8244, up 14.77%. Overall, the deterioration in incurred loss and loss ratio coincided with materially higher average severity, while claim frequency was essentially flat.",
+          "missing_evidence": []
+        },
+        {
+          "domain": "conversion",
+          "status": "completed",
+          "evidence_ids": [
+            "conversion-north_west-2025-12-01"
+          ],
+          "summary": "For the period 2024-01-01 to 2025-12-01, quote-to-sale conversion was 21.85% at baseline and 21.95% currently, a 0.46% increase. Renewal retention was 87.97% at baseline and 88.06% currently, a 0.11% increase. Average quoted premium moved from £621.58 to £620.91, a 0.11% decrease. The small improvement in conversion coincided with a slight reduction in average quoted premium. Segment results were mixed: new business conversion was broadly flat, moving from 14.99% to 14.98% (-0.06%), while the renewal segment improved from 21.85% to 21.95% (0.46%). Overall, the portfolio showed marginally stronger conversion and retention, with improvement concentrated in renewals rather than new business.",
+          "missing_evidence": []
+        },
+        {
+          "domain": "market_intelligence",
+          "status": "completed",
+          "evidence_ids": [
+            "competitors-north_west-2025-12-01",
+            "doc-market-2025-11",
+            "doc-broker-2025-12",
+            "doc-broker-2025-09",
+            "doc-feedback-2025-11",
+            "doc-repair-cost-2025-10"
+          ],
+          "summary": "Across the period from 2024-01-01 to 2025-12-01, the fictional competitor set showed modest upward price-index movement with stable rank positions. Northgate Cover increased its price index by 2.62% and remained rank 1, Meridian Insure increased by 2.37% and remained rank 2, and Bracken Mutual increased by 2.43% and remained rank 3. This indicates a broadly firming fictional market with no change in relative ordering among those peers. \n\nRetrieved market intelligence was consistent with that pattern. A market report stated that fictional competitors Meridian Insure, Northgate Cover, and Bracken Mutual had each firmed personal motor renewal pricing by roughly 2% to 3% over the past quarter, with no fictional competitor reducing pricing in that window. Broker notes also said North West personal motor pricing remained competitively positioned relative to fictional peers despite modest recent increases across the market, and that no broker flagged retention risk from a further small adjustment. \n\nCustomer and broker signals were relatively stable in this period. Broker feedback said a previous 2% portfolio-level renewal increase earlier in the year was associated with limited customer pushback and no material shift in quote volumes. Aggregate customer feedback showed that most renewal comments focused on claims-handling speed and overall satisfaction, while only a small minority referenced price and there was no concentrated pattern of fairness or affordability complaints. \n\nCost-side intelligence also pointed to continued external pressure. A repair-cost report said parts and labour costs for common personal motor repairs had risen materially over the past twelve months, consistent with wider claims-severity inflation across the industry. \n\nOverall, the portfolio period was associated with a fictional competitor market that was firming by low single digits, stable competitive ranking, limited reported customer resistance to modest increases, and ongoing repair-cost inflation in the background. Taken together, the retrieved evidence was consistent with a modest pricing adjustment being in line with current fictional market conditions rather than an aggressive repositioning.",
+          "missing_evidence": []
+        },
+        {
+          "domain": "pricing_history",
+          "status": "completed",
+          "evidence_ids": [
+            "pricing-history-2024-06-01"
+          ],
+          "summary": "On 2024-06-01, the portfolio recorded one prior pricing action: a 2.0% renewal price increase at portfolio level, noted as a response to early claims-inflation signals. This action was associated with a 0.6% decrease in conversion and a 1.0% decrease in loss ratio. [Evidence: pricing-history-2024-06-01]",
+          "missing_evidence": []
+        }
+      ],
+      "recommendation": {
+        "action": "increase",
+        "price_range": {
+          "lower_pct": 1.0,
+          "upper_pct": 3.0
+        },
+        "rationale": "A modest portfolio-level price increase could be considered because underwriting performance deteriorated, with loss ratio moving from 71.8% to 82.4%, while quote-to-sale conversion moved from 21.9% to 22.0% and renewal retention moved from 88.0% to 88.1%, indicating little current evidence of broad volume stress at portfolio level [claims-north_west-2025-12-01, conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External market context was also associated with room for a modest move, with tracked competitors showing average price-index movement of +2.5% and supporting market and broker evidence describing a firming market, stable positioning, and limited reported resistance to a further small adjustment [competitors-north_west-2025-12-01, doc-market-2025-11, doc-broker-2025-12, doc-broker-2025-09]. Repair-cost intelligence was consistent with ongoing severity pressure in the background [doc-repair-cost-2025-10]. The suggested range remains within the stated policy limit of +/-5% and should be treated as decision support for analyst review, not an implemented change [competitors-north_west-2025-12-01, claims-north_west-2025-12-01].",
+        "counter_evidence": [
+          "Claim frequency was described as broadly stable rather than worsening, so the claims deterioration appears concentrated in severity rather than frequency [claims-north_west-2025-12-01].",
+          "Average quoted premium was described as slightly lower while conversion improved only marginally, so current demand evidence is supportive but not emphatic [conversion-north_west-2025-12-01].",
+          "New business conversion was described as broadly flat to slightly weaker, with improvement concentrated in renewals, which is a mixed signal for broader elasticity [conversion-north_west-2025-12-01].",
+          "The competitor evidence points to low-single-digit market firming rather than a large repricing window, which argues for modesty rather than an aggressive move [competitors-north_west-2025-12-01, doc-market-2025-11].",
+          "A prior portfolio-level +2.0% pricing action was associated with a 0.6% decrease in conversion, which indicates some risk of softer demand response after another increase [pricing-history-2024-06-01].",
+          "Customer feedback was described as mostly focused on service themes rather than price, but that does not rule out latent sensitivity if pricing is pushed too far [doc-feedback-2025-11]."
+        ],
+        "conditions": [
+          "Keep any consideration to a portfolio-level adjustment within +1.0% to +3.0%, which is inside the policy limit and broadly aligned with the observed competitor average movement of +2.5% [competitors-north_west-2025-12-01].",
+          "Analyst review should confirm that renewal retention and quote-to-sale conversion remain near current levels after any contemplated move, given the prior +2.0% action was associated with a 0.6% decrease in conversion [conversion-north_west-2025-12-01, retention-north_west-2025-12-01, pricing-history-2024-06-01].",
+          "Analyst review should ensure the rationale remains supported by ongoing severity and repair-cost monitoring, since the core underwriting pressure appears linked to claims-cost inflation rather than frequency movement [claims-north_west-2025-12-01, doc-repair-cost-2025-10].",
+          "Requires explicit approval from a qualified pricing analyst before any action; the copilot cannot execute a pricing change."
+        ],
+        "investigation_areas": [
+          "Validate whether the loss-ratio deterioration is persistent in the most recent months or affected by timing/noise within the observed period [claims-north_west-2025-12-01].",
+          "Check whether the flat-to-slightly-weaker new business conversion trend differs materially from renewal behavior before finalizing any portfolio-level adjustment [conversion-north_west-2025-12-01].",
+          "Review competitor monitoring for any change from the current stable ranking and +2.5% average movement before final analyst sign-off [competitors-north_west-2025-12-01, doc-market-2025-11].",
+          "Reassess customer and broker signals for any emerging affordability or fairness themes that were not concentrated in the current feedback set [doc-feedback-2025-11, doc-broker-2025-12, doc-broker-2025-09]."
+        ],
+        "cited_evidence_ids": [
+          "claims-north_west-2025-12-01",
+          "conversion-north_west-2025-12-01",
+          "retention-north_west-2025-12-01",
+          "competitors-north_west-2025-12-01",
+          "pricing-history-2024-06-01",
+          "doc-repair-cost-2025-10",
+          "doc-broker-2025-12",
+          "doc-broker-2025-09",
+          "doc-feedback-2025-11",
+          "doc-market-2025-11"
+        ],
+        "confidence": {
+          "evidence_coverage": 1.0,
+          "source_freshness": 0.7844,
+          "specialist_agreement": 1.0,
+          "data_quality": 1.0,
+          "conflict_penalty": 0.0,
+          "overall": 0.9569
+        },
+        "fair_value_status": "review_recommended",
+        "fair_value_follow_up": [
+          "Confirm no disproportionate impact on price-sensitive segments before rollout.",
+          "Monitor retention for two renewal cycles after implementation."
+        ]
+      },
+      "governance_outcome": {
+        "approved": true,
+        "reasons": [
+          "Recommendation validated deterministically and approved by the independent governance agent.",
+          "Policy approval permits qualified human review only; it is not regulatory compliance and does not execute a pricing change."
+        ]
+      },
+      "missing_evidence": [],
+      "analytics": {
+        "claims": {
+          "period_start": "2024-01-01",
+          "period_end": "2025-12-01",
+          "claim_frequency": {
+            "baseline": 0.08442708771266545,
+            "current": 0.08396598694786157,
+            "movement_pct": -0.5461526357194318,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 0.08377069035123133
+              },
+              {
+                "period": "2024-02-01",
+                "value": 0.08267248215701824
+              },
+              {
+                "period": "2024-03-01",
+                "value": 0.08158368326334733
+              },
+              {
+                "period": "2024-04-01",
+                "value": 0.0860128617363344
+              },
+              {
+                "period": "2024-05-01",
+                "value": 0.08445336008024072
+              },
+              {
+                "period": "2024-06-01",
+                "value": 0.081522822403827
+              },
+              {
+                "period": "2024-07-01",
+                "value": 0.08662522558652497
+              },
+              {
+                "period": "2024-08-01",
+                "value": 0.08649407987156331
+              },
+              {
+                "period": "2024-09-01",
+                "value": 0.08696529459241324
+              },
+              {
+                "period": "2024-10-01",
+                "value": 0.0830848737825482
+              },
+              {
+                "period": "2024-11-01",
+                "value": 0.08438985736925515
+              },
+              {
+                "period": "2024-12-01",
+                "value": 0.08554982135768162
+              },
+              {
+                "period": "2025-01-01",
+                "value": 0.08269617706237424
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.08538785327720987
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.08430818878580072
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.08338344357586691
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.08224934960976586
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.08361536930121441
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.0846774193548387
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.08211202569765108
+              },
+              {
+                "period": "2025-09-01",
+                "value": 0.08520357497517378
+              },
+              {
+                "period": "2025-10-01",
+                "value": 0.0831505483549352
+              },
+              {
+                "period": "2025-11-01",
+                "value": 0.08522500995619275
+              },
+              {
+                "period": "2025-12-01",
+                "value": 0.08558288342331534
+              }
+            ]
+          },
+          "average_severity_gbp": {
+            "baseline": 1615.2992335575184,
+            "current": 1863.9629473183616,
+            "movement_pct": 15.394281665892255,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 1574.296361445783
+              },
+              {
+                "period": "2024-02-01",
+                "value": 1631.3592805755395
+              },
+              {
+                "period": "2024-03-01",
+                "value": 1591.7641421568628
+              },
+              {
+                "period": "2024-04-01",
+                "value": 1626.5879672897197
+              },
+              {
+                "period": "2024-05-01",
+                "value": 1621.6749881235155
+              },
+              {
+                "period": "2024-06-01",
+                "value": 1618.439902200489
+              },
+              {
+                "period": "2024-07-01",
+                "value": 1629.0943287037037
+              },
+              {
+                "period": "2024-08-01",
+                "value": 1620.5400696055685
+              },
+              {
+                "period": "2024-09-01",
+                "value": 1619.4573781902552
+              },
+              {
+                "period": "2024-10-01",
+                "value": 1626.7321531100479
+              },
+              {
+                "period": "2024-11-01",
+                "value": 1605.616737089202
+              },
+              {
+                "period": "2024-12-01",
+                "value": 1618.027494199536
+              },
+              {
+                "period": "2025-01-01",
+                "value": 1832.158102189781
+              },
+              {
+                "period": "2025-02-01",
+                "value": 1893.4181690140845
+              },
+              {
+                "period": "2025-03-01",
+                "value": 1831.1564354066986
+              },
+              {
+                "period": "2025-04-01",
+                "value": 1863.5433173076924
+              },
+              {
+                "period": "2025-05-01",
+                "value": 1863.5027250608273
+              },
+              {
+                "period": "2025-06-01",
+                "value": 1880.5438333333334
+              },
+              {
+                "period": "2025-07-01",
+                "value": 1848.6922142857143
+              },
+              {
+                "period": "2025-08-01",
+                "value": 1881.8010513447432
+              },
+              {
+                "period": "2025-09-01",
+                "value": 1877.5858041958043
+              },
+              {
+                "period": "2025-10-01",
+                "value": 1831.9118465227818
+              },
+              {
+                "period": "2025-11-01",
+                "value": 1882.4198130841123
+              },
+              {
+                "period": "2025-12-01",
+                "value": 1880.8220560747664
+              }
+            ]
+          },
+          "incurred_loss_gbp": {
+            "baseline": 682120.0491666667,
+            "current": 781847.0825,
+            "movement_pct": 14.620158644386422,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 653332.99
+              },
+              {
+                "period": "2024-02-01",
+                "value": 680276.82
+              },
+              {
+                "period": "2024-03-01",
+                "value": 649439.77
+              },
+              {
+                "period": "2024-04-01",
+                "value": 696179.65
+              },
+              {
+                "period": "2024-05-01",
+                "value": 682725.17
+              },
+              {
+                "period": "2024-06-01",
+                "value": 661941.92
+              },
+              {
+                "period": "2024-07-01",
+                "value": 703768.75
+              },
+              {
+                "period": "2024-08-01",
+                "value": 698452.77
+              },
+              {
+                "period": "2024-09-01",
+                "value": 697986.13
+              },
+              {
+                "period": "2024-10-01",
+                "value": 679974.04
+              },
+              {
+                "period": "2024-11-01",
+                "value": 683992.73
+              },
+              {
+                "period": "2024-12-01",
+                "value": 697369.85
+              },
+              {
+                "period": "2025-01-01",
+                "value": 753016.98
+              },
+              {
+                "period": "2025-02-01",
+                "value": 806596.14
+              },
+              {
+                "period": "2025-03-01",
+                "value": 765423.39
+              },
+              {
+                "period": "2025-04-01",
+                "value": 775234.02
+              },
+              {
+                "period": "2025-05-01",
+                "value": 765899.62
+              },
+              {
+                "period": "2025-06-01",
+                "value": 789828.41
+              },
+              {
+                "period": "2025-07-01",
+                "value": 776450.73
+              },
+              {
+                "period": "2025-08-01",
+                "value": 769656.63
+              },
+              {
+                "period": "2025-09-01",
+                "value": 805484.31
+              },
+              {
+                "period": "2025-10-01",
+                "value": 763907.24
+              },
+              {
+                "period": "2025-11-01",
+                "value": 805675.68
+              },
+              {
+                "period": "2025-12-01",
+                "value": 804991.84
+              }
+            ]
+          },
+          "loss_ratio": {
+            "baseline": 0.7183278072540175,
+            "current": 0.8244389130130636,
+            "movement_pct": 14.771961308957483,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 0.6824976003058371
+              },
+              {
+                "period": "2024-02-01",
+                "value": 0.7207285685784628
+              },
+              {
+                "period": "2024-03-01",
+                "value": 0.6886039254509221
+              },
+              {
+                "period": "2024-04-01",
+                "value": 0.7369222304465938
+              },
+              {
+                "period": "2024-05-01",
+                "value": 0.7165675444444158
+              },
+              {
+                "period": "2024-06-01",
+                "value": 0.6947842681372055
+              },
+              {
+                "period": "2024-07-01",
+                "value": 0.7431783222047699
+              },
+              {
+                "period": "2024-08-01",
+                "value": 0.7358674346053025
+              },
+              {
+                "period": "2024-09-01",
+                "value": 0.7308961316480251
+              },
+              {
+                "period": "2024-10-01",
+                "value": 0.7146253589592497
+              },
+              {
+                "period": "2024-11-01",
+                "value": 0.7157112639396452
+              },
+              {
+                "period": "2024-12-01",
+                "value": 0.7395510383277814
+              },
+              {
+                "period": "2025-01-01",
+                "value": 0.7894665561620134
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.8487968956741332
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.7998188895043217
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.8224745394721333
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.8007404034811514
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.836471366665303
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.8237825135575992
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.8089993865889754
+              },
+              {
+                "period": "2025-09-01",
+                "value": 0.8527229711009574
+              },
+              {
+                "period": "2025-10-01",
+                "value": 0.8029866320653731
+              },
+              {
+                "period": "2025-11-01",
+                "value": 0.8514787213990502
+              },
+              {
+                "period": "2025-12-01",
+                "value": 0.8555280804857518
+              }
+            ]
+          }
+        },
+        "conversion": {
+          "period_start": "2024-01-01",
+          "period_end": "2025-12-01",
+          "quote_to_sale_conversion": {
+            "baseline": 0.21851955669716783,
+            "current": 0.21952777931092035,
+            "movement_pct": 0.4613878176358169,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 0.21788537549407114
+              },
+              {
+                "period": "2024-02-01",
+                "value": 0.2138756927949327
+              },
+              {
+                "period": "2024-03-01",
+                "value": 0.21359605911330048
+              },
+              {
+                "period": "2024-04-01",
+                "value": 0.21751495537903304
+              },
+              {
+                "period": "2024-05-01",
+                "value": 0.214068209500609
+              },
+              {
+                "period": "2024-06-01",
+                "value": 0.22041314745090057
+              },
+              {
+                "period": "2024-07-01",
+                "value": 0.22597429096102836
+              },
+              {
+                "period": "2024-08-01",
+                "value": 0.22405402721223558
+              },
+              {
+                "period": "2024-09-01",
+                "value": 0.2165146909827761
+              },
+              {
+                "period": "2024-10-01",
+                "value": 0.21467310916083227
+              },
+              {
+                "period": "2024-11-01",
+                "value": 0.22238017871649066
+              },
+              {
+                "period": "2024-12-01",
+                "value": 0.22128494359980383
+              },
+              {
+                "period": "2025-01-01",
+                "value": 0.21484413656605642
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.2136171051335107
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.2246469833119384
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.2252305277614283
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.21464800162304726
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.22047719722138326
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.22143780451426867
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.2232205956587582
+              },
+              {
+                "period": "2025-09-01",
+                "value": 0.22546043311070635
+              },
+              {
+                "period": "2025-10-01",
+                "value": 0.21856581532416502
+              },
+              {
+                "period": "2025-11-01",
+                "value": 0.2138599858571573
+              },
+              {
+                "period": "2025-12-01",
+                "value": 0.21832476564862413
+              }
+            ]
+          },
+          "renewal_retention": {
+            "baseline": 0.8796859367880024,
+            "current": 0.8806276535531881,
+            "movement_pct": 0.10705147437324156,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 0.8762860727728984
+              },
+              {
+                "period": "2024-02-01",
+                "value": 0.875784190715182
+              },
+              {
+                "period": "2024-03-01",
+                "value": 0.8638426626323752
+              },
+              {
+                "period": "2024-04-01",
+                "value": 0.8758723828514456
+              },
+              {
+                "period": "2024-05-01",
+                "value": 0.8907393388846834
+              },
+              {
+                "period": "2024-06-01",
+                "value": 0.873271310032688
+              },
+              {
+                "period": "2024-07-01",
+                "value": 0.895242914979757
+              },
+              {
+                "period": "2024-08-01",
+                "value": 0.8851248089658685
+              },
+              {
+                "period": "2024-09-01",
+                "value": 0.890314465408805
+              },
+              {
+                "period": "2024-10-01",
+                "value": 0.8820564516129032
+              },
+              {
+                "period": "2024-11-01",
+                "value": 0.8815529179030662
+              },
+              {
+                "period": "2024-12-01",
+                "value": 0.8661437246963563
+              },
+              {
+                "period": "2025-01-01",
+                "value": 0.8781335318937702
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.8771280532938565
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.892984239959329
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.8848378174503394
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.8778796135744364
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.895247574023389
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.8755050505050505
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.8761467889908257
+              },
+              {
+                "period": "2025-09-01",
+                "value": 0.874969355234126
+              },
+              {
+                "period": "2025-10-01",
+                "value": 0.8826314477946673
+              },
+              {
+                "period": "2025-11-01",
+                "value": 0.8754642238177767
+              },
+              {
+                "period": "2025-12-01",
+                "value": 0.876604146100691
+              }
+            ]
+          },
+          "average_quoted_premium_gbp": {
+            "baseline": 621.5841666666666,
+            "current": 620.9066666666666,
+            "movement_pct": -0.1089956978204897,
+            "monthly": [
+              {
+                "period": "2024-01-01",
+                "value": 625.9
+              },
+              {
+                "period": "2024-02-01",
+                "value": 624.08
+              },
+              {
+                "period": "2024-03-01",
+                "value": 624.71
+              },
+              {
+                "period": "2024-04-01",
+                "value": 622.84
+              },
+              {
+                "period": "2024-05-01",
+                "value": 614.12
+              },
+              {
+                "period": "2024-06-01",
+                "value": 622.99
+              },
+              {
+                "period": "2024-07-01",
+                "value": 622.85
+              },
+              {
+                "period": "2024-08-01",
+                "value": 618.56
+              },
+              {
+                "period": "2024-09-01",
+                "value": 623.93
+              },
+              {
+                "period": "2024-10-01",
+                "value": 619.87
+              },
+              {
+                "period": "2024-11-01",
+                "value": 618.07
+              },
+              {
+                "period": "2024-12-01",
+                "value": 621.09
+              },
+              {
+                "period": "2025-01-01",
+                "value": 624.66
+              },
+              {
+                "period": "2025-02-01",
+                "value": 624.5
+              },
+              {
+                "period": "2025-03-01",
+                "value": 619.9
+              },
+              {
+                "period": "2025-04-01",
+                "value": 625.37
+              },
+              {
+                "period": "2025-05-01",
+                "value": 616.43
+              },
+              {
+                "period": "2025-06-01",
+                "value": 618.34
+              },
+              {
+                "period": "2025-07-01",
+                "value": 623.87
+              },
+              {
+                "period": "2025-08-01",
+                "value": 621.61
+              },
+              {
+                "period": "2025-09-01",
+                "value": 619.94
+              },
+              {
+                "period": "2025-10-01",
+                "value": 619.82
+              },
+              {
+                "period": "2025-11-01",
+                "value": 615.76
+              },
+              {
+                "period": "2025-12-01",
+                "value": 620.68
+              }
+            ]
+          },
+          "segment_comparison": {
+            "new_business": {
+              "baseline": 0.14988676738432902,
+              "current": 0.14980013425651617,
+              "movement_pct": -0.05779905012609134,
+              "monthly": [
+                {
+                  "period": "2024-01-01",
+                  "value": 0.15279878971255673
+                },
+                {
+                  "period": "2024-02-01",
+                  "value": 0.1478481012658228
+                },
+                {
+                  "period": "2024-03-01",
+                  "value": 0.1459926507101003
+                },
+                {
+                  "period": "2024-04-01",
+                  "value": 0.1463019250253293
+                },
+                {
+                  "period": "2024-05-01",
+                  "value": 0.1509060303000297
+                },
+                {
+                  "period": "2024-06-01",
+                  "value": 0.15391485561178922
+                },
+                {
+                  "period": "2024-07-01",
+                  "value": 0.15138425289613194
+                },
+                {
+                  "period": "2024-08-01",
+                  "value": 0.1459
+                },
+                {
+                  "period": "2024-09-01",
+                  "value": 0.154291319274154
+                },
+                {
+                  "period": "2024-10-01",
+                  "value": 0.15316744324377912
+                },
+                {
+                  "period": "2024-11-01",
+                  "value": 0.1457833733013589
+                },
+                {
+                  "period": "2024-12-01",
+                  "value": 0.15035246727089627
+                },
+                {
+                  "period": "2025-01-01",
+                  "value": 0.15053546170943624
+                },
+                {
+                  "period": "2025-02-01",
+                  "value": 0.14709755850471076
+                },
+                {
+                  "period": "2025-03-01",
+                  "value": 0.14825466084886949
+                },
+                {
+                  "period": "2025-04-01",
+                  "value": 0.15038275584206284
+                },
+                {
+                  "period": "2025-05-01",
+                  "value": 0.14967268399127157
+                },
+                {
+                  "period": "2025-06-01",
+                  "value": 0.146669341894061
+                },
+                {
+                  "period": "2025-07-01",
+                  "value": 0.14840676632572777
+                },
+                {
+                  "period": "2025-08-01",
+                  "value": 0.15131906421105026
+                },
+                {
+                  "period": "2025-09-01",
+                  "value": 0.15360937344851555
+                },
+                {
+                  "period": "2025-10-01",
+                  "value": 0.14679922897433295
+                },
+                {
+                  "period": "2025-11-01",
+                  "value": 0.15304772565381092
+                },
+                {
+                  "period": "2025-12-01",
+                  "value": 0.15180698967434472
+                }
+              ]
+            },
+            "renewal": {
+              "baseline": 0.21851955669716783,
+              "current": 0.21952777931092035,
+              "movement_pct": 0.4613878176358169,
+              "monthly": [
+                {
+                  "period": "2024-01-01",
+                  "value": 0.21788537549407114
+                },
+                {
+                  "period": "2024-02-01",
+                  "value": 0.2138756927949327
+                },
+                {
+                  "period": "2024-03-01",
+                  "value": 0.21359605911330048
+                },
+                {
+                  "period": "2024-04-01",
+                  "value": 0.21751495537903304
+                },
+                {
+                  "period": "2024-05-01",
+                  "value": 0.214068209500609
+                },
+                {
+                  "period": "2024-06-01",
+                  "value": 0.22041314745090057
+                },
+                {
+                  "period": "2024-07-01",
+                  "value": 0.22597429096102836
+                },
+                {
+                  "period": "2024-08-01",
+                  "value": 0.22405402721223558
+                },
+                {
+                  "period": "2024-09-01",
+                  "value": 0.2165146909827761
+                },
+                {
+                  "period": "2024-10-01",
+                  "value": 0.21467310916083227
+                },
+                {
+                  "period": "2024-11-01",
+                  "value": 0.22238017871649066
+                },
+                {
+                  "period": "2024-12-01",
+                  "value": 0.22128494359980383
+                },
+                {
+                  "period": "2025-01-01",
+                  "value": 0.21484413656605642
+                },
+                {
+                  "period": "2025-02-01",
+                  "value": 0.2136171051335107
+                },
+                {
+                  "period": "2025-03-01",
+                  "value": 0.2246469833119384
+                },
+                {
+                  "period": "2025-04-01",
+                  "value": 0.2252305277614283
+                },
+                {
+                  "period": "2025-05-01",
+                  "value": 0.21464800162304726
+                },
+                {
+                  "period": "2025-06-01",
+                  "value": 0.22047719722138326
+                },
+                {
+                  "period": "2025-07-01",
+                  "value": 0.22143780451426867
+                },
+                {
+                  "period": "2025-08-01",
+                  "value": 0.2232205956587582
+                },
+                {
+                  "period": "2025-09-01",
+                  "value": 0.22546043311070635
+                },
+                {
+                  "period": "2025-10-01",
+                  "value": 0.21856581532416502
+                },
+                {
+                  "period": "2025-11-01",
+                  "value": 0.2138599858571573
+                },
+                {
+                  "period": "2025-12-01",
+                  "value": 0.21832476564862413
+                }
+              ]
+            }
+          }
+        },
+        "competitors": {
+          "period_start": "2024-01-01",
+          "period_end": "2025-12-01",
+          "competitors": [
+            {
+              "competitor_name": "Bracken Mutual",
+              "price_index": {
+                "baseline": 103.03750000000001,
+                "current": 105.5425,
+                "movement_pct": 2.431153706174932,
+                "monthly": [
+                  {
+                    "period": "2024-01-01",
+                    "value": 103.91
+                  },
+                  {
+                    "period": "2024-02-01",
+                    "value": 103.95
+                  },
+                  {
+                    "period": "2024-03-01",
+                    "value": 102.5
+                  },
+                  {
+                    "period": "2024-04-01",
+                    "value": 103.12
+                  },
+                  {
+                    "period": "2024-05-01",
+                    "value": 102.92
+                  },
+                  {
+                    "period": "2024-06-01",
+                    "value": 103.73
+                  },
+                  {
+                    "period": "2024-07-01",
+                    "value": 102.1
+                  },
+                  {
+                    "period": "2024-08-01",
+                    "value": 102.31
+                  },
+                  {
+                    "period": "2024-09-01",
+                    "value": 103.4
+                  },
+                  {
+                    "period": "2024-10-01",
+                    "value": 103.06
+                  },
+                  {
+                    "period": "2024-11-01",
+                    "value": 103.2
+                  },
+                  {
+                    "period": "2024-12-01",
+                    "value": 102.25
+                  },
+                  {
+                    "period": "2025-01-01",
+                    "value": 106.27
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 105.97
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 104.9
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 106.27
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 104.85
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 105.25
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 104.76
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 106.62
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 105.21
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 105.83
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 104.96
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 105.62
+                  }
+                ]
+              },
+              "rank": {
+                "baseline": 3.0,
+                "current": 3.0,
+                "movement_pct": 0.0,
+                "monthly": [
+                  {
+                    "period": "2024-01-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-02-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-03-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-04-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-05-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-06-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-07-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-08-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-09-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-10-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-11-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2024-12-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-01-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 3.0
+                  }
+                ]
+              }
+            },
+            {
+              "competitor_name": "Meridian Insure",
+              "price_index": {
+                "baseline": 99.93083333333334,
+                "current": 102.29833333333333,
+                "movement_pct": 2.369138654235839,
+                "monthly": [
+                  {
+                    "period": "2024-01-01",
+                    "value": 100.25
+                  },
+                  {
+                    "period": "2024-02-01",
+                    "value": 99.22
+                  },
+                  {
+                    "period": "2024-03-01",
+                    "value": 99.02
+                  },
+                  {
+                    "period": "2024-04-01",
+                    "value": 100.44
+                  },
+                  {
+                    "period": "2024-05-01",
+                    "value": 99.82
+                  },
+                  {
+                    "period": "2024-06-01",
+                    "value": 99.92
+                  },
+                  {
+                    "period": "2024-07-01",
+                    "value": 100.2
+                  },
+                  {
+                    "period": "2024-08-01",
+                    "value": 100.44
+                  },
+                  {
+                    "period": "2024-09-01",
+                    "value": 100.32
+                  },
+                  {
+                    "period": "2024-10-01",
+                    "value": 100.3
+                  },
+                  {
+                    "period": "2024-11-01",
+                    "value": 99.41
+                  },
+                  {
+                    "period": "2024-12-01",
+                    "value": 99.83
+                  },
+                  {
+                    "period": "2025-01-01",
+                    "value": 102.66
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 101.7
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 101.5
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 102.33
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 103.15
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 101.55
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 102.72
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 103.26
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 101.59
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 102.55
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 102.37
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 102.2
+                  }
+                ]
+              },
+              "rank": {
+                "baseline": 2.0,
+                "current": 2.0,
+                "movement_pct": 0.0,
+                "monthly": [
+                  {
+                    "period": "2024-01-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-02-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-03-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-04-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-05-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-06-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-07-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-08-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-09-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-10-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-11-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2024-12-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-01-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 2.0
+                  }
+                ]
+              }
+            },
+            {
+              "competitor_name": "Northgate Cover",
+              "price_index": {
+                "baseline": 96.95416666666667,
+                "current": 99.49666666666667,
+                "movement_pct": 2.6223731144441143,
+                "monthly": [
+                  {
+                    "period": "2024-01-01",
+                    "value": 96.97
+                  },
+                  {
+                    "period": "2024-02-01",
+                    "value": 97.37
+                  },
+                  {
+                    "period": "2024-03-01",
+                    "value": 96.84
+                  },
+                  {
+                    "period": "2024-04-01",
+                    "value": 96.84
+                  },
+                  {
+                    "period": "2024-05-01",
+                    "value": 96.17
+                  },
+                  {
+                    "period": "2024-06-01",
+                    "value": 96.07
+                  },
+                  {
+                    "period": "2024-07-01",
+                    "value": 97.95
+                  },
+                  {
+                    "period": "2024-08-01",
+                    "value": 97.87
+                  },
+                  {
+                    "period": "2024-09-01",
+                    "value": 97.96
+                  },
+                  {
+                    "period": "2024-10-01",
+                    "value": 96.47
+                  },
+                  {
+                    "period": "2024-11-01",
+                    "value": 96.5
+                  },
+                  {
+                    "period": "2024-12-01",
+                    "value": 96.44
+                  },
+                  {
+                    "period": "2025-01-01",
+                    "value": 99.35
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 100.02
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 100.28
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 99.88
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 98.77
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 99.16
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 100.02
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 100.16
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 98.82
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 98.66
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 99.17
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 99.67
+                  }
+                ]
+              },
+              "rank": {
+                "baseline": 1.0,
+                "current": 1.0,
+                "movement_pct": 0.0,
+                "monthly": [
+                  {
+                    "period": "2024-01-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-02-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-03-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-04-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-05-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-06-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-07-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-08-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-09-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-10-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-11-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2024-12-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-01-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 1.0
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "pricing_history": [
+          {
+            "period": "2024-06-01",
+            "price_change_pct": 2.0,
+            "rationale": "Portfolio-level 2% renewal price increase applied to offset early claims-inflation signals.",
+            "conversion_impact_pct": -0.6,
+            "loss_ratio_impact_pct": -1.0
+          }
+        ]
+      },
+      "evidence_ledger": {
+        "entries": [
+          {
+            "evidence_id": "claims-north_west-2025-12-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic claims analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-01-01",
+            "period_end": "2025-12-01",
+            "metric_name": "loss_ratio",
+            "value": 0.8244389130130636,
+            "baseline_value": 0.7183278072540175,
+            "interpretation": "Loss ratio moved from 71.8% to 82.4%."
+          },
+          {
+            "evidence_id": "conversion-north_west-2025-12-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic conversion analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-01-01",
+            "period_end": "2025-12-01",
+            "metric_name": "quote_to_sale_conversion",
+            "value": 0.21952777931092035,
+            "baseline_value": 0.21851955669716783,
+            "interpretation": "Quote-to-sale conversion moved from 21.9% to 22.0%."
+          },
+          {
+            "evidence_id": "retention-north_west-2025-12-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic conversion analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-01-01",
+            "period_end": "2025-12-01",
+            "metric_name": "renewal_retention",
+            "value": 0.8806276535531881,
+            "baseline_value": 0.8796859367880024,
+            "interpretation": "Renewal retention moved from 88.0% to 88.1%."
+          },
+          {
+            "evidence_id": "competitors-north_west-2025-12-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic competitor analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-01-01",
+            "period_end": "2025-12-01",
+            "metric_name": "competitor_index_average_movement_pct",
+            "value": 2.5,
+            "baseline_value": null,
+            "interpretation": "3 fictional competitors tracked; average price-index movement +2.5%."
+          },
+          {
+            "evidence_id": "pricing-history-2024-06-01",
+            "source_type": "structured_metric",
+            "source_reference": "Previous pricing action record",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-06-01",
+            "period_end": "2024-06-01",
+            "metric_name": "price_change_pct",
+            "value": 2.0,
+            "baseline_value": null,
+            "interpretation": "Previous +2.0% action: Portfolio-level 2% renewal price increase applied to offset early claims-inflation signals."
+          },
+          {
+            "evidence_id": "doc-repair-cost-2025-10",
+            "source_type": "repair_cost_report",
+            "source_reference": "Synthetic UK Vehicle Repair Cost Index - Autumn 2025",
+            "source_date": "2025-10-01",
+            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "Synthetic UK Vehicle Repair Cost Index - Autumn 2025"
+          },
+          {
+            "evidence_id": "doc-broker-2025-12",
+            "source_type": "broker_note",
+            "source_reference": "Broker Panel Observations - Competitive Positioning",
+            "source_date": "2025-12-05",
+            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "Broker Panel Observations - Competitive Positioning"
+          },
+          {
+            "evidence_id": "doc-broker-2025-09",
+            "source_type": "broker_note",
+            "source_reference": "Broker Panel Observations - North West Motor Renewals",
+            "source_date": "2025-09-01",
+            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "Broker Panel Observations - North West Motor Renewals"
+          },
+          {
+            "evidence_id": "doc-feedback-2025-11",
+            "source_type": "customer_feedback",
+            "source_reference": "Aggregate North West Renewal Feedback Themes - November 2025",
+            "source_date": "2025-11-15",
+            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "Aggregate North West Renewal Feedback Themes - November 2025"
+          },
+          {
+            "evidence_id": "doc-market-2025-11",
+            "source_type": "market_report",
+            "source_reference": "North West Personal Motor Market Pulse - November 2025",
+            "source_date": "2025-11-01",
+            "retrieval_timestamp": "2026-07-25T17:22:41.024486Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "North West Personal Motor Market Pulse - November 2025"
+          }
+        ]
+      },
+      "execution_trace": {
+        "trace_id": "trace_02720b8178dd4c60a3b1e58fb3d111db",
+        "workflow_name": "Governed Pricing Decision Copilot",
+        "started_at": "2026-07-25T17:22:32.506504Z",
+        "completed_at": "2026-07-25T17:23:04.071371Z",
+        "status": "completed",
+        "configuration_versions": {
+          "model_name": "gpt-5.4",
+          "prompt_version": "governed-prompts-v2",
+          "agent_registry_version": "approved-agent-registry-v1",
+          "tool_version": "deterministic-read-only-tools-v2",
+          "dataset_version": "v1",
+          "scenario_seed": 20260101,
+          "governance_version": "deterministic-governance-v1",
+          "recommendation_version": "governed-multi-agent-v1",
+          "policy_version": "recommendation-policy-v2",
+          "recommendation_policy_version": "recommendation-policy-v2"
+        },
+        "limits": {
+          "max_agent_turns": 6,
+          "max_tool_calls_per_agent": 4,
+          "tool_timeout_seconds": 5.0,
+          "request_timeout_seconds": 30.0,
+          "max_workflow_seconds": 90.0,
+          "max_retries": 1
+        },
+        "usage": {
+          "requests": 11,
+          "input_tokens": 12834,
+          "output_tokens": 3337,
+          "total_tokens": 16171,
+          "estimated_cost_gbp": 0.0,
+          "pricing_configured": false
+        },
+        "events": [
+          {
+            "timestamp": "2026-07-25T17:22:32.516459Z",
+            "kind": "agents_sdk",
+            "name": "trace",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:32.516509Z",
+            "kind": "routing",
+            "name": "portfolio-supervisor",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "scenario": "controlled_increase"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.520387Z",
+            "kind": "guardrail",
+            "name": "untrusted_document",
+            "status": "blocked",
+            "duration_ms": null,
+            "details": {
+              "document_id": "doc-market-2025-11-adversarial",
+              "reason": "Quarantined untrusted document containing instruction-like content: instruction_override, ignore_instructions, policy_weakening."
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522027Z",
+            "kind": "routing",
+            "name": "claims",
+            "status": "scheduled",
+            "duration_ms": null,
+            "details": {
+              "parallel": true
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522036Z",
+            "kind": "routing",
+            "name": "conversion",
+            "status": "scheduled",
+            "duration_ms": null,
+            "details": {
+              "parallel": true
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522039Z",
+            "kind": "routing",
+            "name": "market_intelligence",
+            "status": "scheduled",
+            "duration_ms": null,
+            "details": {
+              "parallel": true
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522041Z",
+            "kind": "routing",
+            "name": "pricing_history",
+            "status": "scheduled",
+            "duration_ms": null,
+            "details": {
+              "parallel": true
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522384Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522620Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522744Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.522859Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523172Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523193Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523306Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523323Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523422Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523437Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523530Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.523545Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.524169Z",
+            "kind": "model_call",
+            "name": "claims-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.524182Z",
+            "kind": "model_call",
+            "name": "conversion-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.524187Z",
+            "kind": "model_call",
+            "name": "market-intelligence-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.524191Z",
+            "kind": "model_call",
+            "name": "pricing-history-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.524312Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.722284Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.731099Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:33.735405Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.973275Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.974061Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.974150Z",
+            "kind": "tool_call",
+            "name": "get_claims_metrics",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "claims-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.974499Z",
+            "kind": "tool_call",
+            "name": "get_claims_metrics",
+            "status": "completed",
+            "duration_ms": 0.3493339754641056,
+            "details": {
+              "agent": "claims-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.974580Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.974792Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.974958Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.975374Z",
+            "kind": "model_call",
+            "name": "claims-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:34.975488Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.220682Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.221806Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.221977Z",
+            "kind": "tool_call",
+            "name": "get_pricing_history",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "pricing-history-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.222765Z",
+            "kind": "tool_call",
+            "name": "get_pricing_history",
+            "status": "completed",
+            "duration_ms": 0.7896251045167446,
+            "details": {
+              "agent": "pricing-history-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.222974Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.223403Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.223756Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.224701Z",
+            "kind": "model_call",
+            "name": "pricing-history-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.225052Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.238131Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.238701Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.238779Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.238835Z",
+            "kind": "tool_call",
+            "name": "get_competitor_metrics",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "market-intelligence-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.238862Z",
+            "kind": "tool_call",
+            "name": "get_market_intelligence_documents",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "market-intelligence-specialist",
+              "tool_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.239476Z",
+            "kind": "tool_call",
+            "name": "get_competitor_metrics",
+            "status": "completed",
+            "duration_ms": 0.641584163531661,
+            "details": {
+              "agent": "market-intelligence-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.239498Z",
+            "kind": "tool_call",
+            "name": "get_market_intelligence_documents",
+            "status": "completed",
+            "duration_ms": 0.6364160217344761,
+            "details": {
+              "agent": "market-intelligence-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.239617Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.239635Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.239866Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.240019Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.240548Z",
+            "kind": "model_call",
+            "name": "market-intelligence-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:35.240698Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.171416Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.171962Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.172042Z",
+            "kind": "tool_call",
+            "name": "get_conversion_metrics",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "conversion-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.172691Z",
+            "kind": "tool_call",
+            "name": "get_conversion_metrics",
+            "status": "completed",
+            "duration_ms": 0.648624962195754,
+            "details": {
+              "agent": "conversion-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.172833Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.173092Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.173302Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.173967Z",
+            "kind": "model_call",
+            "name": "conversion-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.174161Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.953027Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.953942Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.954227Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.954255Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.954363Z",
+            "kind": "model_call",
+            "name": "pricing-history-specialist",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 2,
+              "input_tokens": 980,
+              "output_tokens": 126,
+              "total_tokens": 1106,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.954385Z",
+            "kind": "routing",
+            "name": "pricing-history-specialist",
+            "status": "completed",
+            "duration_ms": 3431.5357920713723,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 1,
+              "model_calls": 2,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:36.999351Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:37.000238Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:37.000628Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:37.000697Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:37.000819Z",
+            "kind": "model_call",
+            "name": "claims-specialist",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 2,
+              "input_tokens": 1080,
+              "output_tokens": 195,
+              "total_tokens": 1275,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:37.000855Z",
+            "kind": "routing",
+            "name": "claims-specialist",
+            "status": "completed",
+            "duration_ms": 3478.717542020604,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 1,
+              "model_calls": 2,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:40.044241Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:40.044640Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:40.044777Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:40.044796Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:40.044826Z",
+            "kind": "model_call",
+            "name": "conversion-specialist",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 2,
+              "input_tokens": 1135,
+              "output_tokens": 233,
+              "total_tokens": 1368,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:40.044840Z",
+            "kind": "routing",
+            "name": "conversion-specialist",
+            "status": "completed",
+            "duration_ms": 6522.228209068999,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 1,
+              "model_calls": 2,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.020215Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.021323Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.021728Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.021798Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.021888Z",
+            "kind": "model_call",
+            "name": "market-intelligence-specialist",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 2,
+              "input_tokens": 1971,
+              "output_tokens": 533,
+              "total_tokens": 2504,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.021925Z",
+            "kind": "routing",
+            "name": "market-intelligence-specialist",
+            "status": "completed",
+            "duration_ms": 7499.162542168051,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 2,
+              "model_calls": 2,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.024584Z",
+            "kind": "guardrail",
+            "name": "evidence_policy",
+            "status": "passed",
+            "duration_ms": null,
+            "details": {
+              "minimum_source_types": 3,
+              "human_approval_required": true
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.024864Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.025476Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.025499Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.025992Z",
+            "kind": "model_call",
+            "name": "recommendation-agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:41.026098Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.893063Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.893489Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.893636Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.893657Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.893691Z",
+            "kind": "model_call",
+            "name": "recommendation-agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 1,
+              "input_tokens": 2393,
+              "output_tokens": 1095,
+              "total_tokens": 3488,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.893705Z",
+            "kind": "routing",
+            "name": "recommendation-agent",
+            "status": "completed",
+            "duration_ms": 10868.96379198879,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 0,
+              "model_calls": 1,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.894981Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.895671Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.895700Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.896574Z",
+            "kind": "model_call",
+            "name": "recommendation-agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:22:51.896688Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.575949Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.577072Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.577523Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.577591Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.577744Z",
+            "kind": "model_call",
+            "name": "recommendation-agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 1,
+              "input_tokens": 2428,
+              "output_tokens": 1081,
+              "total_tokens": 3509,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.577799Z",
+            "kind": "routing",
+            "name": "recommendation-agent",
+            "status": "completed",
+            "duration_ms": 10682.862874818966,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 0,
+              "model_calls": 1,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.581443Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.582558Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.582608Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.583239Z",
+            "kind": "model_call",
+            "name": "governance-agent",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:02.583427Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.067129Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.067891Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.068121Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.068165Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.068213Z",
+            "kind": "model_call",
+            "name": "governance-agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 1,
+              "input_tokens": 2847,
+              "output_tokens": 74,
+              "total_tokens": 2921,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.068234Z",
+            "kind": "routing",
+            "name": "governance-agent",
+            "status": "completed",
+            "duration_ms": 1487.257916945964,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 0,
+              "model_calls": 1,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:04.071345Z",
+            "kind": "agents_sdk",
+            "name": "trace",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {}
+          }
+        ]
+      },
+      "source": "live"
+    },
+    "source": "live"
+  }
+}

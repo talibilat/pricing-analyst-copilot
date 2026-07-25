@@ -1,0 +1,169 @@
+{
+  "schema_version": "replay-artifact-schema-v1",
+  "scenario": "conflicting_evidence",
+  "recorded_at": "2026-07-25T17:23:34.380340Z",
+  "configuration_versions": {
+    "model_name": "gpt-5.4",
+    "recommendation_version": "governed-multi-agent-v1",
+    "governance_version": "deterministic-governance-v1",
+    "scenario_seed": 20260101,
+    "scenario_version": "v1",
+    "max_price_movement_pct": 5.0,
+    "prompt_version": "governed-prompts-v2",
+    "agent_registry_version": "approved-agent-registry-v1",
+    "tool_version": "deterministic-read-only-tools-v2",
+    "dataset_version": "v1",
+    "recommendation_policy_version": "recommendation-policy-v2",
+    "output_schema_version": "workflow-result-schema-v1"
+  },
+  "chat_response": {
+    "intent": "pricing_analysis",
+    "message": "The governed workflow recommends **investigate**. Investigation is required: conversion: expected 24 monthly periods, got 20. This gap is material enough that no pricing claim can be safely supported for this period. This is decision support only and needs an analyst’s explicit confirmation before any action is recorded.",
+    "context": {
+      "scenario": "conflicting_evidence",
+      "force_replay": false
+    },
+    "activities": [
+      {
+        "status": "scheduled",
+        "label": "Supervisor coordinating specialist agents",
+        "purpose": "Coordinating market intelligence, claims, conversion, pricing history, recommendation, and governance.",
+        "agent": "portfolio-supervisor",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Supervisor coordinating specialist agents",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      }
+    ],
+    "tables": [],
+    "cited_evidence_ids": [],
+    "investigation_areas": [],
+    "requires_clarification": false,
+    "refused": false,
+    "workflow_result": {
+      "question": {
+        "product": "personal_motor",
+        "region": "north_west",
+        "segment": "renewal",
+        "analysis_period": {
+          "start_month": "2025-07-01",
+          "end_month": "2025-12-01"
+        },
+        "scenario": "conflicting_evidence"
+      },
+      "specialist_reports": [
+        {
+          "domain": "conversion",
+          "status": "error",
+          "evidence_ids": [],
+          "summary": "conversion: expected 24 monthly periods, got 20.",
+          "missing_evidence": [
+            {
+              "domain": "conversion",
+              "reason": "conversion: expected 24 monthly periods, got 20."
+            }
+          ]
+        }
+      ],
+      "recommendation": {
+        "action": "investigate",
+        "price_range": null,
+        "rationale": "Investigation is required: conversion: expected 24 monthly periods, got 20. This gap is material enough that no pricing claim can be safely supported for this period.",
+        "counter_evidence": [],
+        "conditions": [],
+        "investigation_areas": [],
+        "cited_evidence_ids": [],
+        "confidence": null,
+        "fair_value_status": null,
+        "fair_value_follow_up": []
+      },
+      "governance_outcome": {
+        "approved": true,
+        "reasons": [
+          "An investigate outcome proposes no price movement and cites no unsupported claims."
+        ]
+      },
+      "missing_evidence": [
+        {
+          "domain": "conversion",
+          "reason": "conversion: expected 24 monthly periods, got 20."
+        }
+      ],
+      "analytics": null,
+      "evidence_ledger": null,
+      "execution_trace": {
+        "trace_id": "trace_3fa84db88a6c4d9bb46c62d8b43066aa",
+        "workflow_name": "Governed Pricing Decision Copilot",
+        "started_at": "2026-07-25T17:23:34.340123Z",
+        "completed_at": "2026-07-25T17:23:34.379385Z",
+        "status": "safe_investigation",
+        "configuration_versions": {
+          "model_name": "gpt-5.4",
+          "prompt_version": "governed-prompts-v2",
+          "agent_registry_version": "approved-agent-registry-v1",
+          "tool_version": "deterministic-read-only-tools-v2",
+          "dataset_version": "v1",
+          "scenario_seed": 20260101,
+          "governance_version": "deterministic-governance-v1",
+          "recommendation_version": "governed-multi-agent-v1",
+          "policy_version": "recommendation-policy-v2",
+          "recommendation_policy_version": "recommendation-policy-v2"
+        },
+        "limits": {
+          "max_agent_turns": 6,
+          "max_tool_calls_per_agent": 4,
+          "tool_timeout_seconds": 5.0,
+          "request_timeout_seconds": 30.0,
+          "max_workflow_seconds": 90.0,
+          "max_retries": 1
+        },
+        "usage": {
+          "requests": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "total_tokens": 0,
+          "estimated_cost_gbp": 0.0,
+          "pricing_configured": false
+        },
+        "events": [
+          {
+            "timestamp": "2026-07-25T17:23:34.355989Z",
+            "kind": "agents_sdk",
+            "name": "trace",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-25T17:23:34.356029Z",
+            "kind": "routing",
+            "name": "portfolio-supervisor",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "scenario": "conflicting_evidence"
+            }
+          },
+          {
+            "timestamp": "2026-07-25T17:23:34.379366Z",
+            "kind": "agents_sdk",
+            "name": "trace",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {}
+          }
+        ]
+      },
+      "source": "live"
+    },
+    "source": "live"
+  }
+}
