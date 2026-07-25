@@ -331,7 +331,8 @@ with tab_chat:
     for message_number, message in enumerate(st.session_state.chat_messages):
         with st.chat_message(message["role"]):
             response = ChatResponse.model_validate(message["response"])
-            _render_response(response, message_number, can_record=False)
+            is_latest_message = message_number == len(st.session_state.chat_messages) - 1
+            _render_response(response, message_number, can_record=is_latest_message)
 
     if prompt := st.chat_input(
         "Ask a portfolio-level pricing question",

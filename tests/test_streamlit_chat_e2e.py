@@ -141,6 +141,81 @@ def test_counter_evidence_uses_a_prominent_warning_block() -> None:
     assert "Counter-evidence" in warning_bodies
 
 
+def test_claims_only_query_returns_a_single_table() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("Show claims performance")
+    app.run()
+
+    assert not app.exception
+    assert len(app.dataframe) == 1
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "Getting information from claims performance data" in markdown
+
+
+def test_evaluation_question_renders_the_targets_vs_actuals_table_in_the_ui() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("Show me the evaluation results")
+    app.run()
+
+    assert not app.exception
+    assert app.dataframe
+
+
+def test_drift_question_renders_the_material_alert_table_in_the_ui() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("Show me drift monitoring")
+    app.run()
+
+    assert not app.exception
+    assert app.dataframe
+
+
+def test_retention_concern_scenario_is_reachable_by_keyword() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("What did competitors do in the retention concern scenario?")
+    app.run()
+
+    assert not app.exception
+    assert app.dataframe
+
+
+def test_an_unsafe_request_is_refused_in_the_ui() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("SELECT * FROM claims")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "cannot accept raw sql" in markdown.lower()
+
+
+def test_analyst_can_record_an_approval_decision_from_the_chat_ui() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
+    app.run()
+    app.chat_input[0].set_value("Analyse everything and recommend a pricing action")
+    app.run()
+
+    assert not app.exception
+    assert app.text_area
+    app.text_area[0].set_value("Approving based on the evidence reviewed.")
+    assert app.checkbox
+    app.checkbox[-1].set_value(True)
+    app.run()
+
+    submit_buttons = [b for b in app.button if "Record analyst decision" in b.label]
+    assert submit_buttons
+    submit_buttons[0].click()
+    app.run()
+
+    assert not app.exception
+    assert app.success
+
+
 def test_monitoring_tab_shows_an_honest_message_with_no_drift_report_recorded(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
