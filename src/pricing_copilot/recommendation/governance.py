@@ -16,6 +16,23 @@ _NUMBER_PATTERN = re.compile(r"(-?\d+(?:\.\d+)?)\s*%")
 # far outside this margin.
 _TOLERANCE = 5.0
 
+_EXECUTION_CLAIM_PATTERN = re.compile(
+    r"\bprice (?:has been|was|is being) (?:changed|increased|decreased|adjusted)\b"
+    r"|\b(?:already |has )?(?:implemented|executed|applied) (?:the|this) (?:price|increase|decrease)\b"
+    r"|\baction (?:has been|was) taken\b",
+    re.IGNORECASE,
+)
+
+
+def _check_no_execution_claim_language(texts: list[str]) -> None:
+    for text in texts:
+        if _EXECUTION_CLAIM_PATTERN.search(text):
+            raise RecommendationValidationError(
+                "Recommendation text claims an executed price change, which this system must "
+                "never do - it is decision support only."
+            )
+
+
 _CAUSAL_REPLACEMENTS: tuple[tuple[str, str], ...] = (
     (r"\bcaused\b", "coincided with"),
     (r"\bcauses\b", "coincides with"),
@@ -82,6 +99,10 @@ def validate_and_clamp_draft(
         raise RecommendationValidationError(
             f"Recommendation cites unknown evidence ids: {unknown_ids}"
         )
+
+    _check_no_execution_claim_language(
+        [draft.rationale, *draft.counter_evidence, *draft.conditions, *draft.investigation_areas]
+    )
 
     price_range = draft.price_range
     conditions = list(draft.conditions)

@@ -139,6 +139,17 @@ def test_numeric_claim_from_cited_document_text_is_accepted() -> None:
     assert "4%" in validated.rationale
 
 
+def test_execution_claim_language_is_rejected() -> None:
+    draft = RecommendationDraft(
+        action=RecommendationAction.INCREASE,
+        price_range=PriceRange(lower_pct=2.0, upper_pct=3.0),
+        rationale="The price has been increased by 2 to 3 percent effective immediately.",
+        cited_evidence_ids=["claims-north_west-2025-12-01"],
+    )
+    with pytest.raises(RecommendationValidationError, match="claims an executed price change"):
+        validate_and_clamp_draft(draft, ledger=_ledger(), documents=[], max_movement_pct=5.0)
+
+
 def test_prompt_injected_range_is_still_clamped_even_if_the_model_had_complied() -> None:
     """Simulates a hypothetical compromised model output to prove the deterministic
     governance clamp holds regardless of what the model proposes."""
