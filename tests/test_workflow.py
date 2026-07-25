@@ -177,3 +177,36 @@ def test_conflicting_evidence_scenario_forces_investigate_without_calling_the_mo
         EvidenceDomain.CONVERSION,
         EvidenceDomain.MARKET_INTELLIGENCE,
     )
+
+
+def test_replay_flag_routes_to_the_replay_pipeline(tmp_path) -> None:
+    from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
+    from pricing_copilot.config import Settings
+    from pricing_copilot.contracts import GovernanceOutcome, Recommendation, ResultSource
+    from pricing_copilot.contracts import WorkflowResult as WorkflowResultModel
+    from pricing_copilot.replay.store import save_replay_artifact
+
+    settings = Settings(replay_directory=tmp_path / "replay")
+    question = _question().model_copy(update={"scenario": ScenarioName.CONTROLLED_INCREASE})
+    save_replay_artifact(
+        ChatResponse(
+            intent=ChatIntent.PRICING_ANALYSIS,
+            context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+            message="increase",
+            workflow_result=WorkflowResultModel(
+                question=question,
+                specialist_reports=[],
+                recommendation=Recommendation(
+                    action=RecommendationAction.INCREASE, rationale="Loss ratio rose."
+                ),
+                governance_outcome=GovernanceOutcome(approved=True),
+                missing_evidence=[],
+            ),
+        ),
+        settings,
+    )
+
+    result = run_portfolio_workflow(question, settings, replay=True)
+
+    assert result.source is ResultSource.REPLAY
+    assert result.recommendation.action is RecommendationAction.INCREASE

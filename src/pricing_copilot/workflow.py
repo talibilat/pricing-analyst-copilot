@@ -23,6 +23,7 @@ from pricing_copilot.evidence.policy import detect_material_evidence_issues
 from pricing_copilot.observability.trace import TraceEventListener
 from pricing_copilot.orchestration.pipeline import run_governed_portfolio_workflow
 from pricing_copilot.recommendation.governance import validate_and_clamp_draft
+from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
 from pricing_copilot.recommendation.synthesizer import (
     RecommendationSynthesizer,
     get_default_synthesizer,
@@ -207,10 +208,15 @@ def run_portfolio_workflow(
     *,
     use_baseline: bool = False,
     event_listener: TraceEventListener | None = None,
+    replay: bool = False,
 ) -> WorkflowResult:
     """Public entry point used by the API, CLI, and Streamlit interface. Defaults to the
     governed multi-agent pipeline; set use_baseline=True (or pass an explicit synthesizer) to
-    run the single-agent baseline instead, for fallback or side-by-side benchmarking."""
+    run the single-agent baseline instead, for fallback or side-by-side benchmarking. Set
+    replay=True to serve a version-checked cached artifact instead of a live call."""
+    if replay:
+        validate_portfolio_combination(question.product, question.region, question.segment)
+        return run_replay_portfolio_workflow(question, settings)
     if use_baseline or synthesizer is not None:
         return run_baseline_portfolio_workflow(question, settings, synthesizer)
 
