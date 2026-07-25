@@ -2,6 +2,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from pricing_copilot.config import PolicySettings
 from pricing_copilot.contracts import PriceRange, RecommendationAction, Region, ScenarioName
 from pricing_copilot.documents.corpus import DocumentRecord, DocumentSentiment, SourceType
 from pricing_copilot.documents.retrieval import RetrievedDocument
@@ -131,10 +132,19 @@ def test_numeric_claim_from_cited_document_text_is_accepted() -> None:
         action=RecommendationAction.HOLD,
         price_range=None,
         rationale="Competitors reduced pricing by 4%, softening the case for any increase.",
-        cited_evidence_ids=["claims-north_west-2025-12-01"],
+        cited_evidence_ids=["claims-north_west-2025-12-01", "doc-market-retention"],
+    )
+    ledger = _ledger()
+    ledger.entries.append(
+        EvidenceLedgerEntry(
+            evidence_id="doc-market-retention",
+            source_type="market_report",
+            source_reference="retention market report",
+            interpretation="Competitors reduced pricing.",
+        )
     )
     validated = validate_and_clamp_draft(
-        draft, ledger=_ledger(), documents=[document], max_movement_pct=5.0
+        draft, ledger=ledger, documents=[document], max_movement_pct=5.0
     )
     assert "4%" in validated.rationale
 
@@ -184,3 +194,33 @@ def test_causal_language_is_softened_to_correlational() -> None:
         "coincided with" in validated.rationale.lower()
         or "associated with" in validated.rationale.lower()
     )
+
+
+def test_customer_level_action_is_rejected_by_policy() -> None:
+    draft = RecommendationDraft(
+        action=RecommendationAction.HOLD,
+        rationale="Set a different price for each individual customer.",
+    )
+    with pytest.raises(RecommendationValidationError, match="customer-level"):
+        validate_and_clamp_draft(
+            draft,
+            ledger=_ledger(),
+            documents=[],
+            max_movement_pct=5.0,
+            policy=PolicySettings(),
+        )
+
+
+def test_policy_appends_explicit_human_approval_condition() -> None:
+    draft = RecommendationDraft(
+        action=RecommendationAction.HOLD,
+        rationale="Hold at portfolio level pending review.",
+    )
+    validated = validate_and_clamp_draft(
+        draft,
+        ledger=_ledger(),
+        documents=[],
+        max_movement_pct=5.0,
+        policy=PolicySettings(),
+    )
+    assert any("qualified pricing analyst" in condition for condition in validated.conditions)

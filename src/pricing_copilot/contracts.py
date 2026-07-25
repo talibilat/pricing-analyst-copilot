@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.evidence.models import ConfidenceBreakdown, EvidenceLedger, FairValueStatus
+from pricing_copilot.observability.contracts import WorkflowExecutionTrace
 
 
 class Product(StrEnum):
@@ -62,6 +63,8 @@ class AnalysisPeriod(BaseModel):
 
 
 class PortfolioQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     product: Product
     region: Region
     segment: Segment
@@ -118,6 +121,11 @@ class ConfigurationVersions(BaseModel):
     scenario_seed: int
     scenario_version: str
     max_price_movement_pct: float
+    prompt_version: str = "governed-prompts-v1"
+    agent_registry_version: str = "approved-agent-registry-v1"
+    tool_version: str = "deterministic-tools-v1"
+    dataset_version: str = "scenario-dataset-v1"
+    recommendation_policy_version: str = "recommendation-policy-v1"
 
 
 class AnalystDecision(BaseModel):
@@ -165,3 +173,4 @@ class WorkflowResult(BaseModel):
     missing_evidence: list[MissingEvidence]
     analytics: PortfolioAnalytics | None = None
     evidence_ledger: EvidenceLedger | None = None
+    execution_trace: WorkflowExecutionTrace | None = None

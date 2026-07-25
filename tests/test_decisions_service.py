@@ -63,6 +63,11 @@ def test_record_decision_persists_and_returns_full_record(tmp_path: Path) -> Non
         recorded.configuration_versions.max_price_movement_pct
         == settings.policy.max_price_movement_pct
     )
+    assert recorded.configuration_versions.prompt_version
+    assert recorded.configuration_versions.agent_registry_version
+    assert recorded.configuration_versions.tool_version
+    assert recorded.configuration_versions.dataset_version
+    assert recorded.configuration_versions.recommendation_policy_version
     assert store.get(recorded.record_id) == recorded
 
 

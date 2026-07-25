@@ -1,7 +1,9 @@
+import asyncio
 from datetime import date
 from typing import Any
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
+from pricing_copilot.config import Settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
     EvidenceDomain,
@@ -163,3 +165,53 @@ def test_recommendation_agent_never_receives_analytics_or_documents_kwarg() -> N
     )
     assert "analytics" not in seen_kwargs
     assert "documents" not in seen_kwargs
+
+
+def test_total_workflow_timeout_fails_safe_without_unbounded_wait() -> None:
+    class _SlowSpecialist(FakeSpecialistAgent):
+        async def analyze(self) -> SpecialistFindings:
+            await asyncio.sleep(0.1)
+            return await super().analyze()
+
+    def _slow_factory(
+        *, analytics: PortfolioAnalytics, documents: list[RetrievedDocument], region: Region
+    ) -> dict[EvidenceDomain, SpecialistAgent]:
+        return {
+            domain: _SlowSpecialist(SpecialistFindings(summary="eventually"))
+            for domain in EvidenceDomain
+        }
+
+    settings = Settings(max_workflow_seconds=0.01, local_tracing_enabled=False)
+    result = run_governed_portfolio_workflow(
+        _question(ScenarioName.CONTROLLED_INCREASE),
+        settings,
+        orchestration=_bundle(specialist_factory=_slow_factory),
+    )
+    assert result.recommendation.action is RecommendationAction.INVESTIGATE
+    assert "workflow time exceeded" in result.recommendation.rationale
+    assert result.execution_trace is not None
+    assert result.execution_trace.status == "safe_investigation"
+
+
+def test_prompt_injection_guardrail_is_visible_and_quarantined_from_the_ledger() -> None:
+    result = run_governed_portfolio_workflow(
+        _question(ScenarioName.CONTROLLED_INCREASE),
+        Settings(local_tracing_enabled=False),
+        orchestration=_bundle(),
+    )
+    assert result.execution_trace is not None
+    blocked = [
+        event
+        for event in result.execution_trace.events
+        if event.name == "untrusted_document" and event.status == "blocked"
+    ]
+    assert blocked
+    assert result.evidence_ledger is not None
+    assert "doc-market-2025-11-adversarial" not in result.evidence_ledger.ids()
+    versions = result.execution_trace.configuration_versions
+    assert versions["model_name"]
+    assert versions["prompt_version"]
+    assert versions["agent_registry_version"]
+    assert versions["tool_version"]
+    assert versions["dataset_version"]
+    assert versions["recommendation_policy_version"]

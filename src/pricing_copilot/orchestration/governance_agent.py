@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 from typing import Protocol
 
-from agents import Agent, OpenAIChatCompletionsModel, Runner
+from agents import Agent, OpenAIChatCompletionsModel
 
 from pricing_copilot.contracts import SpecialistReport
 from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.orchestration.contracts import GovernanceReview
+from pricing_copilot.orchestration.runtime import AgentRuntime
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 GOVERNANCE_AGENT_SYSTEM_PROMPT = (
@@ -15,8 +16,8 @@ GOVERNANCE_AGENT_SYSTEM_PROMPT = (
     "prototype. You did NOT write the draft recommendation you are reviewing, and you do not "
     "have database or document access - you review the draft strictly against the specialist "
     "reports and evidence ledger entries provided to you. Reject (approved=false) if: the action "
-    "contradicts what the specialist reports actually say; material counter-evidence from a "
-    "specialist report is missing from the draft's counter_evidence; or the rationale implies a "
+    "contradicts what the specialist reports actually say; material evidence that opposes the "
+    "proposed action is missing from the draft's counter_evidence; or the rationale implies a "
     "price has already been executed rather than merely proposed. Otherwise approve. When you "
     "reject, feedback must name the specific problem so it can be fixed in one revision. "
     'Respond with a single JSON object: {"approved": boolean, "feedback": string}.'
@@ -91,7 +92,10 @@ def _build_review_prompt(
 
 
 class AgentsSdkGovernanceAgentRunner:
-    def __init__(self, model: OpenAIChatCompletionsModel) -> None:
+    def __init__(
+        self, model: OpenAIChatCompletionsModel, runtime: AgentRuntime | None = None
+    ) -> None:
+        self._runtime = runtime
         self._agent = Agent(
             name="governance-agent",
             instructions=GOVERNANCE_AGENT_SYSTEM_PROMPT,
@@ -108,8 +112,11 @@ class AgentsSdkGovernanceAgentRunner:
         ledger: EvidenceLedger,
     ) -> GovernanceReview:
         prompt = _build_review_prompt(draft, specialist_reports, ledger)
-        result = await Runner.run(self._agent, prompt)
-        output = result.final_output
+        if self._runtime is None:
+            raise RuntimeError("Governance agent requires a configured bounded runtime.")
+        output = await self._runtime.run(
+            self._agent, prompt, output_contract="GovernanceReview"
+        )
         if not isinstance(output, GovernanceReview):
             raise TypeError(f"Governance agent returned unexpected output type: {type(output)}")
         return output

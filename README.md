@@ -13,11 +13,9 @@ The complete product specification is tracked in [Issue #1](https://github.com/t
 
 ## Current status
 
-The repository is currently in the planning stage.
-Implementation is divided into twelve dependency-aware tracer-bullet tickets.
-Each ticket delivers behavior through the same end-to-end workflow and is labeled `ready-for-agent`.
-
-The first available implementation ticket is [Issue #2](https://github.com/talibilat/pricing-analyst-copilot/issues/2).
+Issues #2 through #8 are implemented on the delivery branch.
+The current application supports all three designed scenarios through controlled specialist-agent orchestration, independent governance review, deterministic safety policy, human decision recording, and inspectable local traces.
+The next dependency-ready implementation ticket is [Issue #9](https://github.com/talibilat/pricing-analyst-copilot/issues/9).
 
 ## Product outcome
 
@@ -160,14 +158,16 @@ This build implements [Issue #2](https://github.com/talibilat/pricing-analyst-co
 ### Install
 
 ```bash
-uv sync --all-groups
+uv sync --all-groups --no-editable
 cp .env.example .env
 ```
+
+The non-editable install avoids a macOS edge case where hidden-file flags can cause Python to skip an editable `.pth` file under `.venv`.
 
 ### Run the API
 
 ```bash
-uv run uvicorn pricing_copilot.api:app --reload
+uv run --no-editable uvicorn pricing_copilot.api:app --reload
 ```
 
 Then submit a supported portfolio question:
@@ -181,7 +181,7 @@ curl -s -X POST http://127.0.0.1:8000/workflow \
 ### Run the CLI
 
 ```bash
-uv run pricing-copilot \
+uv run --no-editable pricing-copilot \
   --product personal_motor --region north_west --segment renewal \
   --start-month 2026-01-01 --end-month 2026-06-01
 ```
@@ -189,7 +189,7 @@ uv run pricing-copilot \
 ### Run the Streamlit interface
 
 ```bash
-uv run streamlit run src/pricing_copilot/streamlit_app.py
+uv run --no-editable streamlit run src/pricing_copilot/streamlit_app.py
 ```
 
 ### Run the quality command
@@ -199,6 +199,28 @@ uv run streamlit run src/pricing_copilot/streamlit_app.py
 ```
 
 This runs Ruff, MyPy, Pytest, Bandit, and the secret-scanning check.
+It first rebuilds a non-editable local package so every check exercises the current source tree.
+
+## Governance and observability controls
+
+The active recommendation policy caps movements at 5 percent, requires claims and conversion evidence, enforces a minimum of three source types, applies the configured freshness threshold, surfaces material conflicts, and requires explicit qualified-analyst approval.
+Portfolio questions reject unexpected customer-level or protected-attribute fields.
+Recommendation text is checked for customer-specific action, protected attributes, unknown evidence IDs, unsupported figures, invalid action ranges, causal claims, and any statement that a price was already executed.
+
+Retrieved text is treated as untrusted data.
+Instruction-like content that attempts to change system instructions, weaken policy, add tools or agents, or exfiltrate data is quarantined before specialist execution.
+Customer-feedback documents containing personal or protected attribute text are also quarantined.
+
+The approved-agent registry fixes each agent's owner, version, risk tier, permitted tools, output contract, and evaluation suite.
+Unknown agents, capability escalation, and runtime handoffs are rejected.
+Agent turns, tool calls, tool timeouts, model-request timeouts, total workflow time, and retries are bounded.
+Only one automatic retry is permitted.
+
+Each governed run produces an Agents SDK trace captured by a local processor and a versioned JSON workflow trace under `var/traces`.
+The trace records routing, model and tool calls, guardrail events, retries, failures, latency, token usage, optional configured cost, operational limits, and model, prompt, agent, tool, dataset, governance, recommendation, and policy versions.
+Trace capture excludes model and tool input or output payloads.
+Policy approval means the result may proceed to qualified human review.
+It is not a claim of formal regulatory compliance and never executes a pricing change.
 
 ## Delivery roadmap
 

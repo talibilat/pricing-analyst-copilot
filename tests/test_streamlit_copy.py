@@ -18,3 +18,8 @@ def test_streamlit_app_never_claims_a_price_was_executed() -> None:
 def test_streamlit_app_distinguishes_recommendation_from_decision() -> None:
     assert "system recommendation" in SOURCE
     assert "analyst decision" in SOURCE or "analyst review" in SOURCE
+
+
+def test_streamlit_app_distinguishes_policy_review_from_regulatory_compliance() -> None:
+    assert "policy-approved for qualified analyst review" in SOURCE
+    assert "not a claim of regulatory compliance" in SOURCE

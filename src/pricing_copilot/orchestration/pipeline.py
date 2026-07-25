@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from agents import OpenAIChatCompletionsModel, set_tracing_disabled
+from agents import OpenAIChatCompletionsModel, trace
 from openai import AsyncOpenAI
 
 from pricing_copilot.analytics.calculators import MetricCalculationError
@@ -19,6 +19,7 @@ from pricing_copilot.contracts import (
     Region,
     WorkflowResult,
 )
+from pricing_copilot.data.generation import DEFAULT_SCENARIO_SEED, DEFAULT_SCENARIO_VERSION
 from pricing_copilot.data.repository import PortfolioDataRepository
 from pricing_copilot.documents.retrieval import RetrievedDocument, retrieve_documents
 from pricing_copilot.evidence.confidence import calculate_confidence
@@ -26,6 +27,18 @@ from pricing_copilot.evidence.fair_value import calculate_fair_value_status
 from pricing_copilot.evidence.ledger import build_evidence_ledger
 from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.evidence.policy import detect_material_evidence_issues
+from pricing_copilot.governance.policy import validate_pre_synthesis_policy
+from pricing_copilot.governance.registry import AGENT_REGISTRY_VERSION, require_approved_agent
+from pricing_copilot.governance.security import quarantine_unsafe_documents
+from pricing_copilot.observability.contracts import TraceEventKind
+from pricing_copilot.observability.trace import (
+    POLICY_VERSION,
+    PROMPT_VERSION,
+    TOOL_VERSION,
+    WORKFLOW_NAME,
+    WorkflowTraceRecorder,
+    configure_local_agents_sdk_tracing,
+)
 from pricing_copilot.orchestration.governance_agent import (
     AgentsSdkGovernanceAgentRunner,
     GovernanceAgentRunner,
@@ -34,10 +47,12 @@ from pricing_copilot.orchestration.recommendation_agent import (
     AgentsSdkRecommendationAgentRunner,
     RecommendationAgentRunner,
 )
+from pricing_copilot.orchestration.runtime import AgentRuntime
 from pricing_copilot.orchestration.specialists import SpecialistAgent, build_specialist_agents
 from pricing_copilot.orchestration.supervisor import run_specialists, to_specialist_report
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 from pricing_copilot.recommendation.governance import (
+    GOVERNANCE_VERSION,
     RecommendationValidationError,
     validate_and_clamp_draft,
 )
@@ -48,8 +63,6 @@ from pricing_copilot.workflow_common import (
     data_quality_investigation_result,
     missing_evidence_workflow_result,
 )
-
-set_tracing_disabled(True)
 
 GOVERNED_RECOMMENDATION_VERSION = "governed-multi-agent-v1"
 
@@ -62,11 +75,15 @@ class OrchestrationBundle:
     recommendation_agent: RecommendationAgentRunner
     governance_agent: GovernanceAgentRunner
     client: AsyncOpenAI | None = None
+    runtime: AgentRuntime | None = None
     """Set only by get_default_orchestration - closed after each run so the underlying httpx
     connection pool never outlives the asyncio event loop it was created on."""
 
 
 def get_default_orchestration(settings: Settings) -> OrchestrationBundle:
+    configure_local_agents_sdk_tracing()
+    recorder = WorkflowTraceRecorder(settings, _configuration_versions(settings))
+    runtime = AgentRuntime(settings, recorder)
     azure_settings = get_azure_openai_settings()
     if not azure_settings.api_key or not azure_settings.endpoint:
         raise RuntimeError(
@@ -82,27 +99,52 @@ def get_default_orchestration(settings: Settings) -> OrchestrationBundle:
         *, analytics: PortfolioAnalytics, documents: list[RetrievedDocument], region: Region
     ) -> dict[EvidenceDomain, SpecialistAgent]:
         return build_specialist_agents(
-            analytics=analytics, documents=documents, region=region, model=model
+            analytics=analytics,
+            documents=documents,
+            region=region,
+            model=model,
+            runtime=runtime,
+            tool_timeout_seconds=settings.tool_timeout_seconds,
         )
 
     return OrchestrationBundle(
         specialist_agents_factory=factory,
-        recommendation_agent=AgentsSdkRecommendationAgentRunner(model),
-        governance_agent=AgentsSdkGovernanceAgentRunner(model),
+        recommendation_agent=AgentsSdkRecommendationAgentRunner(model, runtime),
+        governance_agent=AgentsSdkGovernanceAgentRunner(model, runtime),
         client=client,
+        runtime=runtime,
     )
+
+
+def _configuration_versions(settings: Settings) -> dict[str, str | int | float | bool]:
+    return {
+        "model_name": settings.model_name,
+        "prompt_version": PROMPT_VERSION,
+        "agent_registry_version": AGENT_REGISTRY_VERSION,
+        "tool_version": TOOL_VERSION,
+        "dataset_version": DEFAULT_SCENARIO_VERSION,
+        "scenario_seed": DEFAULT_SCENARIO_SEED,
+        "governance_version": GOVERNANCE_VERSION,
+        "recommendation_version": GOVERNED_RECOMMENDATION_VERSION,
+        "policy_version": POLICY_VERSION,
+        "recommendation_policy_version": POLICY_VERSION,
+    }
 
 
 def _validate(
     draft: RecommendationDraft,
     ledger: EvidenceLedger,
     documents: list[RetrievedDocument],
-    max_movement_pct: float,
+    settings: Settings,
 ) -> tuple[RecommendationDraft | None, str | None]:
     try:
         return (
             validate_and_clamp_draft(
-                draft, ledger=ledger, documents=documents, max_movement_pct=max_movement_pct
+                draft,
+                ledger=ledger,
+                documents=documents,
+                max_movement_pct=settings.policy.max_price_movement_pct,
+                policy=settings.policy,
             ),
             None,
         )
@@ -111,11 +153,24 @@ def _validate(
 
 
 async def _run_governed_pipeline_async(
-    question: PortfolioQuestion, settings: Settings, orchestration: OrchestrationBundle
+    question: PortfolioQuestion,
+    settings: Settings,
+    orchestration: OrchestrationBundle,
+    recorder: WorkflowTraceRecorder,
 ) -> WorkflowResult:
     scenario = question.scenario
     if scenario is None:  # pragma: no cover - caller already filters via IMPLEMENTED_DATA_SCENARIOS
         raise ValueError("Governed workflow requires a scenario.")
+
+    require_approved_agent(
+        "portfolio-supervisor", tool_names=set(), output_contract="WorkflowResult"
+    )
+    recorder.event(
+        TraceEventKind.ROUTING,
+        "portfolio-supervisor",
+        "started",
+        details={"scenario": scenario.value},
+    )
 
     repository = PortfolioDataRepository.from_scenario(scenario)
 
@@ -124,9 +179,17 @@ async def _run_governed_pipeline_async(
     except MetricCalculationError as exc:
         return data_quality_investigation_result(question, str(exc))
 
-    documents = retrieve_documents(
+    retrieved_documents = retrieve_documents(
         scenario=scenario, region=question.region, query=RETRIEVAL_QUERY, top_k=6
     )
+    documents, guardrail_findings = quarantine_unsafe_documents(retrieved_documents)
+    for finding in guardrail_findings:
+        recorder.event(
+            TraceEventKind.GUARDRAIL,
+            "untrusted_document",
+            "blocked",
+            details={"document_id": finding.document_id, "reason": finding.reason},
+        )
 
     material_issues = detect_material_evidence_issues(
         documents,
@@ -139,6 +202,13 @@ async def _run_governed_pipeline_async(
     specialist_agents = orchestration.specialist_agents_factory(
         analytics=analytics, documents=documents, region=question.region
     )
+    for domain in specialist_agents:
+        recorder.event(
+            TraceEventKind.ROUTING,
+            domain.value,
+            "scheduled",
+            details={"parallel": True},
+        )
     findings_by_domain, failed_domains = await run_specialists(specialist_agents)
     if failed_domains:
         failed_names = ", ".join(d.value for d in failed_domains)
@@ -156,12 +226,36 @@ async def _run_governed_pipeline_async(
         region=question.region,
         retrieved_at=datetime.now(UTC),
     )
+    policy_issues = validate_pre_synthesis_policy(
+        specialist_reports=specialist_reports,
+        ledger=ledger,
+        policy=settings.policy,
+    )
+    if policy_issues:
+        for issue in policy_issues:
+            recorder.event(
+                TraceEventKind.GUARDRAIL,
+                "evidence_policy",
+                "blocked",
+                details={"reason": issue},
+            )
+        return data_quality_investigation_result(question, "; ".join(policy_issues))
+
+    recorder.event(
+        TraceEventKind.GUARDRAIL,
+        "evidence_policy",
+        "passed",
+        details={
+            "minimum_source_types": settings.policy.minimum_source_types,
+            "human_approval_required": settings.policy.require_human_approval,
+        },
+    )
     max_movement_pct = settings.policy.max_price_movement_pct
 
     draft = await orchestration.recommendation_agent.synthesize(
         specialist_reports=specialist_reports, ledger=ledger, max_movement_pct=max_movement_pct
     )
-    validated, error = _validate(draft, ledger, documents, max_movement_pct)
+    validated, error = _validate(draft, ledger, documents, settings)
 
     revision_used = False
     if validated is None:
@@ -172,7 +266,7 @@ async def _run_governed_pipeline_async(
             max_movement_pct=max_movement_pct,
             revision_feedback=error,
         )
-        validated, error = _validate(draft, ledger, documents, max_movement_pct)
+        validated, error = _validate(draft, ledger, documents, settings)
         if validated is None:
             return data_quality_investigation_result(
                 question,
@@ -195,7 +289,7 @@ async def _run_governed_pipeline_async(
             max_movement_pct=max_movement_pct,
             revision_feedback=review.feedback,
         )
-        validated, error = _validate(draft, ledger, documents, max_movement_pct)
+        validated, error = _validate(draft, ledger, documents, settings)
         if validated is None:
             return data_quality_investigation_result(
                 question,
@@ -238,7 +332,9 @@ async def _run_governed_pipeline_async(
         approved=True,
         reasons=[
             "Recommendation validated deterministically and approved by the independent "
-            "governance agent."
+            "governance agent.",
+            "Policy approval permits qualified human review only; it is not regulatory "
+            "compliance and does not execute a pricing change.",
         ],
     )
     return WorkflowResult(
@@ -253,10 +349,49 @@ async def _run_governed_pipeline_async(
 
 
 async def _run_and_close_client(
-    question: PortfolioQuestion, settings: Settings, orchestration: OrchestrationBundle
+    question: PortfolioQuestion,
+    settings: Settings,
+    orchestration: OrchestrationBundle,
+    recorder: WorkflowTraceRecorder,
 ) -> WorkflowResult:
     try:
-        return await _run_governed_pipeline_async(question, settings, orchestration)
+        with trace(
+            WORKFLOW_NAME,
+            trace_id=recorder.trace_id,
+            metadata=_configuration_versions(settings),
+            disabled=not settings.agents_sdk_tracing_enabled,
+        ):
+            try:
+                result = await asyncio.wait_for(
+                    _run_governed_pipeline_async(question, settings, orchestration, recorder),
+                    timeout=settings.max_workflow_seconds,
+                )
+            except TimeoutError:
+                recorder.event(
+                    TraceEventKind.FAILURE,
+                    "workflow_timeout",
+                    "failed_safe",
+                    details={"limit_seconds": settings.max_workflow_seconds},
+                )
+                result = data_quality_investigation_result(
+                    question,
+                    f"workflow: total workflow time exceeded the configured "
+                    f"{settings.max_workflow_seconds:g}-second limit.",
+                )
+            except Exception as exc:
+                recorder.event(
+                    TraceEventKind.FAILURE,
+                    "workflow",
+                    "failed_safe",
+                    details={"error_type": type(exc).__name__},
+                )
+                result = data_quality_investigation_result(
+                    question,
+                    f"workflow: governed execution failed safely ({type(exc).__name__}).",
+                )
+        status = "safe_investigation" if result.missing_evidence else "completed"
+        execution_trace = recorder.complete(status)
+        return result.model_copy(update={"execution_trace": execution_trace})
     finally:
         if orchestration.client is not None:
             await orchestration.client.close()
@@ -274,4 +409,10 @@ def run_governed_portfolio_workflow(
     if question.scenario not in IMPLEMENTED_DATA_SCENARIOS:
         return missing_evidence_workflow_result(question)
     active = orchestration or get_default_orchestration(settings)
-    return asyncio.run(_run_and_close_client(question, settings, active))
+    recorder = (
+        active.runtime.recorder
+        if active.runtime is not None
+        else WorkflowTraceRecorder(settings, _configuration_versions(settings))
+    )
+    configure_local_agents_sdk_tracing()
+    return asyncio.run(_run_and_close_client(question, settings, active, recorder))

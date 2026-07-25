@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 
+import altair as alt
+import pandas as pd
 import streamlit as st
 from pydantic import ValidationError
 
@@ -18,13 +21,59 @@ from pricing_copilot.contracts import (
     Segment,
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
+from pricing_copilot.governance.registry import AGENT_REGISTRY_VERSION, registry_snapshot
 from pricing_copilot.workflow import run_portfolio_workflow
+
+
+def _render_time_series(
+    months: Sequence[date],
+    series: dict[str, Sequence[float]],
+    *,
+    y_label: str,
+) -> None:
+    values = [value for observations in series.values() for value in observations]
+    if not months or not values:
+        st.caption("No observations are available for this chart.")
+        return
+
+    minimum = min(values)
+    maximum = max(values)
+    padding = max((maximum - minimum) * 0.08, abs(maximum) * 0.01, 0.01)
+    frame = pd.DataFrame({"month": months, **series}).melt(
+        id_vars="month",
+        var_name="series",
+        value_name="value",
+    )
+    chart = (
+        alt.Chart(frame)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X(
+                "month:T",
+                title="Month",
+                scale=alt.Scale(domain=[min(months), max(months)]),
+            ),
+            y=alt.Y(
+                "value:Q",
+                title=y_label,
+                scale=alt.Scale(domain=[minimum - padding, maximum + padding]),
+            ),
+            color=alt.Color("series:N", title=None),
+            tooltip=[
+                alt.Tooltip("month:T", title="Month"),
+                alt.Tooltip("series:N", title="Series"),
+                alt.Tooltip("value:Q", title=y_label),
+            ],
+        )
+    )
+    st.altair_chart(chart, width="stretch")
+
 
 st.set_page_config(page_title="Pricing Decision Copilot", layout="wide")
 st.title("Pricing Decision Copilot")
 st.caption(
-    "Governed decision-support prototype. This build has no evidence sources connected, "
-    "so every supported question safely returns an investigate outcome."
+    "Governed portfolio-level decision support. Specialist evidence and deterministic policy "
+    "checks support qualified human review; the copilot never executes a pricing change."
 )
 
 with st.form("portfolio_question"):
@@ -83,37 +132,61 @@ if result is not None and question is not None:
         analytics = result.analytics
 
         st.subheader("Loss ratio (%)")
-        st.line_chart(
-            {"loss_ratio_pct": [v.value * 100 for v in analytics.claims.loss_ratio.monthly]}
+        _render_time_series(
+            [v.period for v in analytics.claims.loss_ratio.monthly],
+            {
+                "Loss ratio": [
+                    v.value * 100 for v in analytics.claims.loss_ratio.monthly
+                ]
+            },
+            y_label="Loss ratio (%)",
         )
 
         st.subheader("Claim severity (GBP)")
-        st.line_chart(
+        _render_time_series(
+            [v.period for v in analytics.claims.average_severity_gbp.monthly],
             {
-                "average_severity_gbp": [
+                "Average severity": [
                     v.value for v in analytics.claims.average_severity_gbp.monthly
                 ]
-            }
+            },
+            y_label="Average severity (GBP)",
         )
 
         st.subheader("Conversion and retention (%)")
-        st.line_chart(
+        _render_time_series(
+            [
+                v.period
+                for v in analytics.conversion.quote_to_sale_conversion.monthly
+            ],
             {
-                "quote_to_sale_conversion_pct": [
-                    v.value * 100 for v in analytics.conversion.quote_to_sale_conversion.monthly
+                "Quote-to-sale conversion": [
+                    v.value * 100
+                    for v in analytics.conversion.quote_to_sale_conversion.monthly
                 ],
-                "renewal_retention_pct": [
-                    v.value * 100 for v in analytics.conversion.renewal_retention.monthly
+                "Renewal retention": [
+                    v.value * 100
+                    for v in analytics.conversion.renewal_retention.monthly
                 ],
-            }
+            },
+            y_label="Rate (%)",
         )
 
         st.subheader("Competitor price-index movement")
-        st.line_chart(
+        competitor_months = (
+            [v.period for v in analytics.competitors.competitors[0].price_index.monthly]
+            if analytics.competitors.competitors
+            else []
+        )
+        _render_time_series(
+            competitor_months,
             {
-                movement.competitor_name: [v.value for v in movement.price_index.monthly]
+                movement.competitor_name: [
+                    v.value for v in movement.price_index.monthly
+                ]
                 for movement in analytics.competitors.competitors
-            }
+            },
+            y_label="Price index",
         )
 
         recommendation = result.recommendation
@@ -239,3 +312,32 @@ if result is not None and question is not None:
 
     st.subheader("Governance outcome")
     st.json(result.governance_outcome.model_dump())
+    if result.governance_outcome.approved:
+        st.info(
+            "Policy-approved for qualified analyst review. "
+            "This status is not a claim of regulatory compliance and does not authorize or "
+            "execute a pricing change."
+        )
+
+    with st.expander("Governance controls and execution trace"):
+        settings = get_settings()
+        st.write(
+            f"Approved agent registry: `{AGENT_REGISTRY_VERSION}` "
+            f"({len(registry_snapshot())} fixed registrations; runtime creation prohibited)."
+        )
+        st.write(
+            f"Configured limits: {settings.max_agent_turns} turns per agent, "
+            f"{settings.max_tool_calls_per_agent} tool calls per agent, "
+            f"{settings.tool_timeout_seconds:g}s per tool, "
+            f"{settings.max_workflow_seconds:g}s total workflow time, and "
+            f"{settings.max_retries} automatic retry."
+        )
+        st.write(
+            f"Evidence policy: at least {settings.policy.minimum_source_types} source types; "
+            "claims and conversion evidence required; stale and materially conflicting "
+            "evidence forces investigation."
+        )
+        if result.execution_trace is None:
+            st.write("No execution trace is available for this result.")
+        else:
+            st.json(result.execution_trace.model_dump(mode="json"))

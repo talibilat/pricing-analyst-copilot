@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import re
 
+from pricing_copilot.config import PolicySettings
 from pricing_copilot.contracts import PriceRange
 from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.evidence.models import EvidenceLedger
+from pricing_copilot.governance.policy import (
+    human_approval_condition,
+    validate_recommendation_scope,
+)
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 GOVERNANCE_VERSION = "deterministic-governance-v1"
@@ -62,6 +67,7 @@ class RecommendationValidationError(ValueError):
 def _allowed_numbers(
     ledger: EvidenceLedger,
     documents: list[RetrievedDocument],
+    cited_evidence_ids: set[str],
     price_range: PriceRange | None,
     max_movement_pct: float,
 ) -> set[float]:
@@ -82,6 +88,8 @@ def _allowed_numbers(
     # "reduced pricing by four to six percent" - that a faithful paraphrase can render in
     # digit form. Those are legitimately supported, so scan document bodies too.
     for retrieved in documents:
+        if retrieved.document.document_id not in cited_evidence_ids:
+            continue
         for match in _NUMBER_PATTERN.finditer(retrieved.document.body):
             numbers.add(round(float(match.group(1)), 1))
     return numbers
@@ -93,6 +101,7 @@ def validate_and_clamp_draft(
     ledger: EvidenceLedger,
     documents: list[RetrievedDocument],
     max_movement_pct: float,
+    policy: PolicySettings | None = None,
 ) -> RecommendationDraft:
     known_ids = ledger.ids()
     unknown_ids = [eid for eid in draft.cited_evidence_ids if eid not in known_ids]
@@ -105,6 +114,29 @@ def validate_and_clamp_draft(
         [draft.rationale, *draft.counter_evidence, *draft.conditions, *draft.investigation_areas]
     )
 
+    if policy is not None:
+        scope_issues = validate_recommendation_scope(draft, policy)
+        cited_entries = [
+            entry for entry in ledger.entries if entry.evidence_id in draft.cited_evidence_ids
+        ]
+        if draft.action.value in {"increase", "decrease"}:
+            if policy.require_claims_evidence and not any(
+                entry.source_reference == "Deterministic claims analytics"
+                for entry in cited_entries
+            ):
+                scope_issues.append(
+                    "Actionable recommendations must cite deterministic claims evidence."
+                )
+            if policy.require_conversion_evidence and not any(
+                entry.source_reference == "Deterministic conversion analytics"
+                for entry in cited_entries
+            ):
+                scope_issues.append(
+                    "Actionable recommendations must cite deterministic conversion evidence."
+                )
+        if scope_issues:
+            raise RecommendationValidationError("; ".join(scope_issues))
+
     price_range = draft.price_range
     conditions = list(draft.conditions)
     if price_range is not None:
@@ -116,7 +148,18 @@ def validate_and_clamp_draft(
             )
             price_range = PriceRange(lower_pct=clamped_lower, upper_pct=clamped_upper)
 
-    allowed_numbers = _allowed_numbers(ledger, documents, price_range, max_movement_pct)
+    if policy is not None:
+        approval_condition = human_approval_condition(policy)
+        if approval_condition is not None and approval_condition not in conditions:
+            conditions.append(approval_condition)
+
+    allowed_numbers = _allowed_numbers(
+        ledger,
+        documents,
+        set(draft.cited_evidence_ids),
+        price_range,
+        max_movement_pct,
+    )
     for text in [draft.rationale, *draft.counter_evidence, *conditions, *draft.investigation_areas]:
         for match in _NUMBER_PATTERN.finditer(text):
             value = float(match.group(1))

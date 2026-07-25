@@ -61,6 +61,20 @@ def test_claims_tool_returns_evidence_id_and_loss_ratio() -> None:
     assert payload["loss_ratio"]["baseline"] == 0.71
 
 
+def test_tools_expose_the_configured_per_call_timeout() -> None:
+    metrics = ClaimsMetrics(
+        period_start=date(2025, 1, 1),
+        period_end=date(2025, 12, 1),
+        claim_frequency=_window(0.1, 0.11),
+        average_severity_gbp=_window(1000.0, 1100.0),
+        incurred_loss_gbp=_window(100000.0, 121000.0),
+        loss_ratio=_window(0.71, 0.82),
+    )
+    tool = build_claims_tool(metrics, "claims-x", timeout_seconds=2.5)
+    assert tool.timeout_seconds == 2.5
+    assert tool.timeout_behavior == "raise_exception"
+
+
 def test_conversion_tool_returns_evidence_id_and_retention() -> None:
     metrics = ConversionMetrics(
         period_start=date(2025, 1, 1),

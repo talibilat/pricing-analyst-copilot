@@ -72,6 +72,32 @@ def test_workflow_endpoint_rejects_unsupported_region() -> None:
     assert "south_east" in response.json()["detail"]
 
 
+def test_workflow_endpoint_rejects_customer_level_or_protected_attributes() -> None:
+    payload = {
+        "product": "personal_motor",
+        "region": "north_west",
+        "segment": "renewal",
+        "analysis_period": {"start_month": "2026-01-01", "end_month": "2026-06-01"},
+        "scenario": "controlled_increase",
+        "customer_id": "customer-123",
+        "ethnicity": "not-permitted",
+    }
+    response = client.post("/workflow", json=payload)
+    assert response.status_code == 422
+
+
+def test_workflow_endpoint_rejects_query_injection_as_an_invalid_typed_filter() -> None:
+    payload = {
+        "product": "personal_motor' OR 1=1 --",
+        "region": "north_west",
+        "segment": "renewal",
+        "analysis_period": {"start_month": "2026-01-01", "end_month": "2026-06-01"},
+        "scenario": "controlled_increase",
+    }
+    response = client.post("/workflow", json=payload)
+    assert response.status_code == 422
+
+
 def test_workflow_endpoint_returns_analytics_for_controlled_increase_scenario(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 from typing import Protocol
 
-from agents import Agent, OpenAIChatCompletionsModel, Runner
+from agents import Agent, OpenAIChatCompletionsModel
 
 from pricing_copilot.contracts import PriceRange, RecommendationAction, SpecialistReport
 from pricing_copilot.evidence.models import EvidenceLedger, EvidenceLedgerEntry
+from pricing_copilot.orchestration.runtime import AgentRuntime
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 RECOMMENDATION_AGENT_SYSTEM_PROMPT = (
@@ -27,6 +28,8 @@ RECOMMENDATION_AGENT_SYSTEM_PROMPT = (
     "specialist report mentions (for example a softening premium, flat conversion, or a cost "
     "driver working against your recommended action) - do not present the specialist evidence as "
     "uniformly one-sided just because the headline metric supports your action. "
+    "Only repeat numerical figures that are literally present in the evidence ledger. Do not "
+    "calculate or infer a new percentage from a specialist summary. "
     "Respond with a single JSON object matching this shape: "
     '{"action": "increase|decrease|hold|investigate", '
     '"price_range": {"lower_pct": number, "upper_pct": number} or null, '
@@ -159,7 +162,10 @@ def _build_prompt(
 
 
 class AgentsSdkRecommendationAgentRunner:
-    def __init__(self, model: OpenAIChatCompletionsModel) -> None:
+    def __init__(
+        self, model: OpenAIChatCompletionsModel, runtime: AgentRuntime | None = None
+    ) -> None:
+        self._runtime = runtime
         self._agent = Agent(
             name="recommendation-agent",
             instructions=RECOMMENDATION_AGENT_SYSTEM_PROMPT,
@@ -177,8 +183,11 @@ class AgentsSdkRecommendationAgentRunner:
         revision_feedback: str | None = None,
     ) -> RecommendationDraft:
         prompt = _build_prompt(specialist_reports, ledger, max_movement_pct, revision_feedback)
-        result = await Runner.run(self._agent, prompt)
-        output = result.final_output
+        if self._runtime is None:
+            raise RuntimeError("Recommendation agent requires a configured bounded runtime.")
+        output = await self._runtime.run(
+            self._agent, prompt, output_contract="RecommendationDraft"
+        )
         if not isinstance(output, RecommendationDraft):
             raise TypeError(
                 f"Recommendation agent returned unexpected output type: {type(output)}"

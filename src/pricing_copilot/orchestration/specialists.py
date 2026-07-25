@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from agents import Agent, OpenAIChatCompletionsModel, Runner
+from agents import Agent, OpenAIChatCompletionsModel
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.contracts import EvidenceDomain, Region
 from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.orchestration.contracts import SpecialistFindings
+from pricing_copilot.orchestration.runtime import AgentRuntime
 from pricing_copilot.orchestration.tools import (
     build_claims_tool,
     build_competitor_tool,
@@ -67,10 +68,14 @@ class FakeSpecialistAgent:
 class AgentsSdkSpecialistAgent:
     agent: Agent
     prompt: str
+    runtime: AgentRuntime | None = None
 
     async def analyze(self) -> SpecialistFindings:
-        result = await Runner.run(self.agent, self.prompt)
-        output = result.final_output
+        if self.runtime is None:
+            raise RuntimeError("Agents SDK specialists require a configured bounded runtime.")
+        output = await self.runtime.run(
+            self.agent, self.prompt, output_contract="SpecialistFindings"
+        )
         if not isinstance(output, SpecialistFindings):
             raise TypeError(f"Specialist agent returned unexpected output type: {type(output)}")
         return output
@@ -82,6 +87,8 @@ def build_specialist_agents(
     documents: list[RetrievedDocument],
     region: Region,
     model: OpenAIChatCompletionsModel,
+    runtime: AgentRuntime | None = None,
+    tool_timeout_seconds: float | None = None,
 ) -> dict[EvidenceDomain, SpecialistAgent]:
     claims_evidence_id = f"claims-{region.value}-{analytics.claims.period_end.isoformat()}"
     conversion_evidence_id = (
@@ -97,14 +104,26 @@ def build_specialist_agents(
     claims_agent = Agent(
         name="claims-specialist",
         instructions=CLAIMS_INSTRUCTIONS,
-        tools=[build_claims_tool(analytics.claims, claims_evidence_id)],
+        tools=[
+            build_claims_tool(
+                analytics.claims,
+                claims_evidence_id,
+                timeout_seconds=tool_timeout_seconds,
+            )
+        ],
         output_type=SpecialistFindings,
         model=model,
     )
     conversion_agent = Agent(
         name="conversion-specialist",
         instructions=CONVERSION_INSTRUCTIONS,
-        tools=[build_conversion_tool(analytics.conversion, conversion_evidence_id)],
+        tools=[
+            build_conversion_tool(
+                analytics.conversion,
+                conversion_evidence_id,
+                timeout_seconds=tool_timeout_seconds,
+            )
+        ],
         output_type=SpecialistFindings,
         model=model,
     )
@@ -112,8 +131,12 @@ def build_specialist_agents(
         name="market-intelligence-specialist",
         instructions=MARKET_INTELLIGENCE_INSTRUCTIONS,
         tools=[
-            build_competitor_tool(analytics.competitors, competitor_evidence_id),
-            build_market_documents_tool(documents),
+            build_competitor_tool(
+                analytics.competitors,
+                competitor_evidence_id,
+                timeout_seconds=tool_timeout_seconds,
+            ),
+            build_market_documents_tool(documents, timeout_seconds=tool_timeout_seconds),
         ],
         output_type=SpecialistFindings,
         model=model,
@@ -121,24 +144,35 @@ def build_specialist_agents(
     pricing_history_agent = Agent(
         name="pricing-history-specialist",
         instructions=PRICING_HISTORY_INSTRUCTIONS,
-        tools=[build_pricing_history_tool(analytics.pricing_history, pricing_history_evidence_ids)],
+        tools=[
+            build_pricing_history_tool(
+                analytics.pricing_history,
+                pricing_history_evidence_ids,
+                timeout_seconds=tool_timeout_seconds,
+            )
+        ],
         output_type=SpecialistFindings,
         model=model,
     )
 
     return {
         EvidenceDomain.CLAIMS: AgentsSdkSpecialistAgent(
-            claims_agent, "Analyze claims performance for this portfolio period."
+            claims_agent, "Analyze claims performance for this portfolio period.", runtime
         ),
         EvidenceDomain.CONVERSION: AgentsSdkSpecialistAgent(
-            conversion_agent, "Analyze conversion and retention for this portfolio period."
+            conversion_agent,
+            "Analyze conversion and retention for this portfolio period.",
+            runtime,
         ),
         EvidenceDomain.MARKET_INTELLIGENCE: AgentsSdkSpecialistAgent(
             market_intelligence_agent,
             "Analyze competitor movement and retrieved market intelligence for this portfolio "
             "period.",
+            runtime,
         ),
         EvidenceDomain.PRICING_HISTORY: AgentsSdkSpecialistAgent(
-            pricing_history_agent, "Summarize previous pricing actions for this portfolio."
+            pricing_history_agent,
+            "Summarize previous pricing actions for this portfolio.",
+            runtime,
         ),
     }
