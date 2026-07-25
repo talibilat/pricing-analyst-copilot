@@ -269,3 +269,59 @@ def test_recording_a_decision_never_mutates_subsequent_workflow_output(
     after = _run_controlled_increase(monkeypatch)
     assert after["analytics"] == before["analytics"]
     assert after["recommendation"]["action"] == before["recommendation"]["action"]
+
+
+def test_workflow_endpoint_replay_query_param_serves_a_recorded_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from datetime import date
+
+    from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
+    from pricing_copilot.config import Settings
+    from pricing_copilot.contracts import (
+        AnalysisPeriod,
+        GovernanceOutcome,
+        PortfolioQuestion,
+        Product,
+        Recommendation,
+        RecommendationAction,
+        Region,
+        ScenarioName,
+        Segment,
+        WorkflowResult,
+    )
+    from pricing_copilot.replay.store import save_replay_artifact
+
+    replay_dir = tmp_path / "replay"
+    monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(replay_dir))
+    question = PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+    )
+    save_replay_artifact(
+        ChatResponse(
+            intent=ChatIntent.PRICING_ANALYSIS,
+            context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+            message="Recommends increase.",
+            workflow_result=WorkflowResult(
+                question=question,
+                specialist_reports=[],
+                recommendation=Recommendation(
+                    action=RecommendationAction.INCREASE, rationale="Loss ratio rose."
+                ),
+                governance_outcome=GovernanceOutcome(approved=True),
+                missing_evidence=[],
+            ),
+        ),
+        Settings(replay_directory=replay_dir),
+    )
+
+    payload = question.model_dump(mode="json")
+    response = client.post("/workflow?replay=true", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["source"] == "replay"
+    assert body["recommendation"]["action"] == "increase"

@@ -14,6 +14,7 @@ from pricing_copilot.contracts import (
     WorkflowResult,
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
+from pricing_copilot.replay.store import ReplayArtifactIncompatibleError, ReplayArtifactMissingError
 from pricing_copilot.workflow import run_portfolio_workflow
 
 app = FastAPI(
@@ -28,11 +29,13 @@ def health() -> dict[str, str]:
 
 
 @app.post("/workflow", response_model=WorkflowResult)
-def submit_portfolio_question(question: PortfolioQuestion) -> WorkflowResult:
+def submit_portfolio_question(question: PortfolioQuestion, replay: bool = False) -> WorkflowResult:
     try:
-        return run_portfolio_workflow(question)
+        return run_portfolio_workflow(question, replay=replay)
     except UnsupportedPortfolioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (ReplayArtifactMissingError, ReplayArtifactIncompatibleError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @app.post("/chat", response_model=ChatResponse)
