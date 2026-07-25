@@ -19,7 +19,7 @@ from pricing_copilot.data.generation import (
 )
 from pricing_copilot.data.records import ScenarioDataset
 
-ANALYTICS_DATABASE_VERSION: Final = "synthetic-portfolio-duckdb-v1"
+ANALYTICS_DATABASE_VERSION: Final = "synthetic-portfolio-duckdb-v2"
 
 SOURCE_TABLES: Final[dict[str, tuple[str, ...]]] = {
     "claims": (
