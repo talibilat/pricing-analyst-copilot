@@ -92,3 +92,18 @@ def test_replay_of_an_unrecorded_scenario_fails_gracefully_in_the_interface(
     assert not app.exception
     markdown = "\n".join(item.value for item in app.markdown)
     assert "not available" in markdown.lower() or "not" in markdown.lower()
+
+
+def test_monitoring_tab_shows_an_honest_message_with_no_drift_report_recorded(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PRICING_COPILOT_DRIFT_DIRECTORY", str(tmp_path / "drift"))
+
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    assert not app.exception
+    assert app.tabs
+    monitoring_tab = app.tabs[1]
+    info_messages = "\n".join(block.value for block in monitoring_tab.get("info"))
+    assert "no drift monitoring run" in info_messages.lower()

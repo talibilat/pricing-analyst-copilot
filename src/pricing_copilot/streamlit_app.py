@@ -24,6 +24,7 @@ from pricing_copilot.contracts import (
     WorkflowResult,
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
+from pricing_copilot.drift.contracts import DriftAlertCategory
 
 
 def _render_time_series(
@@ -168,6 +169,48 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             _render_decision_controls(response.workflow_result, message_number)
 
 
+def _render_drift_monitoring_tab() -> None:
+    from pricing_copilot.drift.store import load_drift_report
+
+    st.subheader("Drift and change-promotion monitoring")
+    report = load_drift_report(get_settings())
+    if report is None:
+        st.info(
+            "No drift monitoring run has been recorded yet. Run "
+            "`pricing-copilot --monitor-drift` to generate one."
+        )
+        return
+    st.caption(f"Generated {report.generated_at.isoformat()} - {report.report_version}")
+    material = report.material_alerts
+    if material:
+        st.warning(f"{len(material)} measure(s) require investigation.", icon="⚠️")
+    else:
+        st.success("No material drift detected in the latest run.")
+    for category in DriftAlertCategory:
+        category_alerts = [alert for alert in report.alerts if alert.category is category]
+        if not category_alerts:
+            continue
+        with st.expander(
+            f"{category.value.title()} alerts ({len(category_alerts)})", expanded=bool(material)
+        ):
+            for alert in category_alerts:
+                if alert.investigation_required:
+                    status = "🔴 investigation required"
+                elif alert.insufficient_sample:
+                    status = "🟡 insufficient sample"
+                else:
+                    status = "🟢 normal"
+                st.markdown(f"**{alert.metric_name}** - {status}")
+                st.caption(f"Baseline: {alert.baseline_window} | Current: {alert.current_window}")
+                st.write(alert.detail)
+                for measurement in alert.measurements:
+                    st.caption(
+                        f"{measurement.measure_kind.value}: {measurement.value:g} "
+                        f"{measurement.unit} (threshold {measurement.threshold:g}, "
+                        f"{'breached' if measurement.breached else 'within range'})"
+                    )
+
+
 def _activity_text(activity: ChatActivity) -> str:
     duration = f" - {activity.duration_ms:g} ms" if activity.duration_ms is not None else ""
     return f"{activity.status.value.title()}: {activity.label}{duration}"
@@ -204,50 +247,60 @@ with st.sidebar:
     st.code("Analyse everything and recommend a pricing action")
     st.caption("Each run shows safe activity labels, not hidden prompts or private reasoning.")
 
-for message_number, message in enumerate(st.session_state.chat_messages):
-    with st.chat_message(message["role"]):
-        response = ChatResponse.model_validate(message["response"])
-        _render_response(response, message_number, can_record=False)
+tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 
-if prompt := st.chat_input(
-    "Ask a portfolio-level pricing question",
-    key="pricing_chat_input",
-    max_chars=1_000,
-    submit_mode="disable",
-):
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    st.session_state.chat_messages.append(
-        {
-            "role": "user",
-            "response": ChatResponse(
-                intent=ChatIntent.HELP, context=ChatContext(), message=prompt
-            ).model_dump(mode="json"),
-        }
-    )
-    with st.chat_message("assistant"):
-        activity_box = st.empty()
-        activity_lines: list[str] = []
+with tab_chat:
+    for message_number, message in enumerate(st.session_state.chat_messages):
+        with st.chat_message(message["role"]):
+            response = ChatResponse.model_validate(message["response"])
+            _render_response(response, message_number, can_record=False)
 
-        def show_activity(activity: ChatActivity) -> None:
-            activity_lines.append(_activity_text(activity))
-            activity_box.markdown("  \n".join(activity_lines[-10:]))
+    if prompt := st.chat_input(
+        "Ask a portfolio-level pricing question",
+        key="pricing_chat_input",
+        max_chars=1_000,
+        submit_mode="disable",
+    ):
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        st.session_state.chat_messages.append(
+            {
+                "role": "user",
+                "response": ChatResponse(
+                    intent=ChatIntent.HELP, context=ChatContext(), message=prompt
+                ).model_dump(mode="json"),
+            }
+        )
+        with st.chat_message("assistant"):
+            activity_box = st.empty()
+            activity_lines: list[str] = []
 
-        with st.spinner("Working with governed portfolio sources..."):
-            response = ChatService().submit(prompt, on_activity=show_activity)
-        activity_box.empty()
-        if "Live analysis could not complete" in response.message:
+            def show_activity(activity: ChatActivity) -> None:
+                activity_lines.append(_activity_text(activity))
+                activity_box.markdown("  \n".join(activity_lines[-10:]))
+
+            with st.spinner("Working with governed portfolio sources..."):
+                response = ChatService().submit(prompt, on_activity=show_activity)
+            activity_box.empty()
+            if "Live analysis could not complete" in response.message:
+                message_number = len(st.session_state.chat_messages)
+                if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
+                    retry_context = ChatContext(
+                        scenario=response.context.scenario, force_replay=True
+                    )
+                    response = ChatService().submit(prompt, retry_context, on_activity=show_activity)
+            if response.activities:
+                with st.expander("Activity trace", expanded=True):
+                    st.write(
+                        "\n".join(
+                            f"- {_activity_text(activity)}" for activity in response.activities
+                        )
+                    )
             message_number = len(st.session_state.chat_messages)
-            if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
-                retry_context = ChatContext(scenario=response.context.scenario, force_replay=True)
-                response = ChatService().submit(prompt, retry_context, on_activity=show_activity)
-        if response.activities:
-            with st.expander("Activity trace", expanded=True):
-                st.write(
-                    "\n".join(f"- {_activity_text(activity)}" for activity in response.activities)
-                )
-        message_number = len(st.session_state.chat_messages)
-        _render_response(response, message_number, can_record=True)
-    st.session_state.chat_messages.append(
-        {"role": "assistant", "response": response.model_dump(mode="json")}
-    )
+            _render_response(response, message_number, can_record=True)
+        st.session_state.chat_messages.append(
+            {"role": "assistant", "response": response.model_dump(mode="json")}
+        )
+
+with tab_monitoring:
+    _render_drift_monitoring_tab()
