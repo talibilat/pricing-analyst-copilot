@@ -1,3 +1,6 @@
+from pathlib import Path
+
+import pytest
 from streamlit.testing.v1 import AppTest
 
 
@@ -18,7 +21,9 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
     assert "Getting information from conversion performance data" in markdown
 
 
-def test_replay_keyword_shows_a_prominent_replay_label(tmp_path, monkeypatch) -> None:
+def test_replay_keyword_shows_a_prominent_replay_label(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     from datetime import date
 
     from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
@@ -75,7 +80,7 @@ def test_replay_keyword_shows_a_prominent_replay_label(tmp_path, monkeypatch) ->
 
 
 def test_replay_of_an_unrecorded_scenario_fails_gracefully_in_the_interface(
-    tmp_path, monkeypatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(tmp_path / "replay"))
 

@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 import pytest
 
@@ -179,7 +180,7 @@ def test_conflicting_evidence_scenario_forces_investigate_without_calling_the_mo
     )
 
 
-def test_replay_flag_routes_to_the_replay_pipeline(tmp_path) -> None:
+def test_replay_flag_routes_to_the_replay_pipeline(tmp_path: Path) -> None:
     from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
     from pricing_copilot.config import Settings
     from pricing_copilot.contracts import GovernanceOutcome, Recommendation, ResultSource

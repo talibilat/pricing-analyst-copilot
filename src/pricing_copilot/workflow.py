@@ -23,11 +23,11 @@ from pricing_copilot.evidence.policy import detect_material_evidence_issues
 from pricing_copilot.observability.trace import TraceEventListener
 from pricing_copilot.orchestration.pipeline import run_governed_portfolio_workflow
 from pricing_copilot.recommendation.governance import validate_and_clamp_draft
-from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
 from pricing_copilot.recommendation.synthesizer import (
     RecommendationSynthesizer,
     get_default_synthesizer,
 )
+from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
 from pricing_copilot.workflow_common import (
     IMPLEMENTED_DATA_SCENARIOS,
     RETRIEVAL_QUERY,

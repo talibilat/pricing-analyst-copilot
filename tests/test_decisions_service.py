@@ -110,13 +110,16 @@ def test_recorded_decision_preserves_the_replay_source(tmp_path: Path) -> None:
     )
 
     assert recorded.source is ResultSource.REPLAY
-    assert store.get(recorded.record_id).source is ResultSource.REPLAY
+    assert recorded.record_id is not None
+    fetched = store.get(recorded.record_id)
+    assert fetched is not None
+    assert fetched.source is ResultSource.REPLAY
 
 
 def test_replaying_an_analysis_never_creates_a_decision_record_by_itself(tmp_path: Path) -> None:
-    from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
     from pricing_copilot.contracts import AnalysisPeriod as _AnalysisPeriod
     from pricing_copilot.contracts import PortfolioQuestion as _PortfolioQuestion
+    from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
 
     store = DecisionStore.from_path(tmp_path / "decisions.sqlite3")
     replay_settings = Settings(replay_directory=tmp_path / "replay")
