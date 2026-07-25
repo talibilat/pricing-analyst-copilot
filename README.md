@@ -142,16 +142,30 @@ This runs every golden case on the governed multi-agent architecture (and, where
 
 ## Drift and release governance
 
-Monitoring covers:
+The drift monitor (`src/pricing_copilot/drift/`) covers four alert categories:
 
-- Data drift across pricing, claims, conversion, competitor, and feedback measures.
-- Agent-behavior drift across routing, citations, abstention, recommendation distribution, and governance rejection.
-- Operational drift across latency, token use, estimated cost, retries, failures, and invalid outputs.
-- Configuration drift across model, prompt, agent, tool, dataset, and policy versions.
+- Data drift across claim severity, claim frequency, loss ratio, conversion, competitor index, and aggregate feedback topics - measured with rolling z-scores and percentage movement everywhere, a Kolmogorov-Smirnov test on the competitor index (a genuine per-observation sample), and a population stability index on the feedback-topic mix (a genuine categorical distribution).
+- Agent-behavior drift across routing accuracy, citation coverage, safe abstention, recommendation distribution, governance rejection, and golden-suite pass rate.
+- Operational drift across latency, token use, estimated cost, tool failures/retries, and invalid structured outputs.
+- Configuration drift across model, prompt, agent, tool, dataset, and policy versions, diffed against the previously recorded snapshot.
 
-A predesigned month-25 dataset provides a repeatable drift demonstration.
-Material drift can lower confidence or force investigation.
-Changes cannot become the default until the relevant evaluation gates pass.
+A reproducible 25-month dataset (`ScenarioName.DRIFT_MONITORING`) provides the demonstration: the first 24 months are stable, and the 25th month is deliberately shifted by a fixed seed, so the same alerts fire every run.
+Every threshold is configurable (`Settings.drift`) and every measurement reports its unit and comparison period.
+Material drift can lower recommendation confidence (`calculate_confidence(..., drift_penalty=...)`) or force investigation.
+
+Run the monitor after an evaluation report exists:
+
+```bash
+uv run pricing-copilot --evaluate
+uv run pricing-copilot --monitor-drift
+```
+
+This writes `var/drift/latest.json`, which the chat interface ("show me drift monitoring") and the Streamlit Monitoring tab both read.
+
+### Change-promotion gate
+
+`uv run pricing-copilot --check-promotion` compares the latest evaluation report's actuals against its targets (`src/pricing_copilot/evaluation/gate.py`).
+If every required metric and every golden case passes, the report is saved to `var/evaluation/promoted.json` as the current default; otherwise the command exits non-zero, lists every failing metric and case, and leaves the existing `promoted.json` untouched - a change cannot become the default until it passes.
 
 The Sunday 2:30 pm feature freeze applies to the interview release.
 Later development may continue as a separately versioned iteration after the interview package is stable, recorded, and rehearsed.
