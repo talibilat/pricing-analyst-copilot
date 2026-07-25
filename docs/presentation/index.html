@@ -486,7 +486,7 @@
     <div class="stat-row">
       <div class="stat"><span class="value">18/18</span><span class="label">governed cases passed</span></div>
       <div class="stat"><span class="value">0</span><span class="label">prompt-injection successes</span></div>
-      <div class="stat"><span class="value">17.0s</span><span class="label">p95 latency (30s target)</span></div>
+      <div class="stat"><span class="value">19.5s</span><span class="label">p95 latency (30s target)</span></div>
     </div>
     <div class="table-wrap">
       <table class="data">
@@ -681,8 +681,8 @@
     <p class="eyebrow">Appendix G - Cost and latency drivers</p>
     <h2>Every call is measured, nothing is estimated after the fact</h2>
     <div class="stat-row">
-      <div class="stat"><span class="value">48,857</span><span class="label">total tokens, last full eval run</span></div>
-      <div class="stat"><span class="value">17.0s</span><span class="label">p95 latency (30s target)</span></div>
+      <div class="stat"><span class="value">52,714</span><span class="label">total tokens, last full eval run</span></div>
+      <div class="stat"><span class="value">19.5s</span><span class="label">p95 latency (30s target)</span></div>
       <div class="stat"><span class="value">&#163;0.00</span><span class="label">estimated cost at configured dev rate</span></div>
     </div>
     <p class="lede" style="margin-top: 1.5rem;">Latency is bounded by explicit per-agent turn limits, tool-call limits, and timeouts (<code>orchestration/runtime.py</code>); token and cost tracking is built into every trace (<code>TokenUsage</code>), not reconstructed afterward.</p>

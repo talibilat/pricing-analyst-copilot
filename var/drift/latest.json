@@ -1,6 +1,6 @@
 {
   "report_version": "drift-report-v1",
-  "generated_at": "2026-07-25T19:44:13.534252Z",
+  "generated_at": "2026-07-25T23:11:05.489012Z",
   "configuration_versions": {
     "model_name": "gpt-5.4",
     "recommendation_version": "governed-multi-agent-v1",
@@ -285,7 +285,7 @@
       "insufficient_sample": false,
       "baseline_window": "operational policy ceiling",
       "current_window": "latest governed benchmark run",
-      "detail": "P95 latency is 17.004s, ceiling is 30.0s."
+      "detail": "P95 latency is 19.519s, ceiling is 30.0s."
     },
     {
       "category": "operational",
@@ -324,7 +324,7 @@
       "insufficient_sample": false,
       "baseline_window": "operational policy ceiling",
       "current_window": "latest governed benchmark run",
-      "detail": "Total tokens: 48857, estimated cost: GBP 0.0."
+      "detail": "Total tokens: 52714, estimated cost: GBP 0.0."
     },
     {
       "category": "configuration",
