@@ -18,7 +18,8 @@ _TOLERANCE = 5.0
 
 _EXECUTION_CLAIM_PATTERN = re.compile(
     r"\bprice (?:has been|was|is being) (?:changed|increased|decreased|adjusted)\b"
-    r"|\b(?:already |has )?(?:implemented|executed|applied) (?:the|this) (?:price|increase|decrease)\b"
+    r"|\b(?:already |has )?(?:implemented|executed|applied) (?:the|this) "
+    r"(?:price|increase|decrease)\b"
     r"|\baction (?:has been|was) taken\b",
     re.IGNORECASE,
 )

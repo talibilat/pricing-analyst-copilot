@@ -11,12 +11,12 @@ from pricing_copilot.orchestration.contracts import SpecialistFindings
 from pricing_copilot.orchestration.governance_agent import FakeGovernanceAgentRunner
 from pricing_copilot.orchestration.pipeline import OrchestrationBundle
 from pricing_copilot.orchestration.recommendation_agent import FakeRecommendationAgentRunner
-from pricing_copilot.orchestration.specialists import FakeSpecialistAgent
+from pricing_copilot.orchestration.specialists import FakeSpecialistAgent, SpecialistAgent
 
 client = TestClient(app)
 
 
-def _fake_specialist_factory(**_kwargs: Any) -> dict[EvidenceDomain, FakeSpecialistAgent]:
+def _fake_specialist_factory(**_kwargs: Any) -> dict[EvidenceDomain, SpecialistAgent]:
     return {
         domain: FakeSpecialistAgent(SpecialistFindings(summary=f"{domain.value} summary ok"))
         for domain in EvidenceDomain

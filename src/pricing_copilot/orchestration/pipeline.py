@@ -9,12 +9,14 @@ from agents import OpenAIChatCompletionsModel, set_tracing_disabled
 from openai import AsyncOpenAI
 
 from pricing_copilot.analytics.calculators import MetricCalculationError
+from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.config import Settings, get_azure_openai_settings
 from pricing_copilot.contracts import (
     EvidenceDomain,
     GovernanceOutcome,
     PortfolioQuestion,
     Recommendation,
+    Region,
     WorkflowResult,
 )
 from pricing_copilot.data.repository import PortfolioDataRepository
@@ -22,6 +24,7 @@ from pricing_copilot.documents.retrieval import RetrievedDocument, retrieve_docu
 from pricing_copilot.evidence.confidence import calculate_confidence
 from pricing_copilot.evidence.fair_value import calculate_fair_value_status
 from pricing_copilot.evidence.ledger import build_evidence_ledger
+from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.evidence.policy import detect_material_evidence_issues
 from pricing_copilot.orchestration.governance_agent import (
     AgentsSdkGovernanceAgentRunner,
@@ -58,6 +61,9 @@ class OrchestrationBundle:
     specialist_agents_factory: SpecialistAgentsFactory
     recommendation_agent: RecommendationAgentRunner
     governance_agent: GovernanceAgentRunner
+    client: AsyncOpenAI | None = None
+    """Set only by get_default_orchestration - closed after each run so the underlying httpx
+    connection pool never outlives the asyncio event loop it was created on."""
 
 
 def get_default_orchestration(settings: Settings) -> OrchestrationBundle:
@@ -73,7 +79,7 @@ def get_default_orchestration(settings: Settings) -> OrchestrationBundle:
     model = OpenAIChatCompletionsModel(model=deployment, openai_client=client)
 
     def factory(
-        *, analytics, documents: list[RetrievedDocument], region
+        *, analytics: PortfolioAnalytics, documents: list[RetrievedDocument], region: Region
     ) -> dict[EvidenceDomain, SpecialistAgent]:
         return build_specialist_agents(
             analytics=analytics, documents=documents, region=region, model=model
@@ -83,11 +89,15 @@ def get_default_orchestration(settings: Settings) -> OrchestrationBundle:
         specialist_agents_factory=factory,
         recommendation_agent=AgentsSdkRecommendationAgentRunner(model),
         governance_agent=AgentsSdkGovernanceAgentRunner(model),
+        client=client,
     )
 
 
 def _validate(
-    draft: RecommendationDraft, ledger, documents, max_movement_pct: float
+    draft: RecommendationDraft,
+    ledger: EvidenceLedger,
+    documents: list[RetrievedDocument],
+    max_movement_pct: float,
 ) -> tuple[RecommendationDraft | None, str | None]:
     try:
         return (
@@ -242,6 +252,16 @@ async def _run_governed_pipeline_async(
     )
 
 
+async def _run_and_close_client(
+    question: PortfolioQuestion, settings: Settings, orchestration: OrchestrationBundle
+) -> WorkflowResult:
+    try:
+        return await _run_governed_pipeline_async(question, settings, orchestration)
+    finally:
+        if orchestration.client is not None:
+            await orchestration.client.close()
+
+
 def run_governed_portfolio_workflow(
     question: PortfolioQuestion,
     settings: Settings | None = None,
@@ -254,4 +274,4 @@ def run_governed_portfolio_workflow(
     if question.scenario not in IMPLEMENTED_DATA_SCENARIOS:
         return missing_evidence_workflow_result(question)
     active = orchestration or get_default_orchestration(settings)
-    return asyncio.run(_run_governed_pipeline_async(question, settings, active))
+    return asyncio.run(_run_and_close_client(question, settings, active))

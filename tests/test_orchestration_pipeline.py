@@ -1,5 +1,7 @@
 from datetime import date
+from typing import Any
 
+from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.contracts import (
     AnalysisPeriod,
     EvidenceDomain,
@@ -11,11 +13,21 @@ from pricing_copilot.contracts import (
     ScenarioName,
     Segment,
 )
+from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.orchestration.contracts import SpecialistFindings
-from pricing_copilot.orchestration.governance_agent import FakeGovernanceAgentRunner
-from pricing_copilot.orchestration.pipeline import OrchestrationBundle, run_governed_portfolio_workflow
-from pricing_copilot.orchestration.recommendation_agent import FakeRecommendationAgentRunner
-from pricing_copilot.orchestration.specialists import FakeSpecialistAgent
+from pricing_copilot.orchestration.governance_agent import (
+    FakeGovernanceAgentRunner,
+    GovernanceAgentRunner,
+)
+from pricing_copilot.orchestration.pipeline import (
+    OrchestrationBundle,
+    run_governed_portfolio_workflow,
+)
+from pricing_copilot.orchestration.recommendation_agent import (
+    FakeRecommendationAgentRunner,
+    RecommendationAgentRunner,
+)
+from pricing_copilot.orchestration.specialists import FakeSpecialistAgent, SpecialistAgent
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 
 
@@ -29,14 +41,21 @@ def _question(scenario: ScenarioName) -> PortfolioQuestion:
     )
 
 
-def _fake_specialist_factory(**_kwargs):  # noqa: ANN003 - matches factory signature by design
+def _fake_specialist_factory(
+    *, analytics: PortfolioAnalytics, documents: list[RetrievedDocument], region: Region
+) -> dict[EvidenceDomain, SpecialistAgent]:
     return {
         domain: FakeSpecialistAgent(SpecialistFindings(summary=f"{domain.value} summary ok"))
         for domain in EvidenceDomain
     }
 
 
-def _bundle(*, recommendation=None, governance=None, specialist_factory=None) -> OrchestrationBundle:
+def _bundle(
+    *,
+    recommendation: RecommendationAgentRunner | None = None,
+    governance: GovernanceAgentRunner | None = None,
+    specialist_factory: Any = None,
+) -> OrchestrationBundle:
     return OrchestrationBundle(
         specialist_agents_factory=specialist_factory or _fake_specialist_factory,
         recommendation_agent=recommendation or FakeRecommendationAgentRunner(),
@@ -66,7 +85,7 @@ def test_governed_retention_concern_holds() -> None:
 
 
 def test_governed_conflicting_evidence_investigates_without_calling_any_agent() -> None:
-    def _factory_that_must_not_be_called(**_kwargs):  # noqa: ANN003
+    def _factory_that_must_not_be_called(**_kwargs: Any) -> dict[EvidenceDomain, SpecialistAgent]:
         raise AssertionError("Specialist agents must not be invoked when the gate short-circuits.")
 
     result = run_governed_portfolio_workflow(
@@ -85,7 +104,7 @@ def test_governance_rejection_triggers_exactly_one_bounded_revision_then_succeed
     call_log: list[str | None] = []
     original_synthesize = recommendation.synthesize
 
-    async def _tracking_synthesize(**kwargs):
+    async def _tracking_synthesize(**kwargs: Any) -> RecommendationDraft:
         call_log.append(kwargs.get("revision_feedback"))
         if kwargs.get("revision_feedback") is not None:
             return revised_draft
@@ -131,10 +150,10 @@ def test_deterministic_validation_failure_also_consumes_the_one_bounded_revision
 
 
 def test_recommendation_agent_never_receives_analytics_or_documents_kwarg() -> None:
-    seen_kwargs: dict = {}
+    seen_kwargs: dict[str, Any] = {}
 
     class _SpyRecommendationAgent(FakeRecommendationAgentRunner):
-        async def synthesize(self, **kwargs):  # noqa: ANN003
+        async def synthesize(self, **kwargs: Any) -> RecommendationDraft:
             seen_kwargs.update(kwargs)
             return await super().synthesize(**kwargs)
 

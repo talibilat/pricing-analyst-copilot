@@ -1,7 +1,9 @@
 import asyncio
 import json
 from datetime import date
+from typing import Any
 
+from agents import FunctionTool
 from agents.tool_context import ToolContext
 
 from pricing_copilot.analytics.contracts import (
@@ -25,9 +27,13 @@ from pricing_copilot.orchestration.tools import (
 )
 
 
-def _invoke(tool) -> dict:  # noqa: ANN001
+async def _call(tool: FunctionTool) -> Any:
     ctx = ToolContext(context=None, tool_name=tool.name, tool_call_id="1", tool_arguments="{}")
-    result = asyncio.run(tool.on_invoke_tool(ctx, "{}"))
+    return await tool.on_invoke_tool(ctx, "{}")
+
+
+def _invoke(tool: FunctionTool) -> Any:
+    result = asyncio.run(_call(tool))
     return json.loads(result)
 
 

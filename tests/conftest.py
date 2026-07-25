@@ -4,6 +4,7 @@ import pytest
 from agents import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
+from pricing_copilot.analytics.contracts import PortfolioAnalytics
 from pricing_copilot.config import get_azure_openai_settings, get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
@@ -14,12 +15,12 @@ from pricing_copilot.contracts import (
     Segment,
 )
 from pricing_copilot.data.repository import PortfolioDataRepository
-from pricing_copilot.documents.retrieval import retrieve_documents
+from pricing_copilot.documents.retrieval import RetrievedDocument, retrieve_documents
 from pricing_copilot.workflow_common import RETRIEVAL_QUERY, build_analytics
 
 
 @pytest.fixture
-def controlled_increase_analytics():
+def controlled_increase_analytics() -> PortfolioAnalytics:
     question = PortfolioQuestion(
         product=Product.PERSONAL_MOTOR,
         region=Region.NORTH_WEST,
@@ -32,7 +33,7 @@ def controlled_increase_analytics():
 
 
 @pytest.fixture
-def controlled_increase_documents():
+def controlled_increase_documents() -> list[RetrievedDocument]:
     return retrieve_documents(
         scenario=ScenarioName.CONTROLLED_INCREASE,
         region=Region.NORTH_WEST,
@@ -42,7 +43,7 @@ def controlled_increase_documents():
 
 
 @pytest.fixture
-def azure_chat_model():
+def azure_chat_model() -> OpenAIChatCompletionsModel:
     azure = get_azure_openai_settings()
     settings = get_settings()
     base_url = (azure.endpoint or "https://example.invalid").rstrip("/") + "/openai/v1"

@@ -5,8 +5,8 @@ from pricing_copilot.contracts import (
     EvidenceDomain,
     PortfolioQuestion,
     Product,
-    Region,
     RecommendationAction,
+    Region,
     ScenarioName,
     Segment,
 )

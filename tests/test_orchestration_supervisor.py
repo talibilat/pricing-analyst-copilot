@@ -3,6 +3,7 @@ import time
 
 from pricing_copilot.contracts import EvidenceDomain
 from pricing_copilot.orchestration.contracts import SpecialistFindings
+from pricing_copilot.orchestration.specialists import SpecialistAgent
 from pricing_copilot.orchestration.supervisor import run_specialists, to_specialist_report
 
 
@@ -22,7 +23,7 @@ class _FailingFakeSpecialist:
 
 
 def test_run_specialists_executes_concurrently_not_sequentially() -> None:
-    specialists = {
+    specialists: dict[EvidenceDomain, SpecialistAgent] = {
         domain: _SlowFakeSpecialist(SpecialistFindings(summary=f"{domain.value} ok"), 0.2)
         for domain in EvidenceDomain
     }
@@ -34,7 +35,7 @@ def test_run_specialists_executes_concurrently_not_sequentially() -> None:
 
 
 def test_run_specialists_isolates_a_failing_domain_without_crashing_others() -> None:
-    specialists = {
+    specialists: dict[EvidenceDomain, SpecialistAgent] = {
         EvidenceDomain.CLAIMS: _FailingFakeSpecialist(),
         EvidenceDomain.CONVERSION: _SlowFakeSpecialist(
             SpecialistFindings(summary="conversion ok"), 0.01
