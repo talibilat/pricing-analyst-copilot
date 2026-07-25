@@ -28,6 +28,7 @@ class ScenarioName(StrEnum):
     CONTROLLED_INCREASE = "controlled_increase"
     RETENTION_CONCERN = "retention_concern"
     CONFLICTING_EVIDENCE = "conflicting_evidence"
+    DRIFT_MONITORING = "drift_monitoring"
 
 
 class EvidenceDomain(StrEnum):

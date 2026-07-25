@@ -37,6 +37,14 @@ class CompetitorMonthlyRecord(BaseModel):
     price_index: float
 
 
+class FeedbackTopicMonthlyRecord(BaseModel):
+    period: date
+    claims_handling_share_pct: float
+    price_share_pct: float
+    communication_share_pct: float
+    other_share_pct: float
+
+
 class PricingActionRecord(BaseModel):
     period: date
     product: Product

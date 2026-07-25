@@ -8,6 +8,7 @@ from pricing_copilot.data.records import (
     ClaimsMonthlyRecord,
     CompetitorMonthlyRecord,
     ConversionMonthlyRecord,
+    FeedbackTopicMonthlyRecord,
     PricingActionRecord,
     ScenarioDataset,
 )
@@ -17,6 +18,9 @@ DEFAULT_SCENARIO_VERSION = "v1"
 
 TOTAL_MONTHS = 24
 SCENARIO_START_MONTH = date(2024, 1, 1)
+
+DRIFT_TOTAL_MONTHS = 25
+DRIFT_CURRENT_INDEX = 24  # the 25th month, deliberately shifted to trigger drift signals
 
 COMPETITOR_BASE_INDEX: dict[str, float] = {
     "Meridian Insure": 100.0,
@@ -381,6 +385,124 @@ def _generate_conflicting_evidence_dataset(seed: int, version: str) -> ScenarioD
     )
 
 
+def _generate_drift_monitoring_claims(
+    rng: random.Random, periods: list[date]
+) -> list[ClaimsMonthlyRecord]:
+    records = []
+    for index, period in enumerate(periods):
+        is_drift_month = index == DRIFT_CURRENT_INDEX
+        policies = round(_jitter(rng, 5000, 0.01))
+        claim_count = round(_jitter(rng, 420, 0.03) * (1.35 if is_drift_month else 1.0))
+        severity_target = 1606.0 * (1.45 if is_drift_month else 1.0)
+        severity = _jitter(rng, severity_target, 0.02)
+        earned_premium = round(_jitter(rng, 950_000.0, 0.01), 2)
+        records.append(
+            ClaimsMonthlyRecord(
+                period=period,
+                product=Product.PERSONAL_MOTOR,
+                region=Region.NORTH_WEST,
+                segment=Segment.RENEWAL,
+                policies_in_force=policies,
+                claim_count=claim_count,
+                incurred_loss_gbp=round(claim_count * severity, 2),
+                earned_premium_gbp=earned_premium,
+            )
+        )
+    return records
+
+
+def _generate_drift_monitoring_conversion(
+    rng: random.Random, periods: list[date]
+) -> list[ConversionMonthlyRecord]:
+    records = []
+    for index, period in enumerate(periods):
+        is_drift_month = index == DRIFT_CURRENT_INDEX
+        conv_target = 0.22 * (0.70 if is_drift_month else 1.0)
+        ret_target = 0.88 * (0.85 if is_drift_month else 1.0)
+        quotes = round(_jitter(rng, 10_000, 0.02))
+        sales = round(quotes * _jitter(rng, conv_target, 0.03))
+        renewals_due = round(_jitter(rng, 4_000, 0.02))
+        renewals_retained = round(renewals_due * _jitter(rng, ret_target, 0.02))
+        premium = round(_jitter(rng, 620.0, 0.01), 2)
+        records.append(
+            ConversionMonthlyRecord(
+                period=period,
+                product=Product.PERSONAL_MOTOR,
+                region=Region.NORTH_WEST,
+                segment=Segment.RENEWAL,
+                quotes=quotes,
+                sales=sales,
+                renewals_due=renewals_due,
+                renewals_retained=renewals_retained,
+                average_quoted_premium_gbp=premium,
+            )
+        )
+    return records
+
+
+def _generate_drift_monitoring_competitors(
+    rng: random.Random, periods: list[date]
+) -> list[CompetitorMonthlyRecord]:
+    records = []
+    for name, base_index in COMPETITOR_BASE_INDEX.items():
+        for index, period in enumerate(periods):
+            is_drift_month = index == DRIFT_CURRENT_INDEX
+            target = base_index * (1.20 if is_drift_month else 1.0)
+            records.append(
+                CompetitorMonthlyRecord(
+                    period=period,
+                    region=Region.NORTH_WEST,
+                    competitor_name=name,
+                    price_index=round(_jitter(rng, target, 0.01), 2),
+                )
+            )
+    return records
+
+
+def _generate_drift_monitoring_dataset(seed: int, version: str) -> ScenarioDataset:
+    rng = random.Random(seed)  # nosec B311
+    periods = _month_periods(SCENARIO_START_MONTH, DRIFT_TOTAL_MONTHS)
+    return ScenarioDataset(
+        scenario=ScenarioName.DRIFT_MONITORING,
+        seed=seed,
+        version=version,
+        claims=_generate_drift_monitoring_claims(rng, periods),
+        conversion=_generate_drift_monitoring_conversion(rng, periods),
+        competitors=_generate_drift_monitoring_competitors(rng, periods),
+        pricing_history=_generate_pricing_history(periods),
+    )
+
+
+def generate_feedback_topic_series(
+    seed: int = DEFAULT_SCENARIO_SEED, *, months: int = DRIFT_TOTAL_MONTHS
+) -> list[FeedbackTopicMonthlyRecord]:
+    """A standalone monthly topic-share series for feedback-topic drift detection.
+
+    Not part of ScenarioDataset/the persistent DuckDB store - this is purpose-built,
+    lightweight time series data consumed directly by the drift data detector.
+    """
+    rng = random.Random(seed + 1)  # nosec B311
+    periods = _month_periods(SCENARIO_START_MONTH, months)
+    records = []
+    for index, period in enumerate(periods):
+        is_drift_month = index == DRIFT_CURRENT_INDEX
+        if is_drift_month:
+            claims_share, price_share, comms_share = 0.30, 0.45, 0.15
+        else:
+            claims_share, price_share, comms_share = 0.55, 0.15, 0.20
+        other_share = max(0.0, 1.0 - claims_share - price_share - comms_share)
+        records.append(
+            FeedbackTopicMonthlyRecord(
+                period=period,
+                claims_handling_share_pct=round(claims_share * 100, 2),
+                price_share_pct=round(price_share * 100, 2),
+                communication_share_pct=round(comms_share * 100, 2),
+                other_share_pct=round(other_share * 100, 2),
+            )
+        )
+    return records
+
+
 def generate_scenario_dataset(
     scenario: ScenarioName,
     seed: int = DEFAULT_SCENARIO_SEED,
@@ -392,4 +514,6 @@ def generate_scenario_dataset(
         return _generate_retention_concern_dataset(seed, version)
     if scenario is ScenarioName.CONFLICTING_EVIDENCE:
         return _generate_conflicting_evidence_dataset(seed, version)
+    if scenario is ScenarioName.DRIFT_MONITORING:
+        return _generate_drift_monitoring_dataset(seed, version)
     raise NotImplementedError(f"No generator implemented yet for scenario '{scenario.value}'.")
