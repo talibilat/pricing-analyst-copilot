@@ -118,6 +118,29 @@ def test_recommendation_response_shows_expandable_evidence_detail() -> None:
     assert any("Evidence detail" in label for label in expander_labels)
 
 
+def test_supporting_charts_include_severity_and_competitor_movement() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
+    app.run()
+    app.chat_input[0].set_value("Analyse everything and recommend a pricing action")
+    app.run()
+
+    assert not app.exception
+    captions = "\n".join(item.value for item in app.caption)
+    assert "Claim severity" in captions
+    assert "Competitor" in captions
+
+
+def test_counter_evidence_uses_a_prominent_warning_block() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    app.chat_input[0].set_value("Replay the controlled increase scenario")
+    app.run()
+
+    assert not app.exception
+    warning_bodies = "\n".join(w.body for w in app.warning)
+    assert "Counter-evidence" in warning_bodies
+
+
 def test_monitoring_tab_shows_an_honest_message_with_no_drift_report_recorded(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

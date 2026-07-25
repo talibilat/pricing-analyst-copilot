@@ -100,8 +100,11 @@ def _render_workflow_result(result: WorkflowResult) -> None:
     st.markdown("**Reasoning**")
     st.write(recommendation.rationale)
     if recommendation.counter_evidence:
-        st.markdown("**Counter-evidence**")
-        st.write("\n".join(f"- {item}" for item in recommendation.counter_evidence))
+        st.warning(
+            "**Counter-evidence**\n\n"
+            + "\n".join(f"- {item}" for item in recommendation.counter_evidence),
+            icon="⚖️",
+        )
     if recommendation.investigation_areas:
         st.markdown("**Areas to investigate**")
         st.write("\n".join(f"- {item}" for item in recommendation.investigation_areas))
@@ -147,6 +150,16 @@ def _render_workflow_result(result: WorkflowResult) -> None:
             {"Loss ratio (%)": [item.value * 100 for item in analytics.claims.loss_ratio.monthly]},
             y_label="Loss ratio (%)",
         )
+        st.caption("Claim severity")
+        _render_time_series(
+            [item.period for item in analytics.claims.average_severity_gbp.monthly],
+            {
+                "Average severity (GBP)": [
+                    item.value for item in analytics.claims.average_severity_gbp.monthly
+                ]
+            },
+            y_label="GBP per claim",
+        )
         st.caption("Conversion performance")
         _render_time_series(
             [item.period for item in analytics.conversion.quote_to_sale_conversion.monthly],
@@ -160,6 +173,21 @@ def _render_workflow_result(result: WorkflowResult) -> None:
                 ],
             },
             y_label="Rate (%)",
+        )
+        st.caption("Competitor price movement")
+        _render_time_series(
+            (
+                [item.period for item in analytics.competitors.competitors[0].price_index.monthly]
+                if analytics.competitors.competitors
+                else []
+            ),
+            {
+                competitor.competitor_name: [
+                    item.value for item in competitor.price_index.monthly
+                ]
+                for competitor in analytics.competitors.competitors
+            },
+            y_label="Price index",
         )
 
 
