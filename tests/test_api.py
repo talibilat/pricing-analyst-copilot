@@ -5,10 +5,37 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pricing_copilot.api import app
+from pricing_copilot.contracts import EvidenceDomain
 from pricing_copilot.decisions.store import DecisionStore
-from pricing_copilot.recommendation.synthesizer import FakeRecommendationSynthesizer
+from pricing_copilot.orchestration.contracts import SpecialistFindings
+from pricing_copilot.orchestration.governance_agent import FakeGovernanceAgentRunner
+from pricing_copilot.orchestration.pipeline import OrchestrationBundle
+from pricing_copilot.orchestration.recommendation_agent import FakeRecommendationAgentRunner
+from pricing_copilot.orchestration.specialists import FakeSpecialistAgent
 
 client = TestClient(app)
+
+
+def _fake_specialist_factory(**_kwargs: Any) -> dict[EvidenceDomain, FakeSpecialistAgent]:
+    return {
+        domain: FakeSpecialistAgent(SpecialistFindings(summary=f"{domain.value} summary ok"))
+        for domain in EvidenceDomain
+    }
+
+
+def _fake_orchestration_bundle(settings: Any) -> OrchestrationBundle:
+    return OrchestrationBundle(
+        specialist_agents_factory=_fake_specialist_factory,
+        recommendation_agent=FakeRecommendationAgentRunner(),
+        governance_agent=FakeGovernanceAgentRunner(),
+    )
+
+
+def _patch_default_orchestration(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "pricing_copilot.orchestration.pipeline.get_default_orchestration",
+        _fake_orchestration_bundle,
+    )
 
 
 def test_health_check() -> None:
@@ -48,10 +75,7 @@ def test_workflow_endpoint_rejects_unsupported_region() -> None:
 def test_workflow_endpoint_returns_analytics_for_controlled_increase_scenario(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "pricing_copilot.workflow.get_default_synthesizer",
-        lambda settings: FakeRecommendationSynthesizer(),
-    )
+    _patch_default_orchestration(monkeypatch)
     payload = {
         "product": "personal_motor",
         "region": "north_west",
@@ -88,10 +112,7 @@ def _isolated_decision_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 
 
 def _run_controlled_increase(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
-    monkeypatch.setattr(
-        "pricing_copilot.workflow.get_default_synthesizer",
-        lambda settings: FakeRecommendationSynthesizer(),
-    )
+    _patch_default_orchestration(monkeypatch)
     response = client.post("/workflow", json=_controlled_increase_payload())
     assert response.status_code == 200
     result: dict[str, Any] = response.json()
@@ -101,10 +122,7 @@ def _run_controlled_increase(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
 def test_workflow_endpoint_retention_concern_recommends_hold(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "pricing_copilot.workflow.get_default_synthesizer",
-        lambda settings: FakeRecommendationSynthesizer(),
-    )
+    _patch_default_orchestration(monkeypatch)
     payload = _controlled_increase_payload()
     payload["scenario"] = "retention_concern"
     response = client.post("/workflow", json=payload)

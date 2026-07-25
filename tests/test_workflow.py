@@ -16,7 +16,7 @@ from pricing_copilot.contracts import (
 )
 from pricing_copilot.recommendation.contracts import RecommendationDraft
 from pricing_copilot.recommendation.synthesizer import FakeRecommendationSynthesizer
-from pricing_copilot.workflow import run_portfolio_workflow
+from pricing_copilot.workflow import run_baseline_portfolio_workflow, run_portfolio_workflow
 
 
 def _question(region: Region = Region.NORTH_WEST) -> PortfolioQuestion:
@@ -146,6 +146,20 @@ def test_retention_concern_scenario_recommends_hold_with_elasticity_investigatio
     assert result.analytics is not None
     retention_movement = result.analytics.conversion.renewal_retention.movement_pct
     assert retention_movement is not None and retention_movement < -5.0
+
+
+def test_use_baseline_flag_routes_to_the_single_agent_path_even_without_a_synthesizer() -> None:
+    question = _question().model_copy(update={"scenario": ScenarioName.CONTROLLED_INCREASE})
+    result = run_portfolio_workflow(
+        question, synthesizer=FakeRecommendationSynthesizer(), use_baseline=True
+    )
+    assert result.recommendation.action is RecommendationAction.INCREASE
+
+
+def test_run_baseline_portfolio_workflow_is_directly_callable() -> None:
+    question = _question().model_copy(update={"scenario": ScenarioName.CONTROLLED_INCREASE})
+    result = run_baseline_portfolio_workflow(question, synthesizer=FakeRecommendationSynthesizer())
+    assert result.recommendation.action is RecommendationAction.INCREASE
 
 
 def test_conflicting_evidence_scenario_forces_investigate_without_calling_the_model() -> None:

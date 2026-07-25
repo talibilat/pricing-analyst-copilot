@@ -20,6 +20,7 @@ from pricing_copilot.evidence.confidence import calculate_confidence
 from pricing_copilot.evidence.fair_value import calculate_fair_value_status
 from pricing_copilot.evidence.ledger import build_evidence_ledger
 from pricing_copilot.evidence.policy import detect_material_evidence_issues
+from pricing_copilot.orchestration.pipeline import run_governed_portfolio_workflow
 from pricing_copilot.recommendation.governance import validate_and_clamp_draft
 from pricing_copilot.recommendation.synthesizer import (
     RecommendationSynthesizer,
@@ -181,14 +182,33 @@ def _evidence_backed_workflow_result(
     )
 
 
-def run_portfolio_workflow(
+def run_baseline_portfolio_workflow(
     question: PortfolioQuestion,
     settings: Settings | None = None,
     synthesizer: RecommendationSynthesizer | None = None,
 ) -> WorkflowResult:
+    """The original single-agent baseline pipeline. Retained for fallback and side-by-side
+    benchmarking against the governed multi-agent pipeline (see run_governed_portfolio_workflow)."""
     validate_portfolio_combination(question.product, question.region, question.segment)
     settings = settings or get_settings()
 
     if question.scenario in IMPLEMENTED_DATA_SCENARIOS:
         return _evidence_backed_workflow_result(question, settings, synthesizer)
     return missing_evidence_workflow_result(question)
+
+
+def run_portfolio_workflow(
+    question: PortfolioQuestion,
+    settings: Settings | None = None,
+    synthesizer: RecommendationSynthesizer | None = None,
+    *,
+    use_baseline: bool = False,
+) -> WorkflowResult:
+    """Public entry point used by the API, CLI, and Streamlit interface. Defaults to the
+    governed multi-agent pipeline; set use_baseline=True (or pass an explicit synthesizer) to
+    run the single-agent baseline instead, for fallback or side-by-side benchmarking."""
+    if use_baseline or synthesizer is not None:
+        return run_baseline_portfolio_workflow(question, settings, synthesizer)
+
+    validate_portfolio_combination(question.product, question.region, question.segment)
+    return run_governed_portfolio_workflow(question, settings)
