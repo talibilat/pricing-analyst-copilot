@@ -10,7 +10,7 @@ from pricing_copilot.governance.registry import (
 
 def test_registry_records_owner_risk_tools_contract_and_evaluation_suite() -> None:
     assert AGENT_REGISTRY_VERSION
-    assert len(APPROVED_AGENT_REGISTRY) == 7
+    assert len(APPROVED_AGENT_REGISTRY) == 8
     for registration in APPROVED_AGENT_REGISTRY.values():
         assert registration.owner
         assert registration.version

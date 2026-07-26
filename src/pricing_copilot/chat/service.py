@@ -3,17 +3,28 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from time import monotonic
 
 from pricing_copilot.chat.contracts import (
     ActivityStatus,
+    AnalyticsSource,
     ChatActivity,
     ChatContext,
     ChatIntent,
     ChatResponse,
     ChatTable,
+    ChatToolName,
+    ConversationDecision,
+    ConversationMessage,
+    ConversationRoute,
+)
+from pricing_copilot.chat.conversation_graph import (
+    AgentsSdkConversationPlanner,
+    ConversationGraph,
+    ConversationPlanner,
+    ConversationToolExecutor,
 )
 from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
@@ -59,19 +70,6 @@ _SOURCE_LABELS: dict[str, str] = {
     "customer_feedback": CUSTOMER_FEEDBACK_LABEL,
     "schema_catalogue": "Checking the portfolio data catalogue",
 }
-_SOURCE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("claims", ("claims", "loss ratio", "severity", "frequency", "incurred loss")),
-    ("conversion", ("conversion", "retention", "quotes", "sales", "renewal rate")),
-    ("competitors", ("competitor", "market price", "price index", "competitive")),
-    ("pricing_history", ("previous pricing", "pricing history", "previous action", "past action")),
-    ("market_intelligence", ("market intelligence", "market report", "repair cost", "broker")),
-    ("customer_feedback", ("customer feedback", "feedback", "complaint", "affordability")),
-    ("schema_catalogue", ("schema", "data catalogue", "database fields", "available fields")),
-)
-_SQL_PATTERN = re.compile(
-    r"\b(?:select|insert|update|delete|drop|alter|attach|copy|pragma|create|grant|revoke)\b",
-    re.IGNORECASE,
-)
 _UNSAFE_QUERY_PATTERN = re.compile(
     r"\b(?:ignore (?:all |any )?(?:prior|previous|system) instructions|"
     r"(?:weaken|disable|bypass|ignore).{0,40}(?:policy|limit|guardrail)|"
@@ -87,77 +85,140 @@ _CUSTOMER_PATTERN = re.compile(
 )
 
 
-class ChatService:
-    """Routes natural language only to an allowlisted read-only data surface."""
+class DefaultConversationTools:
+    """Adapts the existing governed capabilities to the conversation graph."""
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
         self.database = PersistentAnalyticsDatabase(self.settings.analytics_database_path)
 
-    def submit(
+    def available_tools(self) -> dict[str, str]:
+        return {
+            ChatToolName.ANALYTICS.value: (
+                "Retrieve allowlisted claims, conversion, competitor, or pricing-history tables."
+            ),
+            ChatToolName.SCHEMA.value: (
+                "Describe approved analytics tables, fields, types, and units."
+            ),
+            ChatToolName.DOCUMENTS.value: (
+                "Search market intelligence or aggregate customer-feedback documents."
+            ),
+            ChatToolName.REPLAY.value: (
+                "Load a version-checked cached recommendation for a scenario."
+            ),
+            ChatToolName.EVALUATION.value: "Load the latest evaluation benchmark report.",
+            ChatToolName.DRIFT.value: "Load the latest drift-monitoring report.",
+            ChatToolName.RECOMMENDATION.value: (
+                "Run the governed specialist workflow for a pricing recommendation."
+            ),
+            ChatToolName.READ_ONLY_SQL.value: (
+                "Execute validated read-only SQL when the safe SQL adapter is installed."
+            ),
+        }
+
+    def execute(
         self,
         message: str,
-        context: ChatContext | None = None,
-        *,
-        on_activity: ActivityListener | None = None,
+        decision: ConversationDecision,
+        context: ChatContext,
+        listener: ActivityListener | None,
     ) -> ChatResponse:
-        active_context = context or ChatContext()
-        normalized = " ".join(message.split())
-        if refusal_reason := self._refusal_reason(normalized):
+        if refusal_reason := self._refusal_reason(message):
             return ChatResponse(
                 intent=ChatIntent.UNSUPPORTED,
                 message=refusal_reason,
-                context=active_context,
+                context=context,
                 refused=True,
+                route=ConversationRoute.REFUSE,
             )
-
-        active_context = ChatContext(
-            scenario=self._scenario_for(normalized, active_context.scenario),
-            force_replay=active_context.force_replay,
-        )
-        intent = ChatIntent.REPLAY if active_context.force_replay else self._intent_for(normalized)
-        sources = self._sources_for(normalized)
-
-        if intent is ChatIntent.REPLAY:
-            return self._run_replay(active_context, on_activity)
-        if intent is ChatIntent.EVALUATION:
-            return self._report_evaluation(active_context, on_activity)
-        if intent is ChatIntent.DRIFT:
-            return self._report_drift(active_context, on_activity)
-        if intent is ChatIntent.HELP:
-            return ChatResponse(
-                intent=intent,
-                context=active_context,
-                message=(
-                    "Ask about claims, conversion, competitors, previous pricing actions, market "
-                    "intelligence, or aggregate customer feedback. Ask for a pricing "
-                    "recommendation to run the governed specialist workflow, or say ‘analyse "
-                    "everything’ to consult "
-                    "every source."
-                ),
+        if decision.tool_name is ChatToolName.REPLAY:
+            return self._run_replay(context, listener)
+        if decision.tool_name is ChatToolName.EVALUATION:
+            return self._report_evaluation(context, listener)
+        if decision.tool_name is ChatToolName.DRIFT:
+            return self._report_drift(context, listener)
+        if decision.tool_name is ChatToolName.RECOMMENDATION:
+            return self._run_pricing_analysis(decision, context, listener)
+        if decision.tool_name is ChatToolName.SCHEMA:
+            return self._retrieve_sources(
+                ["schema_catalogue"],
+                [],
+                context,
+                listener,
             )
-        if intent is ChatIntent.PRICING_ANALYSIS:
-            return self._run_pricing_analysis(normalized, active_context, on_activity)
-        if not sources:
+        if decision.tool_name is ChatToolName.DOCUMENTS:
+            document_sources = [
+                source.value
+                for source in decision.sources
+                if source
+                in (
+                    AnalyticsSource.MARKET_INTELLIGENCE,
+                    AnalyticsSource.CUSTOMER_FEEDBACK,
+                )
+            ]
+            return self._retrieve_sources(
+                document_sources or ["market_intelligence", "customer_feedback"],
+                [],
+                context,
+                listener,
+            )
+        if decision.tool_name is ChatToolName.ANALYTICS:
+            sources = [
+                source.value
+                for source in decision.sources
+                if source
+                in (
+                    AnalyticsSource.CLAIMS,
+                    AnalyticsSource.CONVERSION,
+                    AnalyticsSource.COMPETITORS,
+                    AnalyticsSource.PRICING_HISTORY,
+                )
+            ]
+            if sources:
+                return self._retrieve_sources(
+                    sources,
+                    decision.requested_fields,
+                    context,
+                    listener,
+                )
             return ChatResponse(
-                intent=ChatIntent.DATA_RETRIEVAL,
-                context=active_context,
+                intent=ChatIntent.CLARIFICATION,
+                context=context,
                 message=(
-                    "Which permitted portfolio-level source should I check? You can ask about "
-                    "claims, "
-                    "conversion, competitors, previous pricing actions, market intelligence, or "
-                    "aggregate customer feedback."
+                    "I can retrieve the data, but I still need to know which measure you mean. "
+                    "For example, should I check quoted premium, a previous pricing action, "
+                    "claims, conversion, or competitor position?"
                 ),
                 requires_clarification=True,
+                clarification_question="Which portfolio measure should I retrieve?",
+                suggested_next_steps=[
+                    "Check the average quoted premium.",
+                    "Check the last approved pricing action.",
+                    "Compare claims and conversion.",
+                ],
             )
-        return self._retrieve_sources(sources, normalized, active_context, on_activity)
+        if decision.tool_name is ChatToolName.READ_ONLY_SQL:
+            return ChatResponse(
+                intent=ChatIntent.UNSUPPORTED,
+                context=context,
+                message=(
+                    "I understood that you want a read-only SQL query, but the validated SQL "
+                    "executor is not connected in this workstream yet. I have not executed it."
+                ),
+                limitations=["The safe read-only SQL adapter is not installed yet."],
+                suggested_next_steps=[
+                    "Ask for the same data in natural language.",
+                    "Connect the read-only SQL adapter from the data-tools workstream.",
+                ],
+            )
+        return ChatResponse(
+            intent=ChatIntent.UNSUPPORTED,
+            context=context,
+            message="The selected capability is not available.",
+            limitations=["No registered executor matched the requested tool."],
+        )
 
     def _refusal_reason(self, message: str) -> str | None:
-        if _SQL_PATTERN.search(message):
-            return (
-                "I cannot accept raw SQL. Ask a natural-language question about the allowlisted, "
-                "read-only portfolio sources instead."
-            )
         if _UNSAFE_QUERY_PATTERN.search(message):
             return (
                 "I cannot weaken controls, change tools, or reveal sensitive system data. "
@@ -177,49 +238,6 @@ class ChatService:
                 "portfolio-level evidence instead."
             )
         return None
-
-    @staticmethod
-    def _scenario_for(message: str, fallback: ScenarioName) -> ScenarioName:
-        lowered = message.lower()
-        if "retention concern" in lowered or "retention scenario" in lowered:
-            return ScenarioName.RETENTION_CONCERN
-        if "conflicting evidence" in lowered or "conflicting scenario" in lowered:
-            return ScenarioName.CONFLICTING_EVIDENCE
-        if "controlled increase" in lowered or "controlled scenario" in lowered:
-            return ScenarioName.CONTROLLED_INCREASE
-        return fallback
-
-    @staticmethod
-    def _intent_for(message: str) -> ChatIntent:
-        lowered = message.lower()
-        if any(word in lowered for word in ("evaluate", "evaluation", "golden case")):
-            return ChatIntent.EVALUATION
-        if any(phrase in lowered for phrase in ("replay", "cached run", "use the cache")):
-            return ChatIntent.REPLAY
-        if any(word in lowered for word in ("drift", "monitoring", "monitor model")):
-            return ChatIntent.DRIFT
-        if any(word in lowered for word in ("help", "what can you", "how do i")):
-            return ChatIntent.HELP
-        pricing_keywords = (
-            "recommend",
-            "should we",
-            "analyse everything",
-            "analyze everything",
-        )
-        if any(word in lowered for word in pricing_keywords):
-            return ChatIntent.PRICING_ANALYSIS
-        if len(ChatService._sources_for(message)) > 1:
-            return ChatIntent.MULTI_SOURCE_SUMMARY
-        return ChatIntent.DATA_RETRIEVAL
-
-    @staticmethod
-    def _sources_for(message: str) -> list[str]:
-        lowered = message.lower()
-        return [
-            source
-            for source, keywords in _SOURCE_KEYWORDS
-            if any(keyword in lowered for keyword in keywords)
-        ]
 
     def _emit(
         self,
@@ -247,9 +265,7 @@ class ChatService:
         self._emit(activity, activities, listener)
         return ChatResponse(intent=intent, message=message, context=context, activities=activities)
 
-    def _run_replay(
-        self, context: ChatContext, listener: ActivityListener | None
-    ) -> ChatResponse:
+    def _run_replay(self, context: ChatContext, listener: ActivityListener | None) -> ChatResponse:
         activities: list[ChatActivity] = []
         try:
             artifact = load_replay_artifact(context.scenario, self.settings)
@@ -428,7 +444,7 @@ class ChatService:
     def _retrieve_sources(
         self,
         sources: Iterable[str],
-        message: str,
+        requested_fields: list[str],
         context: ChatContext,
         listener: ActivityListener | None,
     ) -> ChatResponse:
@@ -459,7 +475,10 @@ class ChatService:
                 table = self._query_table(
                     source,
                     context.scenario,
-                    requested_fields=self._requested_fields(source, message),
+                    requested_fields=[
+                        field for field in requested_fields if field in SOURCE_TABLES[source]
+                    ]
+                    or None,
                 )
             tables.append(table)
             self._emit(
@@ -494,13 +513,6 @@ class ChatService:
     ) -> ChatTable:
         result = self.database.query_source(source, scenario, columns=requested_fields)
         return self._table_from_query(result)
-
-    @staticmethod
-    def _requested_fields(source: str, message: str) -> list[str] | None:
-        """Use explicit permitted field names when the analyst asks for them."""
-        lowered = message.lower()
-        requested = [field for field in SOURCE_TABLES[source] if field in lowered]
-        return requested or None
 
     def _catalogue_table(self) -> ChatTable:
         catalogue = self.database.schema_catalogue()
@@ -578,7 +590,7 @@ class ChatService:
 
     def _run_pricing_analysis(
         self,
-        message: str,
+        decision: ConversationDecision,
         context: ChatContext,
         listener: ActivityListener | None,
     ) -> ChatResponse:
@@ -602,12 +614,31 @@ class ChatService:
             activities,
             listener,
         )
+        claims_periods = self.database.query_source(
+            "claims",
+            context.scenario,
+            columns=["period"],
+        )
+        periods = sorted(
+            value for row in claims_periods.rows for value in row if isinstance(value, date)
+        )
+        if not periods:
+            return ChatResponse(
+                intent=ChatIntent.PRICING_ANALYSIS,
+                context=context,
+                message=(
+                    "I cannot run a recommendation because no claims period is available for "
+                    f"the {context.scenario.value} scenario."
+                ),
+                limitations=["The required analysis period could not be resolved from the data."],
+            )
         question = PortfolioQuestion(
-            product=Product.PERSONAL_MOTOR,
-            region=Region.NORTH_WEST,
-            segment=Segment.RENEWAL,
+            product=decision.product or Product.PERSONAL_MOTOR,
+            region=decision.region or Region.NORTH_WEST,
+            segment=decision.segment or Segment.RENEWAL,
             analysis_period=AnalysisPeriod(
-                start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)
+                start_month=decision.start_month or periods[max(0, len(periods) - 6)],
+                end_month=decision.end_month or periods[-1],
             ),
             scenario=context.scenario,
         )
@@ -709,4 +740,37 @@ class ChatService:
             agent=event.name if "agent" in event.name or "specialist" in event.name else None,
             trace_id=None,
             duration_ms=event.duration_ms,
+        )
+
+
+class ChatService:
+    """Thin application adapter around the LLM-first conversation graph."""
+
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        *,
+        planner: ConversationPlanner | None = None,
+        tools: ConversationToolExecutor | None = None,
+    ) -> None:
+        self.settings = settings or get_settings()
+        self.tools = tools or DefaultConversationTools(self.settings)
+        self.graph = ConversationGraph(
+            planner or AgentsSdkConversationPlanner(self.settings),
+            self.tools,
+        )
+
+    def submit(
+        self,
+        message: str,
+        context: ChatContext | None = None,
+        *,
+        history: Sequence[ConversationMessage] = (),
+        on_activity: ActivityListener | None = None,
+    ) -> ChatResponse:
+        return self.graph.run(
+            message,
+            context or ChatContext(),
+            history=history,
+            on_activity=on_activity,
         )

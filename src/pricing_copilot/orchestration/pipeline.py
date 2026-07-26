@@ -413,6 +413,30 @@ def run_governed_portfolio_workflow(
     settings = settings or get_settings()
     if question.scenario not in IMPLEMENTED_DATA_SCENARIOS:
         return missing_evidence_workflow_result(question)
+    if orchestration is None:
+        scenario = question.scenario
+        if scenario is None:
+            return missing_evidence_workflow_result(question)
+        preflight_repository = PortfolioDataRepository.from_scenario(scenario)
+        try:
+            preflight_analytics = build_analytics(question, preflight_repository)
+        except MetricCalculationError as exc:
+            return data_quality_investigation_result(question, str(exc))
+        preflight_documents, _ = quarantine_unsafe_documents(
+            retrieve_documents(
+                scenario=scenario,
+                region=question.region,
+                query=RETRIEVAL_QUERY,
+                top_k=6,
+            )
+        )
+        preflight_issues = detect_material_evidence_issues(
+            preflight_documents,
+            analysis_period_end=preflight_analytics.claims.period_end,
+            max_evidence_age_days=settings.policy.max_evidence_age_days,
+        )
+        if preflight_issues:
+            return data_quality_investigation_result(question, "; ".join(preflight_issues))
     if orchestration is not None:
         active = orchestration
     else:
