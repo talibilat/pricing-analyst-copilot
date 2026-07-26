@@ -154,6 +154,17 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stChatMessage"] [data-testid="stButton"] button:hover {
   background:oklch(40% 0.085 235); border-color:oklch(40% 0.085 235);
 }
+[data-testid="stBaseButton-secondary"] {
+  background:white !important; border-color:oklch(75% 0.02 270) !important;
+  color:var(--pc-text) !important;
+}
+[data-testid="stBaseButton-secondary"] * {
+  color:var(--pc-text) !important;
+}
+[data-testid="stBaseButton-secondary"]:hover {
+  background:oklch(96% 0.01 270) !important;
+  border-color:var(--pc-accent) !important;
+}
 
 [data-testid="stChatMessage"] { gap:9px; color:var(--pc-text); }
 [data-testid="stChatMessageAvatarUser"],
@@ -264,6 +275,14 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 [data-testid="stTabs"] [role="tab"][aria-selected="true"],
 [data-testid="stTabs"] [role="tab"][aria-selected="true"] :is(p, span, div) {
+  color:var(--pc-accent) !important;
+}
+[data-testid="stTabs"] div[id*="-tab-"],
+[data-testid="stTabs"] div[id*="-tab-"] * {
+  color:var(--pc-text) !important;
+}
+[data-testid="stTabs"] div[id*="-tab-"][aria-selected="true"],
+[data-testid="stTabs"] div[id*="-tab-"][aria-selected="true"] * {
   color:var(--pc-accent) !important;
 }
 
