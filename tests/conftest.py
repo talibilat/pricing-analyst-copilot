@@ -5,7 +5,11 @@ from agents import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
-from pricing_copilot.config import get_azure_openai_settings, get_settings
+from pricing_copilot.config import (
+    azure_openai_base_url,
+    get_azure_openai_settings,
+    get_settings,
+)
 from pricing_copilot.contracts import (
     AnalysisPeriod,
     PortfolioQuestion,
@@ -46,7 +50,7 @@ def controlled_increase_documents() -> list[RetrievedDocument]:
 def azure_chat_model() -> OpenAIChatCompletionsModel:
     azure = get_azure_openai_settings()
     settings = get_settings()
-    base_url = (azure.endpoint or "https://example.invalid").rstrip("/") + "/openai/v1"
+    base_url = azure_openai_base_url(azure.endpoint or "https://example.invalid")
     client = AsyncOpenAI(api_key=azure.api_key or "unset", base_url=base_url)
     deployment = azure.chat_deployment or settings.model_name
     return OpenAIChatCompletionsModel(model=deployment, openai_client=client)

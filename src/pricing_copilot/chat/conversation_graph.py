@@ -21,7 +21,11 @@ from pricing_copilot.chat.contracts import (
     ConversationState,
 )
 from pricing_copilot.chat.prompts import CONVERSATION_AGENT_PROMPT
-from pricing_copilot.config import Settings, get_azure_openai_settings
+from pricing_copilot.config import (
+    Settings,
+    azure_openai_base_url,
+    get_azure_openai_settings,
+)
 from pricing_copilot.governance.registry import require_approved_agent
 
 ActivityListener = Callable[[ChatActivity], None]
@@ -82,7 +86,7 @@ class AgentsSdkConversationPlanner:
             )
         client = AsyncOpenAI(
             api_key=azure.api_key,
-            base_url=azure.endpoint.rstrip("/") + "/openai/v1",
+            base_url=azure_openai_base_url(azure.endpoint),
         )
         model = OpenAIChatCompletionsModel(
             model=azure.chat_deployment or self.settings.model_name,

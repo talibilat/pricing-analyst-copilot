@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 from pydantic import BaseModel, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -105,6 +106,21 @@ class AzureOpenAISettings(BaseSettings):
     api_key: str | None = None
     endpoint: str | None = None
     chat_deployment: str | None = None
+
+
+def azure_openai_base_url(endpoint: str) -> str:
+    """Normalize an Azure resource or API endpoint for the OpenAI-compatible v1 client."""
+    parts = urlsplit(endpoint.strip())
+    if parts.scheme not in {"http", "https"} or not parts.netloc:
+        raise ValueError("Azure OpenAI endpoint must be an absolute HTTP(S) URL.")
+
+    path = parts.path.rstrip("/")
+    lowered = path.lower()
+    openai_index = lowered.find("/openai")
+    if openai_index >= 0:
+        path = path[:openai_index]
+    normalized_path = f"{path.rstrip('/')}/openai/v1"
+    return urlunsplit((parts.scheme, parts.netloc, normalized_path, "", ""))
 
 
 @lru_cache
