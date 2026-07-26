@@ -28,6 +28,51 @@ from pricing_copilot.decisions.service import get_decision_store, record_analyst
 from pricing_copilot.drift.contracts import DriftAlertCategory
 from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
 
+CHAT_LAYOUT_CSS = """
+<style>
+/* Leave room for the fixed composer so the latest message is never hidden behind it. */
+[data-testid="stMainBlockContainer"] {
+    padding-bottom: 7rem;
+}
+
+/* Keep the composer available at the bottom of the viewport, including inside a tab. */
+.st-key-pricing_chat_input {
+    position: fixed;
+    z-index: 999;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(calc(100vw - 2rem), 48rem) !important;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    background: var(--background-color);
+    box-shadow: 0 0 0 0.5rem var(--background-color);
+}
+
+/* User turns are compact bubbles on the right, with the avatar on the outer edge. */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+    width: fit-content;
+    max-width: min(78%, 42rem);
+    margin-left: auto;
+    flex-direction: row-reverse;
+    border-radius: 1.25rem;
+}
+
+/* Assistant turns start from the left and retain room for rich results and tables. */
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {
+    width: min(100%, 48rem);
+    margin-right: auto;
+    border-radius: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+        max-width: 90%;
+    }
+}
+</style>
+"""
+
 
 def _render_time_series(
     months: Sequence[date], series: dict[str, Sequence[float]], *, y_label: str
@@ -302,6 +347,7 @@ def _activity_text(activity: ChatActivity) -> str:
 st.set_page_config(
     page_title="Pricing Decision Copilot", layout="wide", initial_sidebar_state="collapsed"
 )
+st.markdown(CHAT_LAYOUT_CSS, unsafe_allow_html=True)
 st.title("Pricing Decision Copilot")
 st.caption(
     "Chat-first, governed portfolio decision support. The copilot retrieves only permitted "
