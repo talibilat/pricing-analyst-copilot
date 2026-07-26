@@ -31,7 +31,11 @@ from pricing_copilot.contracts import (
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
 from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
-from pricing_copilot.streamlit_theme import INJECT_CSS, portfolio_pill_text
+from pricing_copilot.streamlit_theme import (
+    INJECT_CSS,
+    assistant_avatar_data_uri,
+    portfolio_pill_text,
+)
 
 
 def _render_time_series(
@@ -345,9 +349,58 @@ if "chat_messages" not in st.session_state:
 
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 
+def _render_copilot_label() -> None:
+    st.markdown('<div class="pc-copilot-label">Copilot</div>', unsafe_allow_html=True)
+
+
+def _submit_prompt(prompt: str) -> None:
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    st.session_state.chat_messages.append(
+        {
+            "role": "user",
+            "response": ChatResponse(
+                intent=ChatIntent.HELP, context=ChatContext(), message=prompt
+            ).model_dump(mode="json"),
+        }
+    )
+    with st.chat_message("assistant", avatar=assistant_avatar_data_uri()):
+        _render_copilot_label()
+        activity_box = st.empty()
+        activity_lines: list[str] = []
+
+        def show_activity(activity: ChatActivity) -> None:
+            activity_lines.append(_activity_text(activity))
+            activity_box.markdown("  \n".join(activity_lines[-10:]))
+
+        with st.spinner("Working with governed portfolio sources..."):
+            response = ChatService().submit(prompt, on_activity=show_activity)
+        activity_box.empty()
+        if "Live analysis could not complete" in response.message:
+            retry_number = len(st.session_state.chat_messages)
+            if st.button("Try replay instead", key=f"replay_retry_{retry_number}"):
+                retry_context = ChatContext(scenario=response.context.scenario, force_replay=True)
+                response = ChatService().submit(prompt, retry_context, on_activity=show_activity)
+        if response.activities:
+            with st.expander("Activity trace", expanded=True):
+                st.write(
+                    "\n".join(f"- {_activity_text(activity)}" for activity in response.activities)
+                )
+        message_number = len(st.session_state.chat_messages)
+        _render_response(response, message_number, can_record=True)
+    st.session_state.chat_messages.append(
+        {"role": "assistant", "response": response.model_dump(mode="json")}
+    )
+
+
 with tab_chat:
     for message_number, message in enumerate(st.session_state.chat_messages):
-        with st.chat_message(message["role"]):
+        with st.chat_message(
+            message["role"],
+            avatar=assistant_avatar_data_uri() if message["role"] == "assistant" else None,
+        ):
+            if message["role"] == "assistant":
+                _render_copilot_label()
             response = ChatResponse.model_validate(message["response"])
             is_latest_message = message_number == len(st.session_state.chat_messages) - 1
             _render_response(response, message_number, can_record=is_latest_message)
@@ -358,48 +411,7 @@ with tab_chat:
         max_chars=1_000,
         submit_mode="disable",
     ):
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.chat_messages.append(
-            {
-                "role": "user",
-                "response": ChatResponse(
-                    intent=ChatIntent.HELP, context=ChatContext(), message=prompt
-                ).model_dump(mode="json"),
-            }
-        )
-        with st.chat_message("assistant"):
-            activity_box = st.empty()
-            activity_lines: list[str] = []
-
-            def show_activity(activity: ChatActivity) -> None:
-                activity_lines.append(_activity_text(activity))
-                activity_box.markdown("  \n".join(activity_lines[-10:]))
-
-            with st.spinner("Working with governed portfolio sources..."):
-                response = ChatService().submit(prompt, on_activity=show_activity)
-            activity_box.empty()
-            if "Live analysis could not complete" in response.message:
-                message_number = len(st.session_state.chat_messages)
-                if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
-                    retry_context = ChatContext(
-                        scenario=response.context.scenario, force_replay=True
-                    )
-                    response = ChatService().submit(
-                        prompt, retry_context, on_activity=show_activity
-                    )
-            if response.activities:
-                with st.expander("Activity trace", expanded=True):
-                    st.write(
-                        "\n".join(
-                            f"- {_activity_text(activity)}" for activity in response.activities
-                        )
-                    )
-            message_number = len(st.session_state.chat_messages)
-            _render_response(response, message_number, can_record=True)
-        st.session_state.chat_messages.append(
-            {"role": "assistant", "response": response.model_dump(mode="json")}
-        )
+        _submit_prompt(prompt)
 
 with tab_monitoring:
     _render_drift_monitoring_tab()
