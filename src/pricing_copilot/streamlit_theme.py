@@ -80,6 +80,7 @@ INJECT_CSS = """
   --pc-surface: oklch(99% 0.006 85);
   --pc-surface-subtle: oklch(96% 0.006 85);
   --pc-accent: oklch(47% 0.085 235);
+  --pc-dark-surface: oklch(26% 0.015 270);
   --pc-on-accent: oklch(99% 0.002 85);
 }
 
@@ -165,6 +166,10 @@ html, body, [data-testid="stAppViewContainer"] {
   background:oklch(96% 0.01 270) !important;
   border-color:var(--pc-accent) !important;
 }
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-primary"] * {
+  color:var(--pc-on-accent) !important;
+}
 
 [data-testid="stChatMessage"] { gap:9px; color:var(--pc-text); }
 [data-testid="stChatMessageAvatarUser"],
@@ -186,6 +191,10 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stMarkdownContainer"],
 [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"])
 [data-testid="stMarkdownContainer"] p {
+  color:var(--pc-on-accent) !important;
+}
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"])
+[data-testid="stMarkdownContainer"] * {
   color:var(--pc-on-accent) !important;
 }
 
@@ -247,12 +256,19 @@ html, body, [data-testid="stAppViewContainer"] {
   color:var(--pc-on-accent) !important;
   caret-color:var(--pc-on-accent);
 }
+[data-testid="stBottom"] {
+  background:var(--pc-dark-surface);
+}
+[data-testid="stChatInput"],
+[data-testid="stChatInput"] :is(button, button *, textarea) {
+  color:var(--pc-on-accent) !important;
+}
 [data-testid="stChatInput"] textarea::placeholder {
   color:oklch(78% 0.01 235) !important;
 }
 [data-testid="stChatInput"] {
   border-radius:16px !important; border:1px solid oklch(87% 0.012 85) !important;
-  background:oklch(26% 0.015 270);
+  background:var(--pc-dark-surface);
 }
 [data-testid="stChatInput"] > div {
   border-color:oklch(72% 0.025 235) !important;
