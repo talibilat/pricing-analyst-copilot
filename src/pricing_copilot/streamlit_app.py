@@ -9,6 +9,7 @@ import streamlit as st
 from pydantic import ValidationError
 
 from pricing_copilot.chat.contracts import (
+    ActivityStatus,
     ChatActivity,
     ChatContext,
     ChatIntent,
@@ -293,7 +294,10 @@ def _render_drift_monitoring_tab() -> None:
 
 def _activity_text(activity: ChatActivity) -> str:
     duration = f" - {activity.duration_ms:g} ms" if activity.duration_ms is not None else ""
-    return f"{activity.status.value.title()}: {activity.label}{duration}"
+    status = (
+        "Thinking" if activity.status is ActivityStatus.WORKING else activity.status.value.title()
+    )
+    return f"{status}: {activity.label}{duration}"
 
 
 st.set_page_config(
@@ -375,7 +379,7 @@ def _submit_prompt(prompt: str) -> None:
             activity_lines.append(_activity_text(activity))
             activity_box.markdown("  \n".join(activity_lines[-10:]))
 
-        with st.spinner("Working with governed portfolio sources..."):
+        with st.spinner("Thinking..."):
             response = ChatService().submit(
                 prompt,
                 active_context,

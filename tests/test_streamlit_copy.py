@@ -16,7 +16,7 @@ def test_streamlit_app_never_claims_a_price_was_executed() -> None:
 
 
 def test_streamlit_app_distinguishes_recommendation_from_decision() -> None:
-    assert "supporting detail for the recommendation" in SOURCE
+    assert "supporting evidence" in SOURCE
     assert "analyst decision" in SOURCE or "analyst review" in SOURCE
 
 
@@ -28,20 +28,19 @@ def test_streamlit_app_is_chat_first_with_activity_feedback() -> None:
     assert "st.chat_message" in SOURCE
     assert "st.chat_input" in SOURCE
     assert "st.spinner" in SOURCE
-    assert "activity trace" in SOURCE
+    assert "audit trace" in SOURCE
+    assert 'st.spinner("thinking...")' in SOURCE
+    assert "activity.status is activitystatus.working" in SOURCE
 
 
-def test_streamlit_chat_layout_keeps_composer_fixed_and_separates_roles() -> None:
-    assert "position: fixed" in SOURCE
-    assert 'key="chat_history"' in SOURCE
-    assert "autoscroll=true" in SOURCE
-    assert "stchatmessageavataruser" in SOURCE
-    assert "margin-left: auto" in SOURCE
-    assert "stchatmessageavatarassistant" in SOURCE
-    assert "margin-right: auto" in SOURCE
+def test_streamlit_chat_layout_uses_a_native_fixed_composer_and_separates_roles() -> None:
+    assert "st.bottom" in SOURCE
+    assert "st.chat_message(\"user\")" in SOURCE
+    assert "st.chat_message(\"assistant\"" in SOURCE
+    assert "assistant_avatar_data_uri" in SOURCE
 
 
 def test_streamlit_clarification_recommendations_are_buttons() -> None:
     assert "response.requires_clarification" in SOURCE
-    assert "selected_suggestion" in SOURCE
-    assert 'key=f"suggestion_' in SOURCE
+    assert "pending_chat_prompt" in SOURCE
+    assert 'key=f"chat_suggestion_' in SOURCE
