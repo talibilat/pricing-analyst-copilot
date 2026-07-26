@@ -261,6 +261,40 @@ def test_clicking_a_suggestion_chip_runs_the_same_exchange_as_typing() -> None:
     assert not app.exception
     assert len(app.chat_message) == 3
     assert len(app.dataframe) == 2
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "What would you like to review?" not in markdown
+
+
+def test_current_chat_history_survives_multiple_message_reruns() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("Hi hello")
+    app.run()
+    app.session_state["pending_chat_prompt"] = "What did competitors do this period?"
+    app.run()
+
+    assert not app.exception
+    assert len(app.chat_message) == 5
+    chat_text = "\n".join(message.markdown[0].value for message in app.chat_message[1::2])
+    assert "Hi hello" in chat_text
+    assert "What did competitors do this period?" in chat_text
+
+
+def test_new_streamlit_session_starts_with_clean_chat_history() -> None:
+    first_session = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    first_session.run()
+    first_session.chat_input[0].set_value("Hi hello")
+    first_session.run()
+    assert len(first_session.chat_message) == 3
+
+    refreshed_session = AppTest.from_file(
+        "src/pricing_copilot/streamlit_app.py", default_timeout=10
+    )
+    refreshed_session.run()
+
+    assert not refreshed_session.exception
+    assert len(refreshed_session.chat_message) == 1
 
 
 def test_replayed_workflow_result_renders_the_proposed_action_badge_and_confidence_bars(

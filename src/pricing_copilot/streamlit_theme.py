@@ -223,6 +223,13 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stChatInput"] {
   border-radius:16px !important; border:1px solid oklch(87% 0.012 85) !important;
 }
+[data-testid="stChatInput"] > div {
+  border-color:oklch(72% 0.025 235) !important;
+}
+[data-testid="stChatInput"] > div:focus-within {
+  border-color:var(--pc-accent) !important;
+  box-shadow:0 0 0 1px var(--pc-accent);
+}
 
 [data-testid="stMetric"] { background:transparent; }
 

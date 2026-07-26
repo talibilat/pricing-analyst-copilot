@@ -84,3 +84,8 @@ def test_chat_theme_sets_explicit_assistant_and_activity_text_colors() -> None:
     assert ':has(img[alt="assistant avatar"])' in INJECT_CSS
     assert '[data-testid="stExpanderDetails"]' in INJECT_CSS
     assert "--pc-text" in INJECT_CSS
+
+
+def test_chat_input_focus_uses_the_copilot_accent() -> None:
+    assert '[data-testid="stChatInput"] > div:focus-within' in INJECT_CSS
+    assert "border-color:var(--pc-accent)" in INJECT_CSS

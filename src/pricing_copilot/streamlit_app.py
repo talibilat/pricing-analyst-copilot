@@ -14,6 +14,7 @@ from pricing_copilot.chat.contracts import (
     ChatIntent,
     ChatResponse,
     ChatTable,
+    ChatTurn,
 )
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
@@ -31,6 +32,7 @@ from pricing_copilot.contracts import (
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
 from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
+from pricing_copilot.streamlit_scroll import AUTO_SCROLL_SCRIPT
 from pricing_copilot.streamlit_theme import (
     INJECT_CSS,
     assistant_avatar_data_uri,
@@ -365,6 +367,16 @@ def _render_copilot_label() -> None:
 
 
 def _submit_prompt(prompt: str) -> None:
+    active_context = ChatContext()
+    conversation_history: list[ChatTurn] = []
+    for saved_message in st.session_state.chat_messages:
+        saved_response = ChatResponse.model_validate(saved_message["response"])
+        conversation_history.append(
+            ChatTurn(role=saved_message["role"], content=saved_response.message)
+        )
+        if saved_message["role"] == "assistant":
+            active_context = saved_response.context
+
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.chat_messages.append(
@@ -385,13 +397,23 @@ def _submit_prompt(prompt: str) -> None:
             activity_box.markdown("  \n".join(activity_lines[-10:]))
 
         with st.spinner("Working with governed portfolio sources..."):
-            response = ChatService().submit(prompt, on_activity=show_activity)
+            response = ChatService().submit(
+                prompt,
+                active_context,
+                history=conversation_history,
+                on_activity=show_activity,
+            )
         activity_box.empty()
         if "Live analysis could not complete" in response.message:
             retry_number = len(st.session_state.chat_messages)
             if st.button("Try replay instead", key=f"replay_retry_{retry_number}"):
                 retry_context = ChatContext(scenario=response.context.scenario, force_replay=True)
-                response = ChatService().submit(prompt, retry_context, on_activity=show_activity)
+                response = ChatService().submit(
+                    prompt,
+                    retry_context,
+                    history=conversation_history,
+                    on_activity=show_activity,
+                )
         if response.activities:
             with st.expander("Activity trace", expanded=True):
                 st.write(
@@ -412,7 +434,8 @@ _SUGGESTIONS = [
 
 with tab_chat:
     clicked_suggestion: str | None = None
-    if len(st.session_state.chat_messages) == 1:
+    pending_prompt = st.session_state.pop("pending_chat_prompt", None)
+    if len(st.session_state.chat_messages) == 1 and pending_prompt is None:
         st.markdown(
             """
             <div class="pc-empty-state">
@@ -442,6 +465,9 @@ with tab_chat:
             is_latest_message = message_number == len(st.session_state.chat_messages) - 1
             _render_response(response, message_number, can_record=is_latest_message)
 
+    if pending_prompt is not None:
+        _submit_prompt(pending_prompt)
+
     prompt = st.chat_input(
         "Ask a portfolio-level pricing question",
         key="pricing_chat_input",
@@ -449,7 +475,11 @@ with tab_chat:
         submit_mode="disable",
     )
     if submitted_prompt := clicked_suggestion or prompt:
-        _submit_prompt(submitted_prompt)
+        st.session_state.pending_chat_prompt = submitted_prompt
+        st.rerun()
+
+    if pending_prompt is not None:
+        st.html(AUTO_SCROLL_SCRIPT, unsafe_allow_javascript=True)
 
 with tab_monitoring:
     _render_drift_monitoring_tab()

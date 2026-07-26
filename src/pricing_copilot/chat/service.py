@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from time import monotonic
 
@@ -14,6 +14,7 @@ from pricing_copilot.chat.contracts import (
     ChatIntent,
     ChatResponse,
     ChatTable,
+    ChatTurn,
 )
 from pricing_copilot.chat.orchestrator import (
     ChatOrchestrationPlan,
@@ -91,6 +92,10 @@ _CUSTOMER_PATTERN = re.compile(
     r"\b(?:date of birth|email address|phone number|postcode)\b",
     re.IGNORECASE,
 )
+_GREETING_PATTERN = re.compile(
+    r"(?:(?:hi|hello|hey|good (?:morning|afternoon|evening))[\s!,.]*){1,3}",
+    re.IGNORECASE,
+)
 _ORCHESTRATED_DATA_SOURCES: dict[ChatToolName, str] = {
     ChatToolName.QUERY_CLAIMS: "claims",
     ChatToolName.QUERY_CONVERSION: "conversion",
@@ -120,6 +125,7 @@ class ChatService:
         message: str,
         context: ChatContext | None = None,
         *,
+        history: Sequence[ChatTurn] = (),
         on_activity: ActivityListener | None = None,
     ) -> ChatResponse:
         active_context = context or ChatContext()
@@ -137,7 +143,7 @@ class ChatService:
 
         if self.orchestrator is not None:
             try:
-                plan = self.orchestrator.plan_request(normalized, active_context)
+                plan = self.orchestrator.plan_request(normalized, active_context, history)
             except Exception:
                 # The deterministic router is a transparent availability fallback.
                 # It retains the same allowlists and never expands data access.
@@ -176,6 +182,16 @@ class ChatService:
             )
         if intent is ChatIntent.PRICING_ANALYSIS:
             return self._run_pricing_analysis(normalized, active_context, on_activity)
+        if _GREETING_PATTERN.fullmatch(normalized):
+            return ChatResponse(
+                intent=ChatIntent.HELP,
+                context=active_context,
+                message=(
+                    "Hello! I can help you review claims, conversion, competitors, pricing "
+                    "history, market intelligence, or customer feedback for this portfolio. "
+                    "I can also coordinate a governed pricing recommendation."
+                ),
+            )
         if not sources:
             return ChatResponse(
                 intent=ChatIntent.DATA_RETRIEVAL,
@@ -230,7 +246,8 @@ class ChatService:
             response = ChatResponse(
                 intent=ChatIntent.HELP,
                 context=context,
-                message=(
+                message=plan.assistant_message
+                or (
                     "Ask about claims, conversion, competitors, previous pricing actions, "
                     "market intelligence, aggregate customer feedback, or request a governed "
                     "pricing recommendation."

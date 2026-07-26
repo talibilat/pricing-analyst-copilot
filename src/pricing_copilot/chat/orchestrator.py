@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Sequence
 from enum import StrEnum
 from typing import Protocol
 
@@ -11,7 +12,7 @@ from agents import Agent, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from pricing_copilot.chat.contracts import ChatContext
+from pricing_copilot.chat.contracts import ChatContext, ChatTurn
 from pricing_copilot.config import Settings, get_azure_openai_settings
 from pricing_copilot.contracts import ScenarioName
 from pricing_copilot.data.persistent import SOURCE_TABLES
@@ -73,6 +74,7 @@ class ChatOrchestrationPlan(BaseModel):
     scenario: ScenarioName
     tool_calls: list[ChatToolCall] = Field(default_factory=list, max_length=4)
     clarification_message: str | None = None
+    assistant_message: str | None = Field(default=None, max_length=800)
 
     @model_validator(mode="after")
     def special_operations_are_exclusive(self) -> ChatOrchestrationPlan:
@@ -84,12 +86,17 @@ class ChatOrchestrationPlan(BaseModel):
             )
         if not tools and not self.clarification_message:
             raise ValueError("A plan needs at least one tool call or a clarification message.")
+        if self.assistant_message and tools != {ChatToolName.RESPOND_HELP}:
+            raise ValueError("assistant_message is only valid with respond_help.")
         return self
 
 
 class ChatOrchestrator(Protocol):
     def plan_request(
-        self, message: str, context: ChatContext
+        self,
+        message: str,
+        context: ChatContext,
+        history: Sequence[ChatTurn] = (),
     ) -> ChatOrchestrationPlan: ...
 
 
@@ -104,11 +111,17 @@ _SYSTEM_INSTRUCTIONS = (
     "or a request to analyze all evidence. Select load_replay only when the analyst explicitly "
     "asks for replay or the context forces replay. If the request is ambiguous, return no tools "
     "and provide one concise clarification_message. Preserve the current scenario unless the "
-    "analyst explicitly names another supported scenario."
+    "analyst explicitly names another supported scenario. For greetings, thanks, or questions "
+    "about your capabilities, select respond_help and include a concise, conversational "
+    "assistant_message that guides the analyst toward supported portfolio work."
 )
 
 
-def build_chat_orchestrator_prompt(message: str, context: ChatContext) -> str:
+def build_chat_orchestrator_prompt(
+    message: str,
+    context: ChatContext,
+    history: Sequence[ChatTurn] = (),
+) -> str:
     catalogue = {
         "query_claims": {
             "store": "read-only portfolio DuckDB",
@@ -147,6 +160,8 @@ def build_chat_orchestrator_prompt(message: str, context: ChatContext) -> str:
         [
             f"CURRENT SCENARIO: {context.scenario.value}",
             f"FORCE REPLAY: {context.force_replay}",
+            "RECENT CONVERSATION:",
+            json.dumps([turn.model_dump() for turn in history[-12:]]),
             f"ANALYST REQUEST: {message}",
             "ALLOWLISTED TOOL AND DATA-STORE CATALOGUE:",
             json.dumps(catalogue, default=list),
@@ -159,11 +174,19 @@ class AgentsSdkChatOrchestrator:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
-    def plan_request(self, message: str, context: ChatContext) -> ChatOrchestrationPlan:
-        return asyncio.run(self._plan_request_async(message, context))
+    def plan_request(
+        self,
+        message: str,
+        context: ChatContext,
+        history: Sequence[ChatTurn] = (),
+    ) -> ChatOrchestrationPlan:
+        return asyncio.run(self._plan_request_async(message, context, history))
 
     async def _plan_request_async(
-        self, message: str, context: ChatContext
+        self,
+        message: str,
+        context: ChatContext,
+        history: Sequence[ChatTurn],
     ) -> ChatOrchestrationPlan:
         azure = get_azure_openai_settings()
         if not azure.api_key or not azure.endpoint:
@@ -197,7 +220,7 @@ class AgentsSdkChatOrchestrator:
         try:
             output = await runtime.run(
                 agent,
-                build_chat_orchestrator_prompt(message, context),
+                build_chat_orchestrator_prompt(message, context, history),
                 output_contract="ChatOrchestrationPlan",
             )
         except Exception:

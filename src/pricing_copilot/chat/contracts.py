@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -52,6 +53,13 @@ class ChatContext(BaseModel):
 
     scenario: ScenarioName = ScenarioName.CONTROLLED_INCREASE
     force_replay: bool = False
+
+
+class ChatTurn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2_000)
 
 
 class ChatRequest(BaseModel):
