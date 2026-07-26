@@ -154,7 +154,8 @@ def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:
     assert not app.exception
     markdown = "\n".join(item.value for item in app.markdown)
     assert "last approved renewal action" in markdown
-    assert app.dataframe
+    assert not app.dataframe
+    assert "## Direct answer" in markdown
 
 
 def test_streamlit_clarification_suggestion_is_a_one_click_chat_action() -> None:
@@ -175,7 +176,8 @@ def test_streamlit_clarification_suggestion_is_a_one_click_chat_action() -> None
         message.name == "user" and "average quoted premium" in message.markdown[0].value.lower()
         for message in app.chat_message
     )
-    assert app.dataframe
+    assert not app.dataframe
+    assert any("## Direct answer" in item.value for item in app.markdown)
     assert not any(
         button.label in {"Check the approved renewal action.", "Check the average quoted premium."}
         for button in app.button
@@ -208,8 +210,9 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
     assert len(app.chat_message) == 3
     assert len(app.dataframe) == 0
     markdown = "\n".join(item.value for item in app.markdown)
-    assert "Getting information from claims performance data" in markdown
-    assert "Getting information from conversion performance data" in markdown
+    assert "## Direct answer" in markdown
+    assert "## Key evidence" in markdown
+    assert "loss ratio moved" in markdown.lower()
 
 
 def test_replay_keyword_shows_a_prominent_replay_label(
@@ -335,7 +338,7 @@ def test_counter_evidence_uses_a_prominent_warning_block() -> None:
     assert "Counter-evidence" in warning_bodies
 
 
-def test_claims_only_query_returns_a_single_table() -> None:
+def test_claims_only_question_returns_an_interpreted_answer() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     app.run()
     app.chat_input[0].set_value("Show claims performance")
@@ -344,7 +347,7 @@ def test_claims_only_query_returns_a_single_table() -> None:
     assert not app.exception
     assert len(app.dataframe) == 0
     markdown = "\n".join(item.value for item in app.markdown)
-    assert "Getting information from claims performance data" in markdown
+    assert "Claims performance deteriorated" in markdown
 
 
 def test_evaluation_question_renders_the_targets_vs_actuals_table_in_the_ui() -> None:
@@ -456,9 +459,10 @@ def test_clicking_a_suggestion_chip_runs_the_same_exchange_as_typing() -> None:
 
     assert not app.exception
     assert len(app.chat_message) == 3
-    assert len(app.dataframe) == 2
+    assert len(app.dataframe) == 0
     markdown = "\n".join(item.value for item in app.markdown)
     assert "What would you like to review?" not in markdown
+    assert "## Key evidence" in markdown
 
 
 def test_current_chat_history_survives_multiple_message_reruns() -> None:

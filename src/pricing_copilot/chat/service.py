@@ -31,7 +31,6 @@ from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
     PortfolioQuestion,
-    Product,
     Region,
     ResultSource,
     ScenarioName,
@@ -89,6 +88,8 @@ _ANALYTICAL_TERMS = (
     "rising",
     "trend",
     "why",
+    "show",
+    "what did",
 )
 _UNSAFE_QUERY_PATTERN = re.compile(
     r"\b(?:ignore (?:all |any )?(?:prior|previous|system) instructions|"
@@ -167,6 +168,8 @@ class DefaultConversationTools:
                 listener,
             )
         if decision.tool_name is ChatToolName.DOCUMENTS:
+            if self._is_analytical_request(message):
+                return self._run_pricing_analysis(message, decision, context, listener)
             document_sources = [
                 source.value
                 for source in decision.sources
@@ -194,9 +197,9 @@ class DefaultConversationTools:
                     AnalyticsSource.PRICING_HISTORY,
                 )
             ]
+            if self._is_analytical_request(message):
+                return self._run_pricing_analysis(message, decision, context, listener)
             if sources:
-                if self._is_analytical_request(message):
-                    return self._run_pricing_analysis(message, decision, context, listener)
                 return self._retrieve_sources(
                     sources,
                     decision.requested_fields,
@@ -204,20 +207,12 @@ class DefaultConversationTools:
                     listener,
                 )
             return ChatResponse(
-                intent=ChatIntent.CLARIFICATION,
+                intent=ChatIntent.HELP,
                 context=context,
                 message=(
-                    "I can retrieve the data, but I still need to know which measure you mean. "
-                    "For example, should I check quoted premium, a previous pricing action, "
-                    "claims, conversion, or competitor position?"
+                    "Hello! Ask about claims, conversion, competitors, previous pricing actions, "
+                    "market intelligence, or request a portfolio review."
                 ),
-                requires_clarification=True,
-                clarification_question="Which portfolio measure should I retrieve?",
-                suggested_next_steps=[
-                    "Check the average quoted premium.",
-                    "Check the last approved pricing action.",
-                    "Compare claims and conversion.",
-                ],
             )
         if decision.tool_name is ChatToolName.READ_ONLY_SQL:
             return ChatResponse(
@@ -244,7 +239,12 @@ class DefaultConversationTools:
     def _is_analytical_request(message: str) -> bool:
         """Keep explicit field lookups tabular, but answer portfolio questions as analysis."""
         lowered = message.lower()
-        explicit_field_lookup = any(field in lowered for fields in SOURCE_TABLES.values() for field in fields)
+        explicit_field_lookup = any(
+            field in lowered
+            for fields in SOURCE_TABLES.values()
+            for field in fields
+            if field not in {"period", "product", "region", "segment"}
+        )
         return not explicit_field_lookup and (
             "?" in message or any(term in lowered for term in _ANALYTICAL_TERMS)
         )
@@ -642,6 +642,24 @@ class DefaultConversationTools:
             activities,
             listener,
         )
+        for label, source in (
+            (CLAIMS_LABEL, "claims"),
+            (CONVERSION_LABEL, "conversion"),
+            (COMPETITOR_LABEL, "competitors"),
+            (PRICING_HISTORY_LABEL, "pricing_history"),
+            (MARKET_INTELLIGENCE_LABEL, "market_intelligence"),
+            (CUSTOMER_FEEDBACK_LABEL, "customer_feedback"),
+        ):
+            self._emit(
+                ChatActivity(
+                    status=ActivityStatus.WORKING,
+                    label=label,
+                    purpose="Comparing the requested portfolio period with its prior window.",
+                    source=source,
+                ),
+                activities,
+                listener,
+            )
         claims_periods = self.database.query_source(
             "claims",
             context.scenario,
@@ -671,7 +689,14 @@ class DefaultConversationTools:
             ),
             scenario=context.scenario,
         )
-        result = run_portfolio_workflow(question, self.settings, event_listener=record_trace_event)
+        if decision.tool_name is ChatToolName.RECOMMENDATION:
+            result = run_portfolio_workflow(
+                question, self.settings, event_listener=record_trace_event
+            )
+        else:
+            result = run_baseline_portfolio_workflow(
+                question, self.settings, FakeRecommendationSynthesizer()
+            )
         if result.analytics is None or any(
             item.reason.startswith("workflow:") for item in result.missing_evidence
         ):
@@ -817,9 +842,24 @@ class ChatService:
         elif "new business" in lowered or "new-business" in lowered:
             updates["segment"] = Segment.NEW_BUSINESS
         if any(term in lowered for term in ("last 12 months", "last twelve months", "12-month")):
-            updates.update({"analysis_start_month": date(2025, 1, 1), "analysis_end_month": date(2025, 12, 1)})
+            updates.update(
+                {
+                    "analysis_start_month": date(2025, 1, 1),
+                    "analysis_end_month": date(2025, 12, 1),
+                }
+            )
         elif any(term in lowered for term in ("last 6 months", "last six months", "6-month")):
-            updates.update({"analysis_start_month": date(2025, 7, 1), "analysis_end_month": date(2025, 12, 1)})
+            updates.update(
+                {
+                    "analysis_start_month": date(2025, 7, 1),
+                    "analysis_end_month": date(2025, 12, 1),
+                }
+            )
         elif context.analysis_start_month is None or context.analysis_end_month is None:
-            updates.update({"analysis_start_month": date(2025, 1, 1), "analysis_end_month": date(2025, 12, 1)})
+            updates.update(
+                {
+                    "analysis_start_month": date(2025, 1, 1),
+                    "analysis_end_month": date(2025, 12, 1),
+                }
+            )
         return context.model_copy(update=updates)

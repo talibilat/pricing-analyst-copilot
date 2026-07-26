@@ -31,12 +31,11 @@ from pricing_copilot.contracts import (
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
-from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
+from pricing_copilot.evidence.models import EvidenceLedger
 from pricing_copilot.streamlit_scroll import AUTO_SCROLL_SCRIPT
 from pricing_copilot.streamlit_theme import (
     INJECT_CSS,
     assistant_avatar_data_uri,
-    badge_html,
     confidence_bars_html,
     portfolio_pill_text,
 )
@@ -229,6 +228,18 @@ def _can_record_decision(result: WorkflowResult) -> bool:
     }
 
 
+def _render_clarification_suggestions(response: ChatResponse, message_number: int) -> None:
+    if not response.requires_clarification:
+        return
+    placeholder = st.empty()
+    with placeholder.container():
+        for suggestion in response.suggested_next_steps:
+            if st.button(suggestion, key=f"chat_suggestion_{message_number}_{suggestion}"):
+                placeholder.empty()
+                st.session_state.pending_chat_prompt = suggestion
+                st.rerun()
+
+
 def _render_drift_monitoring_tab() -> None:
     from pricing_copilot.drift.store import load_drift_report
 
@@ -387,6 +398,7 @@ def _submit_prompt(prompt: str) -> None:
                 )
         message_number = len(st.session_state.chat_messages)
         _render_response(response, message_number, can_record=True)
+        _render_clarification_suggestions(response, message_number)
     st.session_state.chat_messages.append(
         {"role": "assistant", "response": response.model_dump(mode="json")}
     )
@@ -401,9 +413,11 @@ _SUGGESTIONS = [
 with tab_chat:
     clicked_suggestion: str | None = None
     pending_prompt = st.session_state.pop("pending_chat_prompt", None)
-    if len(st.session_state.chat_messages) == 1 and pending_prompt is None:
-        st.markdown(
-            """
+    if len(st.session_state.chat_messages) == 1:
+        empty_state = st.empty()
+        with empty_state.container():
+            st.markdown(
+                """
             <div class="pc-empty-state">
               <div class="pc-empty-icon">P</div>
               <div class="pc-empty-heading">What would you like to review?</div>
@@ -411,14 +425,16 @@ with tab_chat:
               history, or request a recommendation for this portfolio.</div>
             </div>
             """,
-            unsafe_allow_html=True,
-        )
-        st.markdown('<div class="pc-suggestions">', unsafe_allow_html=True)
-        chip_columns = st.columns(len(_SUGGESTIONS))
-        for column, suggestion in zip(chip_columns, _SUGGESTIONS, strict=True):
-            if column.button(suggestion, key=f"suggestion_{suggestion}"):
-                clicked_suggestion = suggestion
-        st.markdown("</div>", unsafe_allow_html=True)
+                unsafe_allow_html=True,
+            )
+            st.markdown('<div class="pc-suggestions">', unsafe_allow_html=True)
+            chip_columns = st.columns(len(_SUGGESTIONS))
+            for column, suggestion in zip(chip_columns, _SUGGESTIONS, strict=True):
+                if column.button(suggestion, key=f"suggestion_{suggestion}"):
+                    clicked_suggestion = suggestion
+            st.markdown("</div>", unsafe_allow_html=True)
+        if clicked_suggestion is not None:
+            empty_state.empty()
 
     for message_number, message in enumerate(st.session_state.chat_messages):
         with st.chat_message(
@@ -430,22 +446,22 @@ with tab_chat:
             response = ChatResponse.model_validate(message["response"])
             is_latest_message = message_number == len(st.session_state.chat_messages) - 1
             _render_response(response, message_number, can_record=is_latest_message)
+            if is_latest_message and pending_prompt is None:
+                _render_clarification_suggestions(response, message_number)
 
     if pending_prompt is not None:
         _submit_prompt(pending_prompt)
-
-    prompt = st.chat_input(
-        "Ask a portfolio-level pricing question",
-        key="pricing_chat_input",
-        max_chars=1_000,
-        submit_mode="disable",
-    )
-    if submitted_prompt := clicked_suggestion or prompt:
-        st.session_state.pending_chat_prompt = submitted_prompt
         st.rerun()
-
-    if pending_prompt is not None:
-        st.html(AUTO_SCROLL_SCRIPT, unsafe_allow_javascript=True)
+    else:
+        prompt = st.chat_input(
+            "Ask a portfolio-level pricing question",
+            key="pricing_chat_input",
+            max_chars=1_000,
+            submit_mode="disable",
+        )
+        if submitted_prompt := clicked_suggestion or prompt:
+            _submit_prompt(submitted_prompt)
+            st.html(AUTO_SCROLL_SCRIPT, unsafe_allow_javascript=True)
 
 with tab_monitoring:
     _render_drift_monitoring_tab()

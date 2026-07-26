@@ -50,7 +50,7 @@ def test_health_check() -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_chat_endpoint_returns_permitted_source_data(
+def test_chat_endpoint_returns_an_evidence_based_portfolio_answer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -64,8 +64,11 @@ def test_chat_endpoint_returns_permitted_source_data(
     response = client.post("/chat", json={"message": "Show claims and conversion performance"})
 
     assert response.status_code == 200
-    assert response.json()["intent"] == "multi_source_summary"
-    assert [table["title"] for table in response.json()["tables"]] == ["Claims", "Conversion"]
+    body = response.json()
+    assert body["intent"] == "pricing_analysis"
+    assert "## Direct answer" in body["message"]
+    assert "## Key evidence" in body["message"]
+    assert body["tables"] == []
 
 
 def test_chat_endpoint_reports_when_safe_sql_is_not_connected(
