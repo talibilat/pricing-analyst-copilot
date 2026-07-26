@@ -6,7 +6,11 @@ from typing import Protocol
 from openai import OpenAI
 
 from pricing_copilot.analytics.contracts import PortfolioAnalytics
-from pricing_copilot.config import Settings, get_azure_openai_settings
+from pricing_copilot.config import (
+    Settings,
+    azure_openai_base_url,
+    get_azure_openai_settings,
+)
 from pricing_copilot.contracts import PriceRange, RecommendationAction
 from pricing_copilot.documents.retrieval import RetrievedDocument
 from pricing_copilot.evidence.models import EvidenceLedger
@@ -196,7 +200,7 @@ def get_default_synthesizer(settings: Settings) -> RecommendationSynthesizer:
             "Azure OpenAI credentials are not configured "
             "(set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT in .env)."
         )
-    base_url = azure_settings.endpoint.rstrip("/") + "/openai/v1"
+    base_url = azure_openai_base_url(azure_settings.endpoint)
     client = OpenAI(api_key=azure_settings.api_key, base_url=base_url)
     deployment = azure_settings.chat_deployment or settings.model_name
     return AzureOpenAIRecommendationSynthesizer(
