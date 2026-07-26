@@ -23,6 +23,7 @@ from pricing_copilot.chat.contracts import (
     ConversationState,
 )
 from pricing_copilot.chat.prompts import CONVERSATION_AGENT_PROMPT
+from pricing_copilot.chat.query_planning import plan_request
 from pricing_copilot.config import (
     Settings,
     azure_openai_base_url,
@@ -38,12 +39,12 @@ class ConversationPlanner(Protocol):
         self,
         message: str,
         history: Sequence[ConversationMessage],
-        available_tools: dict[str, str],
+        available_tools: dict[str, object],
     ) -> ConversationDecision: ...
 
 
 class ConversationToolExecutor(Protocol):
-    def available_tools(self) -> dict[str, str]: ...
+    def available_tools(self) -> dict[str, object]: ...
 
     def execute(
         self,
@@ -66,7 +67,7 @@ class AgentsSdkConversationPlanner:
         self,
         message: str,
         history: Sequence[ConversationMessage],
-        available_tools: dict[str, str],
+        available_tools: dict[str, object],
     ) -> ConversationDecision:
         azure = get_azure_openai_settings()
         if not azure.api_key or not azure.endpoint:
@@ -79,7 +80,7 @@ class AgentsSdkConversationPlanner:
         self,
         message: str,
         history: Sequence[ConversationMessage],
-        available_tools: dict[str, str],
+        available_tools: dict[str, object],
     ) -> ConversationDecision:
         azure = get_azure_openai_settings()
         if not azure.api_key or not azure.endpoint:
@@ -234,6 +235,7 @@ class ConversationGraph:
                     duration_ms=(monotonic() - planning_started) * 1_000,
                 )
             )
+        decision = plan_request(state.message, decision)
         state = state.model_copy(update={"decision": decision})
         active_context = context.model_copy(
             update={
@@ -302,9 +304,7 @@ class ConversationGraph:
         )
 
     @staticmethod
-    def _plan_details(
-        decision: ConversationDecision, context: ChatContext
-    ) -> list[str]:
+    def _plan_details(decision: ConversationDecision, context: ChatContext) -> list[str]:
         scope = " ".join(
             value.replace("_", " ").title()
             for value in (
@@ -320,25 +320,26 @@ class ConversationGraph:
         if decision.route is ConversationRoute.REFUSE:
             return ["Plan: decline the request because it is outside the supported scope."]
         details = [f"Scope: {scope}."]
-        if decision.sources:
-            sources = ", ".join(source.value.replace("_", " ") for source in decision.sources)
-            details.extend(
-                [
-                    f"Plan: call the {sources} data tool(s) to retrieve the requested data.",
-                    "Next: get the data, then summarise the findings.",
-                ]
-            )
-        elif decision.tool_name is ChatToolName.RECOMMENDATION:
-            details.extend(
-                [
-                    "Plan: retrieve claims, conversion, competitor, pricing-history, market, "
-                    "and customer-feedback evidence.",
-                    "Next: call the claims, conversion, market-intelligence, and pricing-history "
-                    "specialist agents, then call the recommendation and governance agents.",
-                ]
-            )
-        else:
+        plan = decision.structured_plan
+        if plan is None:
             details.append("Next: call the selected tool and present its result.")
+            return details
+        details.append(f"Intent: {plan.intent.value.replace('_', ' ')}.")
+        details.append("Sub-questions:")
+        details.extend(f"  - {question}" for question in plan.sub_questions)
+        if plan.tool_calls:
+            details.append("Required tool calls:")
+            for tool_call in plan.tool_calls:
+                supported = "; ".join(tool_call.supports_questions)
+                details.append(
+                    f"  - {tool_call.source.value.replace('_', ' ')}: "
+                    f"{tool_call.reason} Supports: {supported}"
+                )
+        else:
+            details.append("Required tool calls: none.")
+        details.append(f"Required filters: {', '.join(plan.required_filters)}.")
+        details.append(f"Final-answer sections: {', '.join(plan.answer_sections)}.")
+        details.append(f"Evidence rule: {plan.evidence_rule}")
         return details
 
     @staticmethod

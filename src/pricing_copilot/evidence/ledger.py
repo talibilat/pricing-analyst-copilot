@@ -102,12 +102,15 @@ def build_evidence_ledger(
         document = retrieved.document
         entries.append(
             EvidenceLedgerEntry(
-                evidence_id=document.document_id,
+                evidence_id=retrieved.evidence_id,
                 source_type=document.source_type.value,
                 source_reference=document.title,
                 source_date=document.source_date,
                 retrieval_timestamp=retrieved_at,
-                interpretation=document.title,
+                interpretation=document.body,
+                document_id=document.document_id,
+                chunk_id=retrieved.chunk_id,
+                retrieval_score=retrieved.retrieval_score or retrieved.score,
             )
         )
 

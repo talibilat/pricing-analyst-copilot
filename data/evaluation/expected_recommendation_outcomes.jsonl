@@ -1,0 +1,3 @@
+{"scenario":"controlled_increase","expected_action":"increase","expected_evidence_categories":["claims_cost","market_pricing"],"human_review_required":true}
+{"scenario":"retention_concern","expected_action":"hold_or_decrease","expected_evidence_categories":["customer_feedback","affordability","market_pricing"],"human_review_required":true}
+{"scenario":"conflicting_evidence","expected_action":"investigate","expected_evidence_categories":["market_pricing"],"human_review_required":true}

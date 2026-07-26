@@ -89,6 +89,12 @@ class Settings(BaseSettings):
     evaluation_directory: Path = Path("var/evaluation")
     drift_directory: Path = Path("var/drift")
     analytics_database_path: Path = Path("var/synthetic_portfolio.duckdb")
+    market_intelligence_database_path: Path = Path("var/market_intelligence.duckdb")
+    market_intelligence_raw_directory: Path = Path("data/unstructured")
+    qdrant_path: Path = Path("var/qdrant")
+    qdrant_collection: str = "pricing_market_intelligence_v1"
+    market_intelligence_dataset_version: str = "synthetic-market-intelligence-v1"
+    market_intelligence_agent_trace_path: Path = Path("var/market_intelligence/agent_traces.jsonl")
     policy: PolicySettings = PolicySettings()
     drift: DriftPolicySettings = DriftPolicySettings()
     cost: CostSettings = CostSettings()
@@ -106,6 +112,7 @@ class AzureOpenAISettings(BaseSettings):
     api_key: str | None = None
     endpoint: str | None = None
     chat_deployment: str | None = None
+    embeddings_deployment: str = "text-embedding-ada-002"
 
 
 def azure_openai_base_url(endpoint: str) -> str:

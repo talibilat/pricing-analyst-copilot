@@ -22,8 +22,10 @@ from pricing_copilot.chat.contracts import ActivityStatus, ChatActivity
 from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     PortfolioQuestion,
+    Product,
     Region,
     ScenarioName,
+    Segment,
     WorkflowResult,
 )
 from pricing_copilot.data.persistent import PersistentAnalyticsDatabase
@@ -31,6 +33,7 @@ from pricing_copilot.documents.retrieval import retrieve_documents
 from pricing_copilot.drift.store import load_drift_report
 from pricing_copilot.evaluation.store import load_benchmark_report
 from pricing_copilot.governance.security import quarantine_unsafe_documents
+from pricing_copilot.intelligence.evaluation import append_agent_trace
 from pricing_copilot.observability.contracts import TraceEvent, TraceEventKind
 from pricing_copilot.replay.store import (
     ReplayArtifactIncompatibleError,
@@ -158,13 +161,22 @@ class ChatToolFacade:
         scenario: ScenarioName,
         region: Region,
         top_k: int = 6,
+        *,
+        product: Product = Product.PERSONAL_MOTOR,
+        segment: Segment = Segment.RENEWAL,
     ) -> dict[str, object]:
         """Retrieve corpus documents for the caller's query, quarantining unsafe ones.
 
         An empty result is still a valid ``"ok"`` answer.
         """
         retrieved = retrieve_documents(
-            scenario=scenario, region=region, query=query, top_k=top_k
+            scenario=scenario,
+            region=region,
+            product=product,
+            segment=segment,
+            query=query,
+            top_k=top_k,
+            settings=self.settings,
         )
         safe_documents, _ = quarantine_unsafe_documents(retrieved)
         documents: list[dict[str, object]] = [
@@ -175,6 +187,10 @@ class ChatToolFacade:
                 "source_type": item.document.source_type.value,
                 "sentiment": item.document.sentiment.value,
                 "score": item.score,
+                "chunk_id": item.chunk_id,
+                "source": item.source,
+                "publication_date": item.document.source_date.isoformat(),
+                "retrieval_score": item.retrieval_score,
             }
             for item in safe_documents
         ]
@@ -252,9 +268,26 @@ class ChatToolFacade:
         An invalid ``PortfolioQuestion`` is a caller bug and is left to raise.
         """
         event_listener = self._build_event_listener(on_activity)
-        result = run_portfolio_workflow(
-            question, self.settings, event_listener=event_listener
-        )
+        result = run_portfolio_workflow(question, self.settings, event_listener=event_listener)
+        if result.execution_trace is not None:
+            append_agent_trace(
+                self.settings.market_intelligence_agent_trace_path,
+                {
+                    "trace_id": result.execution_trace.trace_id,
+                    "recorded_at": result.execution_trace.completed_at,
+                    "model_and_prompt_versions": result.execution_trace.configuration_versions,
+                    "retrieved_evidence_references": sorted(
+                        result.evidence_ledger.ids() if result.evidence_ledger else []
+                    ),
+                    "confidence_score": (
+                        result.recommendation.confidence.overall
+                        if result.recommendation.confidence
+                        else None
+                    ),
+                    "recommendation_action": result.recommendation.action.value,
+                    "human_review_result": "pending",
+                },
+            )
         operational_failure = next(
             (
                 item.reason

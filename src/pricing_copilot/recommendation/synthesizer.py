@@ -31,6 +31,9 @@ SYSTEM_PROMPT = (
     "using correlational language only (for example 'coincided with', 'was associated with') "
     "- never causal language (for example 'caused', 'led to', 'resulted in', 'drove') - since "
     "no causal inference method is implemented in this prototype. "
+    "Do not compare renewal and new-business performance unless the evidence ledger contains "
+    "explicit evidence for both segments. When only one segment is supplied, describe the "
+    "evidence as scoped to that segment rather than claiming it is stronger or weaker elsewhere. "
     "Respond with a single JSON object matching this shape: "
     '{"action": "increase|decrease|hold|investigate", '
     '"price_range": {"lower_pct": number, "upper_pct": number} or null, '

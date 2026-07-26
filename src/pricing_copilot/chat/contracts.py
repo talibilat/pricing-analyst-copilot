@@ -29,6 +29,14 @@ class ChatIntent(StrEnum):
     UNSUPPORTED = "unsupported"
 
 
+class ConversationIntent(StrEnum):
+    DATA_LOOKUP = "data_lookup"
+    DOCUMENT_RETRIEVAL = "document_retrieval"
+    TREND_ANALYSIS = "trend_analysis"
+    INVESTIGATION = "investigation"
+    PRICING_RECOMMENDATION = "pricing_recommendation"
+
+
 class ConversationRoute(StrEnum):
     DIRECT_ANSWER = "direct_answer"
     CLARIFY = "clarify"
@@ -40,6 +48,7 @@ class ChatToolName(StrEnum):
     ANALYTICS = "analytics"
     SCHEMA = "schema"
     DOCUMENTS = "documents"
+    MULTI_SOURCE = "multi_source"
     REPLAY = "replay"
     EVALUATION = "evaluation"
     DRIFT = "drift"
@@ -54,6 +63,29 @@ class AnalyticsSource(StrEnum):
     PRICING_HISTORY = "pricing_history"
     MARKET_INTELLIGENCE = "market_intelligence"
     CUSTOMER_FEEDBACK = "customer_feedback"
+
+
+class PlannedToolCall(BaseModel):
+    """One minimal, explainable data call in a user-facing query plan."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: AnalyticsSource
+    reason: str = Field(min_length=1, max_length=300)
+    supports_questions: list[str] = Field(default_factory=list)
+
+
+class StructuredQueryPlan(BaseModel):
+    """The coordinator's inspectable plan before it calls any data source."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    intent: ConversationIntent
+    sub_questions: list[str] = Field(default_factory=list, max_length=5)
+    tool_calls: list[PlannedToolCall] = Field(default_factory=list)
+    required_filters: list[str] = Field(default_factory=list)
+    answer_sections: list[str] = Field(default_factory=list)
+    evidence_rule: str = Field(min_length=1, max_length=300)
 
 
 class ConversationMessage(BaseModel):
@@ -74,6 +106,9 @@ class ConversationDecision(BaseModel):
     requested_fields: list[str] = Field(default_factory=list)
     sql: str | None = None
     document_query: str | None = None
+    document_categories: list[str] = Field(default_factory=list)
+    intent: ConversationIntent | None = None
+    structured_plan: StructuredQueryPlan | None = None
     scenario: ScenarioName | None = None
     product: Product | None = None
     region: Region | None = None

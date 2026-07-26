@@ -18,6 +18,7 @@ from pricing_copilot.chat.contracts import (
     ChatTable,
     ConversationMessage,
 )
+from pricing_copilot.chat.history import conversation_history_message
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
 from pricing_copilot.contracts import (
@@ -157,9 +158,7 @@ def _render_workflow_result(result: WorkflowResult) -> None:
                 else []
             ),
             {
-                competitor.competitor_name: [
-                    item.value for item in competitor.price_index.monthly
-                ]
+                competitor.competitor_name: [item.value for item in competitor.price_index.monthly]
                 for competitor in analytics.competitors.competitors
             },
             y_label="Price index",
@@ -290,8 +289,7 @@ def _render_drift_monitoring_tab() -> None:
                     status = "🟢 normal"
                     status_class = "pc-monitoring-status-ok"
                 st.markdown(
-                    f"**{alert.metric_name}** - "
-                    f'<span class="{status_class}">{status}</span>',
+                    f'**{alert.metric_name}** - <span class="{status_class}">{status}</span>',
                     unsafe_allow_html=True,
                 )
                 st.caption(f"Baseline: {alert.baseline_window} | Current: {alert.current_window}")
@@ -426,7 +424,7 @@ def _operation_summary(response: ChatResponse) -> str:
 
 
 st.set_page_config(
-    page_title="Pricing Decision Copilot", layout="wide", initial_sidebar_state="collapsed"
+    page_title="Aviva Pricing Decision Copilot", layout="wide", initial_sidebar_state="collapsed"
 )
 st.markdown(INJECT_CSS, unsafe_allow_html=True)
 
@@ -436,13 +434,20 @@ _HEADER_PORTFOLIO = PortfolioQuestion(
     segment=Segment.RENEWAL,
     analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
 )
+_DEFAULT_CHAT_CONTEXT = ChatContext(
+    product=_HEADER_PORTFOLIO.product,
+    region=_HEADER_PORTFOLIO.region,
+    segment=_HEADER_PORTFOLIO.segment,
+    analysis_start_month=_HEADER_PORTFOLIO.analysis_period.start_month,
+    analysis_end_month=_HEADER_PORTFOLIO.analysis_period.end_month,
+)
 st.markdown(
     f"""
     <div class="pc-header">
       <div class="pc-header-left">
         <div class="pc-logo">P</div>
         <div>
-          <div class="pc-title">Pricing Decision Copilot</div>
+          <div class="pc-title">Aviva Pricing Decision Copilot</div>
           <div class="pc-subtitle">Decision support only — never executes a pricing change</div>
         </div>
       </div>
@@ -458,7 +463,7 @@ if "chat_messages" not in st.session_state:
             "role": "assistant",
             "response": ChatResponse(
                 intent=ChatIntent.HELP,
-                context=ChatContext(),
+                context=_DEFAULT_CHAT_CONTEXT,
                 message=(
                     "Ask me about claims, conversion, competitors, previous pricing actions, "
                     "market intelligence, or aggregate customer feedback. You can also ask for a "
@@ -470,17 +475,18 @@ if "chat_messages" not in st.session_state:
 
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 
+
 def _render_copilot_label() -> None:
     st.markdown('<div class="pc-copilot-label">Copilot</div>', unsafe_allow_html=True)
 
 
 def _submit_prompt(prompt: str) -> None:
-    active_context = ChatContext()
+    active_context = _DEFAULT_CHAT_CONTEXT.model_copy()
     conversation_history: list[ConversationMessage] = []
     for saved_message in st.session_state.chat_messages:
         saved_response = ChatResponse.model_validate(saved_message["response"])
         conversation_history.append(
-            ConversationMessage(role=saved_message["role"], content=saved_response.message)
+            conversation_history_message(saved_message["role"], saved_response.message)
         )
         if saved_message["role"] == "assistant":
             active_context = saved_response.context
@@ -491,7 +497,7 @@ def _submit_prompt(prompt: str) -> None:
         {
             "role": "user",
             "response": ChatResponse(
-                intent=ChatIntent.HELP, context=ChatContext(), message=prompt
+                intent=ChatIntent.HELP, context=_DEFAULT_CHAT_CONTEXT, message=prompt
             ).model_dump(mode="json"),
         }
     )

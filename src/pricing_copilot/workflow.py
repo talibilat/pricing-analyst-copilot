@@ -103,9 +103,7 @@ def _evidence_backed_workflow_result(
     if scenario is None:
         raise ValueError("Evidence-backed workflow requires a scenario.")
 
-    repository = PortfolioDataRepository.from_persistent(
-        scenario, settings.analytics_database_path
-    )
+    repository = PortfolioDataRepository.from_persistent(scenario, settings.analytics_database_path)
 
     try:
         analytics = build_analytics(question, repository)
@@ -113,7 +111,13 @@ def _evidence_backed_workflow_result(
         return data_quality_investigation_result(question, str(exc))
 
     retrieved_documents = retrieve_documents(
-        scenario=scenario, region=question.region, query=RETRIEVAL_QUERY, top_k=6
+        scenario=scenario,
+        region=question.region,
+        product=question.product,
+        segment=question.segment,
+        query=RETRIEVAL_QUERY,
+        top_k=6,
+        settings=settings,
     )
 
     retrieved_at = datetime.now(UTC)

@@ -28,6 +28,7 @@ from pricing_copilot.chat.conversation_graph import (
     ConversationToolExecutor,
 )
 from pricing_copilot.chat.presentation import compose_analysis_response
+from pricing_copilot.chat.tool_registry import coordinator_catalogue
 from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
@@ -73,26 +74,6 @@ _SOURCE_LABELS: dict[str, str] = {
     "customer_feedback": CUSTOMER_FEEDBACK_LABEL,
     "schema_catalogue": "Checking the portfolio data catalogue",
 }
-_ANALYTICAL_TERMS = (
-    "analyse",
-    "analyze",
-    "compare",
-    "decision",
-    "deteriorat",
-    "driver",
-    "driving",
-    "identify",
-    "last 12",
-    "last twelve",
-    "performance",
-    "recommend",
-    "review",
-    "rising",
-    "trend",
-    "why",
-    "show",
-    "what did",
-)
 _UNSAFE_QUERY_PATTERN = re.compile(
     r"\b(?:ignore (?:all |any )?(?:prior|previous|system) instructions|"
     r"(?:weaken|disable|bypass|ignore).{0,40}(?:policy|limit|guardrail)|"
@@ -121,8 +102,7 @@ def _format_list(values: Sequence[str]) -> str:
 
 def _portfolio_label(product: Product, region: Region, segment: Segment) -> str:
     return " ".join(
-        value.replace("_", " ")
-        for value in (region.value, product.value, segment.value)
+        value.replace("_", " ") for value in (region.value, product.value, segment.value)
     )
 
 
@@ -133,29 +113,8 @@ class DefaultConversationTools:
         self.settings = settings or get_settings()
         self.database = PersistentAnalyticsDatabase(self.settings.analytics_database_path)
 
-    def available_tools(self) -> dict[str, str]:
-        return {
-            ChatToolName.ANALYTICS.value: (
-                "Retrieve allowlisted claims, conversion, competitor, or pricing-history tables."
-            ),
-            ChatToolName.SCHEMA.value: (
-                "Describe approved analytics tables, fields, types, and units."
-            ),
-            ChatToolName.DOCUMENTS.value: (
-                "Search market intelligence or aggregate customer-feedback documents."
-            ),
-            ChatToolName.REPLAY.value: (
-                "Load a version-checked cached recommendation for a scenario."
-            ),
-            ChatToolName.EVALUATION.value: "Load the latest evaluation benchmark report.",
-            ChatToolName.DRIFT.value: "Load the latest drift-monitoring report.",
-            ChatToolName.RECOMMENDATION.value: (
-                "Run the governed specialist workflow for a pricing recommendation."
-            ),
-            ChatToolName.READ_ONLY_SQL.value: (
-                "Execute validated read-only SQL when the safe SQL adapter is installed."
-            ),
-        }
+    def available_tools(self) -> dict[str, object]:
+        return coordinator_catalogue()
 
     def execute(
         self,
@@ -186,10 +145,9 @@ class DefaultConversationTools:
                 [],
                 context,
                 listener,
+                query=message,
             )
         if decision.tool_name is ChatToolName.DOCUMENTS:
-            if self._is_analytical_request(message):
-                return self._run_pricing_analysis(message, decision, context, listener)
             document_sources = [
                 source.value
                 for source in decision.sources
@@ -204,6 +162,18 @@ class DefaultConversationTools:
                 [],
                 context,
                 listener,
+                query=decision.document_query or message,
+                document_categories=decision.document_categories,
+            )
+        if decision.tool_name is ChatToolName.MULTI_SOURCE:
+            selected_sources = [source.value for source in decision.sources]
+            return self._retrieve_sources(
+                selected_sources,
+                decision.requested_fields,
+                context,
+                listener,
+                query=decision.document_query or message,
+                document_categories=decision.document_categories,
             )
         if decision.tool_name is ChatToolName.ANALYTICS:
             sources = [
@@ -219,14 +189,13 @@ class DefaultConversationTools:
             ]
             if self._is_unique_competitor_name_request(message):
                 return self._retrieve_unique_competitor_names(context, listener)
-            if self._is_analytical_request(message):
-                return self._run_pricing_analysis(message, decision, context, listener)
             if sources:
                 return self._retrieve_sources(
                     sources,
                     decision.requested_fields,
                     context,
                     listener,
+                    query=message,
                 )
             return ChatResponse(
                 intent=ChatIntent.HELP,
@@ -262,10 +231,20 @@ class DefaultConversationTools:
     @staticmethod
     def _is_unique_competitor_name_request(message: str) -> bool:
         lowered = message.lower()
-        return (
-            "competitor" in lowered
-            and any(term in lowered for term in ("name", "names", "unique", "distinct", "all"))
+        asks_for_names = any(
+            phrase in lowered
+            for phrase in (
+                "competitor names",
+                "names of competitors",
+                "unique competitors",
+                "distinct competitors",
+            )
         )
+        document_request = any(
+            term in lowered
+            for term in ("announced", "announcement", "published", "source", "document")
+        )
+        return "competitor" in lowered and asks_for_names and not document_request
 
     def _retrieve_unique_competitor_names(
         self, context: ChatContext, listener: ActivityListener | None
@@ -300,9 +279,7 @@ class DefaultConversationTools:
             message = "No competitor names are available for the selected portfolio scenario."
         else:
             formatted_names = (
-                ", ".join(names[:-1]) + f", and {names[-1]}"
-                if len(names) > 1
-                else names[0]
+                ", ".join(names[:-1]) + f", and {names[-1]}" if len(names) > 1 else names[0]
             )
             message = f"The unique competitor names are: {formatted_names}."
         return ChatResponse(
@@ -317,20 +294,6 @@ class DefaultConversationTools:
                     rows=[[name] for name in names],
                 )
             ],
-        )
-
-    @staticmethod
-    def _is_analytical_request(message: str) -> bool:
-        """Keep explicit field lookups tabular, but answer portfolio questions as analysis."""
-        lowered = message.lower()
-        explicit_field_lookup = any(
-            field in lowered
-            for fields in SOURCE_TABLES.values()
-            for field in fields
-            if field not in {"period", "product", "region", "segment"}
-        )
-        return not explicit_field_lookup and (
-            "?" in message or any(term in lowered for term in _ANALYTICAL_TERMS)
         )
 
     def _refusal_reason(self, message: str) -> str | None:
@@ -562,10 +525,19 @@ class DefaultConversationTools:
         requested_fields: list[str],
         context: ChatContext,
         listener: ActivityListener | None,
+        *,
+        query: str,
+        document_categories: list[str] | None = None,
     ) -> ChatResponse:
+        if (
+            context.segment
+            and (context.product, context.region, context.segment) not in SUPPORTED_PORTFOLIOS
+        ):
+            return self._unsupported_portfolio_response(context, context.segment)
         activities: list[ChatActivity] = []
         tables: list[ChatTable] = []
         evidence_ids: list[str] = []
+        limitations: list[str] = []
         source_list = list(sources)
         for source in source_list:
             label = _SOURCE_LABELS[source]
@@ -585,8 +557,11 @@ class DefaultConversationTools:
             if source == "schema_catalogue":
                 table = self._catalogue_table()
             elif source in {"market_intelligence", "customer_feedback"}:
-                table, document_ids = self._retrieve_documents(source, context.scenario)
+                table, document_ids, document_limitations = self._retrieve_documents(
+                    source, context, query, document_categories or []
+                )
                 evidence_ids.extend(document_ids)
+                limitations.extend(document_limitations)
             else:
                 table = self._query_table(
                     source,
@@ -618,7 +593,22 @@ class DefaultConversationTools:
             )
         else:
             source_names = _format_list([table.title.lower() for table in tables])
-            message = f"Here is the requested data from {source_names}."
+            if evidence_ids:
+                message = self._compose_retrieval_response(
+                    query=query,
+                    source_names=source_names,
+                    evidence_count=len(evidence_ids),
+                    tables=tables,
+                )
+            elif any(
+                source in {"market_intelligence", "customer_feedback"} for source in source_list
+            ):
+                message = (
+                    f"Insufficient evidence: no safe document matched the requested scope in "
+                    f"{source_names}. I have not inferred a conclusion."
+                )
+            else:
+                message = f"Here is the requested data from {source_names}."
         return ChatResponse(
             intent=(
                 ChatIntent.MULTI_SOURCE_SUMMARY if len(tables) > 1 else ChatIntent.DATA_RETRIEVAL
@@ -628,6 +618,246 @@ class DefaultConversationTools:
             activities=activities,
             tables=tables,
             cited_evidence_ids=evidence_ids,
+            limitations=limitations,
+        )
+
+    def _compose_retrieval_response(
+        self,
+        *,
+        query: str,
+        source_names: str,
+        evidence_count: int,
+        tables: list[ChatTable],
+    ) -> str:
+        """Compose a direct, bounded answer from retrieved evidence.
+
+        Raw chunks remain in the supporting-data expander.  This method is deliberately
+        separate so that a chat answer states a conclusion, explains its evidence, and
+        preserves citations without turning the answer into a retrieval dump.
+        """
+        evidence = self._document_evidence_rows(tables)
+        lowered = query.lower()
+        customer = [item for item in evidence if item["table"] == "Customer Feedback"]
+        market = [item for item in evidence if item["table"] == "Market Intelligence"]
+        facts = self._feedback_facts(customer)
+        citations = self._citation_lines(evidence)
+
+        if (
+            market
+            and "competitor" in lowered
+            and any(term in lowered for term in ("announced", "announcement", "published"))
+        ):
+            direct, limitation = self._competitor_announcement_conclusion(market)
+        elif (
+            customer
+            and ("affordability" in lowered or "fairness" in lowered)
+            and any(term in lowered for term in ("does", "is there", "show a material", "material"))
+        ):
+            direct = self._controlled_feedback_conclusion(facts)
+            limitation = (
+                "This is a conclusion about the available aggregate, scoped feedback corpus. "
+                "It does not measure individual customers or prove future price acceptance."
+            )
+        elif customer and any(
+            term in lowered
+            for term in ("attrition", "cancellation", "retention risk", "retention concern")
+        ):
+            direct = self._attrition_conclusion(facts)
+            limitation = (
+                "The evidence is aggregate and observational, so it identifies a retention "
+                "risk but cannot quantify price elasticity or prove causality. A retention and "
+                "price-elasticity investigation should follow before any further increase is "
+                "considered."
+            )
+        elif customer and any(
+            term in lowered
+            for term in ("price sensitivity", "customer channel", "customer channels")
+        ):
+            direct = self._price_sensitivity_conclusion(facts)
+            limitation = (
+                "The common pattern is evidence of price sensitivity, not proof that every "
+                "customer will reject another increase. Validate it with aggregate retention "
+                "and elasticity monitoring before changing price."
+            )
+        else:
+            direct = (
+                f"The retrieved evidence directly addresses the requested question from "
+                f"{source_names}. It supports the findings listed below."
+            )
+            limitation = (
+                "The answer is limited to the retrieved, scoped evidence. "
+                "No recommendation is implied unless one was explicitly requested."
+            )
+        supporting = self._supporting_evidence_lines(evidence)
+        no_summary = (
+            f"Retrieved {evidence_count} evidence item(s), but no safe summary could be composed."
+        )
+        return (
+            "## Direct answer\n"
+            f"{direct}\n\n"
+            "## Supporting evidence\n"
+            f"{supporting or no_summary}\n\n"
+            "## Investigation or limitation\n"
+            f"{limitation}\n\n"
+            "## Citations\n"
+            f"{citations}"
+        )
+
+    @staticmethod
+    def _document_evidence_rows(tables: list[ChatTable]) -> list[dict[str, str]]:
+        """Return citation-ready rows while retaining document metadata for composition."""
+        evidence: list[dict[str, str]] = []
+        for table in tables:
+            if "relevant_text" not in table.columns:
+                continue
+            document_id_index = table.columns.index("document_id")
+            chunk_id_index = table.columns.index("chunk_id")
+            text_index = table.columns.index("relevant_text")
+            source_index = table.columns.index("source")
+            date_index = table.columns.index("source_date")
+            score_index = table.columns.index("retrieval_score")
+            for row in table.rows[:3]:
+                document_id = row[document_id_index]
+                chunk_id = row[chunk_id_index]
+                text = row[text_index]
+                if isinstance(document_id, str) and isinstance(text, str):
+                    evidence_id = chunk_id if isinstance(chunk_id, str) else document_id
+                    evidence.append(
+                        {
+                            "table": table.title,
+                            "evidence_id": evidence_id,
+                            "text": text,
+                            "source": str(row[source_index]),
+                            "source_date": str(row[date_index]),
+                            "score": str(row[score_index]),
+                        }
+                    )
+        return evidence
+
+    @staticmethod
+    def _feedback_facts(evidence: list[dict[str, str]]) -> set[str]:
+        text = " ".join(item["text"].lower() for item in evidence)
+        facts: set[str] = set()
+        if "cancellation" in text and "price" in text:
+            facts.add("price-related cancellations")
+        if "affordability" in text:
+            facts.add("affordability concerns")
+        if "comparison shopping" in text or "shopping around" in text:
+            facts.add("comparison shopping")
+        if "small minority" in text or "price-related comments remain a small minority" in text:
+            facts.add("price comments are a small minority")
+        if "no concentrated" in text or "no recurring" in text:
+            facts.add("no recurring affordability or fairness theme")
+        if "claims handling" in text or "communication" in text or "documentation" in text:
+            facts.add("other service themes dominate")
+        return facts
+
+    @staticmethod
+    def _competitor_announcement_conclusion(evidence: list[dict[str, str]]) -> tuple[str, str]:
+        text = " ".join(item["text"] for item in evidence)
+        match = re.search(r"competitor\s+([A-Z][A-Za-z ]+?)\s+announced\s+(.+?)(?:\.|$)", text)
+        if match is None:
+            return (
+                "Insufficient evidence: the retrieved document does not identify a competitor "
+                "announcement and change.",
+                "The source could not support all requested details, so no pricing conclusion "
+                "is drawn.",
+            )
+        competitor, change = (part.strip() for part in match.groups())
+        publication_date = evidence[0]["source_date"]
+        return (
+            f"{competitor} announced {change}; the announcement was published on "
+            f"{publication_date}. However, the source does not state the direction or magnitude "
+            "of the repricing, so the evidence is insufficient to identify the exact pricing "
+            "change.",
+            "Treat this as external market evidence for Aviva. Do not infer a specific competitor "
+            "price movement without a source that states it.",
+        )
+
+    @staticmethod
+    def _attrition_conclusion(facts: set[str]) -> str:
+        indicators = [
+            phrase
+            for phrase in (
+                "price-related cancellations",
+                "affordability concerns",
+                "comparison shopping",
+            )
+            if phrase in facts
+        ]
+        if len(indicators) >= 2:
+            return (
+                "Renewal pricing appears to be contributing to attrition through "
+                f"{_format_list(indicators)}."
+            )
+        return (
+            "The retrieved customer feedback indicates a possible price-related attrition risk, "
+            "but the available evidence is incomplete."
+        )
+
+    @staticmethod
+    def _price_sensitivity_conclusion(facts: set[str]) -> str:
+        channels: list[str] = []
+        if "price-related cancellations" in facts:
+            channels.append("cancellation records")
+        if "affordability concerns" in facts:
+            channels.append("affordability feedback")
+        if "comparison shopping" in facts:
+            channels.append("call-centre conversations")
+        if len(channels) >= 2:
+            return (
+                f"{_format_list(channels).capitalize()} consistently indicate price sensitivity. "
+                "The common pattern is repeated price concern, comparison shopping, and evidence "
+                "that customers may not absorb another increase."
+            )
+        return (
+            "The retrieved feedback suggests price sensitivity, but it does not cover enough "
+            "channels for a firm conclusion."
+        )
+
+    @staticmethod
+    def _controlled_feedback_conclusion(facts: set[str]) -> str:
+        if {
+            "price comments are a small minority",
+            "no recurring affordability or fairness theme",
+        }.issubset(facts):
+            suffix = (
+                " Most feedback instead concerns claims handling, communication, documentation, "
+                "or claims status."
+                if "other service themes dominate" in facts
+                else ""
+            )
+            return (
+                "No material affordability or fairness concern is evidenced in the "
+                "controlled-increase scenario. Price-related comments are a small minority, "
+                "with no recurring affordability theme "
+                f"and no concentrated fairness concern.{suffix}"
+            )
+        return (
+            "The retrieved controlled-increase feedback does not provide enough evidence to "
+            "confirm "
+            "or rule out a material affordability or fairness concern."
+        )
+
+    @staticmethod
+    def _supporting_evidence_lines(evidence: list[dict[str, str]]) -> str:
+        lines: list[str] = []
+        for item in evidence:
+            excerpt = " ".join(item["text"].split())
+            # Evidence documents may start with Markdown headings.  A chat bullet is
+            # prose, so remove heading syntax before Streamlit renders the response.
+            excerpt = re.sub(r"#+\s*", "", excerpt).strip()
+            if len(excerpt) > 280:
+                excerpt = f"{excerpt[:277].rstrip()}..."
+            lines.append(f"- {excerpt} [{item['evidence_id']}]")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _citation_lines(evidence: list[dict[str, str]]) -> str:
+        return "\n".join(
+            f"- [{item['evidence_id']}] {item['source']} - {item['source_date']}; "
+            f"retrieval score {item['score']}"
+            for item in evidence
         )
 
     def _query_table(
@@ -671,13 +901,18 @@ class DefaultConversationTools:
             rows=rows,
         )
 
-    @staticmethod
-    def _retrieve_documents(source: str, scenario: ScenarioName) -> tuple[ChatTable, list[str]]:
+    def _retrieve_documents(
+        self, source: str, context: ChatContext, query: str, categories: list[str]
+    ) -> tuple[ChatTable, list[str], list[str]]:
         retrieved = retrieve_documents(
-            scenario=scenario,
-            region=Region.NORTH_WEST,
-            query="portfolio pricing market intelligence customer feedback",
+            scenario=context.scenario,
+            region=context.region,
+            product=context.product,
+            segment=context.segment or Segment.RENEWAL,
+            query=query,
             top_k=12,
+            settings=self.settings,
+            categories=categories,
         )
         safe_documents, _ = quarantine_unsafe_documents(retrieved)
         selected = [
@@ -695,7 +930,15 @@ class DefaultConversationTools:
                 document.document.source_type.value,
                 document.document.title,
                 document.document.source_date.isoformat(),
+                document.chunk_id,
+                document.source,
+                (
+                    document.retrieval_score
+                    if document.retrieval_score is not None
+                    else document.score
+                ),
                 document.document.sentiment.value,
+                document.document.body,
             ]
             for document in selected
         ]
@@ -704,10 +947,25 @@ class DefaultConversationTools:
                 title=(
                     "Customer Feedback" if source == "customer_feedback" else "Market Intelligence"
                 ),
-                columns=["document_id", "source_type", "title", "source_date", "sentiment"],
+                columns=[
+                    "document_id",
+                    "source_type",
+                    "title",
+                    "source_date",
+                    "chunk_id",
+                    "source",
+                    "retrieval_score",
+                    "sentiment",
+                    "relevant_text",
+                ],
                 rows=rows,
             ),
-            [document.document.document_id for document in selected],
+            [document.evidence_id for document in selected],
+            (
+                []
+                if selected
+                else ["No document matched the requested source and metadata filters."]
+            ),
         )
 
     def _run_pricing_analysis(
@@ -819,9 +1077,7 @@ class DefaultConversationTools:
         )
 
     @staticmethod
-    def _unsupported_portfolio_response(
-        context: ChatContext, segment: Segment
-    ) -> ChatResponse:
+    def _unsupported_portfolio_response(context: ChatContext, segment: Segment) -> ChatResponse:
         supported_scopes = _format_list(
             sorted(
                 _portfolio_label(product, region, supported_segment)
@@ -979,7 +1235,7 @@ class ChatService:
         """Resolve explicit scope changes while retaining earlier conversation scope."""
         lowered = message.lower()
         updates: dict[str, object] = {}
-        if "retention concern" in lowered:
+        if "retention concern" in lowered or "retention risk" in lowered:
             updates["scenario"] = ScenarioName.RETENTION_CONCERN
         elif "conflicting evidence" in lowered:
             updates["scenario"] = ScenarioName.CONFLICTING_EVIDENCE

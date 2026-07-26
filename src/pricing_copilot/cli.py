@@ -32,6 +32,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--build-data", action="store_true", help="Build the versioned synthetic DuckDB."
     )
+    parser.add_argument(
+        "--ingest-market-intelligence",
+        action="store_true",
+        help="Ingest raw unstructured files into the DuckDB catalogue and local Qdrant index.",
+    )
+    parser.add_argument(
+        "--evaluate-retrieval",
+        action="store_true",
+        help="Evaluate hybrid retrieval against the labelled JSONL retrieval cases.",
+    )
     parser.add_argument("--product", choices=[p.value for p in Product])
     parser.add_argument("--region", choices=[r.value for r in Region])
     parser.add_argument("--segment", choices=[s.value for s in Segment])
@@ -105,6 +115,29 @@ def main(argv: list[str] | None = None) -> int:
     if args.build_data:
         path = build_analytics_database(get_settings().analytics_database_path)
         print(path)
+        return 0
+
+    if args.ingest_market_intelligence:
+        from pricing_copilot.intelligence.ingestion import ingest_market_intelligence
+
+        run = ingest_market_intelligence(get_settings())
+        print(
+            f"Ingested {run.document_count} documents and {run.chunk_count} chunks "
+            f"with {run.embedding_model}: {run.ingestion_version}"
+        )
+        return 0
+
+    if args.evaluate_retrieval:
+        from pricing_copilot.intelligence.evaluation import evaluate_retrieval
+        from pricing_copilot.intelligence.retrieval import HybridRetriever
+
+        settings = get_settings()
+        metrics = evaluate_retrieval(
+            settings,
+            HybridRetriever.from_settings(settings),
+            cases_path=Path("data/evaluation/retrieval_cases.jsonl"),
+        )
+        print(metrics.model_dump_json(indent=2))
         return 0
 
     if args.record_replay_artifacts:

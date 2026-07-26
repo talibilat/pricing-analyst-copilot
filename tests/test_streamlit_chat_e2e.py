@@ -160,7 +160,9 @@ def test_streamlit_summarises_tool_use_and_operation_size_after_completion() -> 
     assert any(expander.label == "Plan, decisions, and tool calls" for expander in app.expander)
     markdown = "\n".join(item.value for item in app.markdown)
     assert "in 0.0 seconds" not in markdown
-    assert "Plan: call the conversion data tool" in markdown
+    assert "Required tool calls:" in markdown
+    assert "conversion: Needed for the requested conversion" in markdown
+    assert "Evidence rule:" in markdown
 
 
 def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:
@@ -175,8 +177,8 @@ def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:
     assert not app.exception
     markdown = "\n".join(item.value for item in app.markdown)
     assert "last approved renewal action" in markdown
-    assert not app.dataframe
-    assert "## Direct answer" in markdown
+    assert app.dataframe
+    assert "Conversion" in markdown
 
 
 def test_streamlit_clarification_suggestion_is_a_one_click_chat_action() -> None:
@@ -228,11 +230,8 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
 
     assert not app.exception
     assert len(app.chat_message) == 3
-    assert len(app.dataframe) == 0
-    markdown = "\n".join(item.value for item in app.markdown)
-    assert "## Direct answer" in markdown
-    assert "## Key evidence" in markdown
-    assert "loss ratio moved" in markdown.lower()
+    assert len(app.dataframe) == 2
+    assert any("Completed in" in caption.value for caption in app.caption)
 
 
 def test_streamlit_handles_an_unavailable_segment_without_a_traceback() -> None:

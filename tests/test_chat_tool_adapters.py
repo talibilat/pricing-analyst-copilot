@@ -171,7 +171,18 @@ def test_search_documents_returns_ok_documents(facade: ChatToolFacade) -> None:
     assert isinstance(data, dict)
     assert data["documents"]
     first = data["documents"][0]
-    assert set(first) >= {"document_id", "title", "snippet", "source_type", "sentiment", "score"}
+    assert set(first) >= {
+        "document_id",
+        "title",
+        "snippet",
+        "source_type",
+        "sentiment",
+        "score",
+        "chunk_id",
+        "source",
+        "publication_date",
+        "retrieval_score",
+    }
     # Citations are exactly the returned (post-quarantine) document ids.
     assert result["citations"] == [doc["document_id"] for doc in data["documents"]]
 

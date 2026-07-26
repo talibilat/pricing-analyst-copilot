@@ -88,7 +88,7 @@ def _allowed_numbers(
     # "reduced pricing by four to six percent" - that a faithful paraphrase can render in
     # digit form. Those are legitimately supported, so scan document bodies too.
     for retrieved in documents:
-        if retrieved.document.document_id not in cited_evidence_ids:
+        if retrieved.evidence_id not in cited_evidence_ids:
             continue
         for match in _NUMBER_PATTERN.finditer(retrieved.document.body):
             numbers.add(round(float(match.group(1)), 1))
@@ -175,8 +175,6 @@ def validate_and_clamp_draft(
             "conditions": conditions,
             "rationale": _soften_causal_language(draft.rationale),
             "counter_evidence": [_soften_causal_language(t) for t in draft.counter_evidence],
-            "investigation_areas": [
-                _soften_causal_language(t) for t in draft.investigation_areas
-            ],
+            "investigation_areas": [_soften_causal_language(t) for t in draft.investigation_areas],
         }
     )

@@ -110,8 +110,25 @@ Structured sources cover claims, conversion and retention, fictional competitors
 Unstructured sources cover market reports, repair-cost or economic reports, aggregate customer feedback, and broker or analyst notes.
 Every generated dataset and scenario uses a fixed seed and an explicit version.
 
-Unstructured retrieval starts with metadata filtering and BM25.
-Hybrid vector retrieval remains stretch work until the core workflow is stable.
+Raw synthetic market-intelligence and anonymised aggregate customer-feedback documents are stored as JSON files under `data/unstructured/`.
+`var/market_intelligence.duckdb` is a separate DuckDB catalogue that records document metadata, chunk manifests, ingestion versions, retrieval evaluation runs, and outcome summaries.
+The protected analytics database and its four business tables remain unchanged.
+The ingestion command sends document chunks to the configured Azure OpenAI `text-embedding-ada-002` deployment and persists their vectors in local Qdrant at `var/qdrant/`.
+Retrieval applies scenario, product, region, segment, category, and publication-date filters before combining Qdrant semantic ranking with BM25 keyword ranking through reciprocal-rank fusion.
+Each result retains document ID, chunk ID, source, publication date, scores, and the relevant text for evidence citations.
+
+### Ingesting and evaluating market intelligence
+
+Run the following after setting `AZURE_OPENAI_API_KEY` and `AZURE_OPENAI_ENDPOINT`.
+
+```bash
+uv run pricing-copilot --ingest-market-intelligence
+uv run pricing-copilot --evaluate-retrieval
+```
+
+The labelled retrieval cases live in `data/evaluation/retrieval_cases.jsonl`.
+Expected pricing outcomes live in `data/evaluation/expected_recommendation_outcomes.jsonl`.
+Retrieval evaluation reports Recall@k, Precision@k, metadata-filter accuracy, citation correctness, unsupported-claim rate, and p95 latency.
 
 ## Evaluation strategy
 

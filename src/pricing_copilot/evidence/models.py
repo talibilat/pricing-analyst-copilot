@@ -18,6 +18,9 @@ class EvidenceLedgerEntry(BaseModel):
     value: float | None = None
     baseline_value: float | None = None
     interpretation: str
+    document_id: str | None = None
+    chunk_id: str | None = None
+    retrieval_score: float | None = None
 
 
 class EvidenceLedger(BaseModel):

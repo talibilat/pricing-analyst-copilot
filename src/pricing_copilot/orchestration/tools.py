@@ -16,7 +16,7 @@ from pricing_copilot.documents.retrieval import RetrievedDocument
 
 def _window_payload(metric: WindowMetric) -> dict[str, float | None]:
     return {
-        "baseline": round(metric.baseline, 4),
+        "baseline": None if metric.baseline is None else round(metric.baseline, 4),
         "current": round(metric.current, 4),
         "movement_pct": None if metric.movement_pct is None else round(metric.movement_pct, 2),
     }
@@ -156,9 +156,12 @@ def build_market_documents_tool(
         return json.dumps(
             [
                 {
-                    "evidence_id": retrieved.document.document_id,
+                    "evidence_id": retrieved.evidence_id,
+                    "document_id": retrieved.document.document_id,
+                    "chunk_id": retrieved.chunk_id,
                     "source_type": retrieved.document.source_type.value,
                     "source_date": retrieved.document.source_date.isoformat(),
+                    "retrieval_score": retrieved.retrieval_score or retrieved.score,
                     "body": retrieved.document.body,
                 }
                 for retrieved in documents

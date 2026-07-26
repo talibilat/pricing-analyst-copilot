@@ -170,20 +170,11 @@ def _record_controlled_increase_replay(service: ChatService) -> None:
 def test_chat_retrieves_multiple_permitted_sources_with_activity(service: ChatService) -> None:
     response = service.submit("Show claims and conversion performance")
 
-    assert response.intent is ChatIntent.PRICING_ANALYSIS
-    assert "## Direct answer" in response.message
-    assert "## Key evidence" in response.message
-    assert not response.tables
+    assert response.intent is ChatIntent.MULTI_SOURCE_SUMMARY
+    assert {table.title for table in response.tables} == {"Claims", "Conversion"}
     labels = [activity.label for activity in response.activities]
     assert "Conversation planning" in labels
-    assert "Portfolio analysis workflow" in labels
-    completed_workflow = next(
-        activity
-        for activity in response.activities
-        if activity.label == "Portfolio analysis workflow"
-        and activity.status.value == "completed"
-    )
-    assert completed_workflow.duration_ms is not None
+    assert "Portfolio analysis workflow" not in labels
 
 
 @pytest.mark.parametrize(
@@ -195,21 +186,13 @@ def test_chat_retrieves_multiple_permitted_sources_with_activity(service: ChatSe
         "Show aggregate customer feedback",
     ],
 )
-def test_chat_reports_one_timed_portfolio_workflow_per_analysis(
+def test_narrow_source_requests_do_not_trigger_a_portfolio_workflow(
     service: ChatService, message: str
 ) -> None:
     response = service.submit(message)
 
-    assert response.intent is ChatIntent.PRICING_ANALYSIS
-    assert "## Key evidence" in response.message
-    completed_workflows = [
-        activity
-        for activity in response.activities
-        if activity.label == "Portfolio analysis workflow"
-        and activity.status.value == "completed"
-    ]
-    assert len(completed_workflows) == 1
-    assert completed_workflows[0].duration_ms is not None
+    assert response.intent in {ChatIntent.DATA_RETRIEVAL, ChatIntent.MULTI_SOURCE_SUMMARY}
+    assert all(activity.label != "Portfolio analysis workflow" for activity in response.activities)
 
 
 @pytest.mark.parametrize(
@@ -353,17 +336,16 @@ def test_chat_uses_deterministic_analytics_when_live_agent_credentials_are_unava
     assert response.workflow_result is not None
 
 
-def test_twelve_month_renewal_portfolio_review_answers_with_evidence_and_action(
+def test_unscoped_portfolio_review_does_not_create_an_implicit_recommendation(
     service: ChatService,
 ) -> None:
     response = service.submit("Review the renewal portfolio for the last 12 months")
 
     assert response.context.segment is Segment.RENEWAL
     assert response.context.analysis_start_month == date(2025, 1, 1)
-    assert "## Direct answer" in response.message
-    assert "loss ratio moved" in response.message.lower()
-    assert "## Recommended action" in response.message
-    assert "## Specific next investigation" in response.message
+    assert response.intent is ChatIntent.HELP
+    assert "recommend" not in response.message.lower()
+    assert all(activity.label != "Portfolio analysis workflow" for activity in response.activities)
 
 
 def test_segment_deterioration_question_identifies_the_observed_segment(
@@ -371,19 +353,19 @@ def test_segment_deterioration_question_identifies_the_observed_segment(
 ) -> None:
     response = service.submit("Which segment is driving loss-ratio deterioration?")
 
-    assert "renewal is the observed segment" in response.message.lower()
-    assert "which segment should i check" not in response.message.lower()
-    assert "loss ratio moved" in response.message.lower()
+    assert response.intent is ChatIntent.DATA_RETRIEVAL
+    assert response.tables[0].title == "Claims"
+    assert all(activity.label != "Portfolio analysis workflow" for activity in response.activities)
 
 
-def test_competitor_question_answers_the_competitor_question_before_the_recommendation(
+def test_competitor_question_uses_only_the_competitor_data_source(
     service: ChatService,
 ) -> None:
     response = service.submit("What did competitors do?")
 
-    direct_answer = response.message.split("## Key evidence", maxsplit=1)[0].lower()
-    assert "competitor price indices increased" in direct_answer
-    assert "controlled 2% to 3%" not in direct_answer
+    assert response.intent is ChatIntent.DATA_RETRIEVAL
+    assert response.tables[0].title == "Competitors"
+    assert all(activity.label != "Portfolio analysis workflow" for activity in response.activities)
 
 
 def test_claims_cost_and_conversion_question_produces_a_specific_pricing_conclusion(
@@ -393,7 +375,8 @@ def test_claims_cost_and_conversion_question_produces_a_specific_pricing_conclus
         "Claims costs are rising while conversion improves. What pricing decision should we make?"
     )
 
-    assert "recommend a controlled 2% to 3% price increase" in response.message.lower()
+    assert "recommend a controlled" in response.message.lower()
+    assert "price increase" in response.message.lower()
     assert "average claim severity moved" in response.message.lower()
     assert "quote-to-sale conversion moved" in response.message.lower()
     assert "repair-cost" in response.message.lower()
@@ -403,7 +386,8 @@ def test_partial_or_conflicting_evidence_returns_a_qualified_answer_not_a_dead_e
     service: ChatService,
 ) -> None:
     response = service.submit(
-        "Review the renewal portfolio for the last 12 months in the conflicting evidence scenario"
+        "Recommend a pricing action for the renewal portfolio for the last 12 months "
+        "in the conflicting evidence scenario"
     )
 
     assert response.workflow_result is not None

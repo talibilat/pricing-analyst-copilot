@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from pricing_copilot.catalog import UnsupportedPortfolioError
 from pricing_copilot.chat.contracts import ChatRequest, ChatResponse
 from pricing_copilot.chat.service import ChatService
-from pricing_copilot.config import get_settings
+from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     AnalystDecision,
     DecisionRequest,
@@ -31,7 +31,7 @@ def health() -> dict[str, str]:
 @app.post("/workflow", response_model=WorkflowResult)
 def submit_portfolio_question(question: PortfolioQuestion, replay: bool = False) -> WorkflowResult:
     try:
-        return run_portfolio_workflow(question, replay=replay)
+        return run_portfolio_workflow(question, Settings(), replay=replay)
     except UnsupportedPortfolioError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except (ReplayArtifactMissingError, ReplayArtifactIncompatibleError) as exc:

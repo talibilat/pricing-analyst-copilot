@@ -184,9 +184,7 @@ async def _run_governed_pipeline_async(
         details={"scenario": scenario.value},
     )
 
-    repository = PortfolioDataRepository.from_persistent(
-        scenario, settings.analytics_database_path
-    )
+    repository = PortfolioDataRepository.from_persistent(scenario, settings.analytics_database_path)
 
     try:
         analytics = build_analytics(question, repository)
@@ -194,7 +192,13 @@ async def _run_governed_pipeline_async(
         return data_quality_investigation_result(question, str(exc))
 
     retrieved_documents = retrieve_documents(
-        scenario=scenario, region=question.region, query=RETRIEVAL_QUERY, top_k=6
+        scenario=scenario,
+        region=question.region,
+        product=question.product,
+        segment=question.segment,
+        query=RETRIEVAL_QUERY,
+        top_k=6,
+        settings=settings,
     )
     documents, guardrail_findings = quarantine_unsafe_documents(retrieved_documents)
     for finding in guardrail_findings:
@@ -522,8 +526,11 @@ def run_governed_portfolio_workflow(
             retrieve_documents(
                 scenario=scenario,
                 region=question.region,
+                product=question.product,
+                segment=question.segment,
                 query=RETRIEVAL_QUERY,
                 top_k=6,
+                settings=settings,
             )
         )
         preflight_issues = detect_material_evidence_issues(
