@@ -1,0 +1,198 @@
+{
+  "schema_version": "replay-artifact-schema-v1",
+  "scenario": "drift_monitoring",
+  "recorded_at": "2026-07-26T19:36:16.637270Z",
+  "configuration_versions": {
+    "model_name": "gpt-4.1-mini",
+    "recommendation_version": "governed-multi-agent-v1",
+    "governance_version": "deterministic-governance-v1",
+    "scenario_seed": 20260101,
+    "scenario_version": "v1",
+    "max_price_movement_pct": 5.0,
+    "prompt_version": "governed-prompts-v2",
+    "agent_registry_version": "approved-agent-registry-v1",
+    "tool_version": "deterministic-read-only-tools-v2",
+    "dataset_version": "v1",
+    "recommendation_policy_version": "recommendation-policy-v2",
+    "output_schema_version": "workflow-result-schema-v1"
+  },
+  "chat_response": {
+    "intent": "pricing_analysis",
+    "message": "## Direct answer\nGoverned pricing recommendation: investigate only; do not implement a price movement at this stage. The available record explicitly says no pricing claim can be supported because no evidence sources are connected for this prototype slice, and the governance outcome approves an investigate outcome because it proposes no price movement and makes no unsupported claims. Given the missing claims, conversion, market intelligence, and pricing history evidence, a supported increase, decrease, or hold recommendation cannot be made from the supplied evidence.\n\n## Answer by question part\n### Produce a governed pricing recommendation from the required portfolio evidence.\nRecommendation: investigate, with no price change recommended now. This is because the supplied recommendation record states that investigation is required and that no pricing claim can be supported, and the governance outcome approves that investigate-only outcome. A directional pricing action cannot be supported from the available evidence because the evidence ledger is empty and required domains are missing, including claims and conversion.\n\n## Key evidence\n- The recommendation record specifies the action as 'investigate' and states that no pricing claim can be supported because no evidence sources are connected for this prototype slice.\n- The governance outcome approves the investigate outcome because it proposes no price movement and cites no unsupported claims.\n- The evidence ledger is empty, so there are no cited evidence items supporting any pricing movement.\n- Claims, conversion, market intelligence, and pricing history evidence are all explicitly missing.\n\n## Interpretation\nRecommendation: investigate, with no price change recommended now. This is because the supplied recommendation record states that investigation is required and that no pricing claim can be supported, and the governance outcome approves that investigate-only outcome. A directional pricing action cannot be supported from the available evidence because the evidence ledger is empty and required domains are missing, including claims and conversion.\n\n## Recommended action\nGoverned pricing recommendation: investigate only; do not implement a price movement at this stage. The available record explicitly says no pricing claim can be supported because no evidence sources are connected for this prototype slice, and the governance outcome approves an investigate outcome because it proposes no price movement and makes no unsupported claims. Given the missing claims, conversion, market intelligence, and pricing history evidence, a supported increase, decrease, or hold recommendation cannot be made from the supplied evidence.\n\n## Confidence and limitations\n- No evidence IDs were supplied in the evidence ledger, so no material claim can be tied to portfolio evidence IDs; this prevents a supported pricing action recommendation.\n- No claims evidence source is connected, so loss-cost or profitability considerations cannot be assessed.\n- No conversion evidence source is connected, so customer response or retention implications cannot be assessed.\n- No market intelligence evidence source is connected, so external competitiveness cannot be assessed.\n- No pricing history evidence source is connected, so prior changes and drift context cannot be assessed.\n- Configured controls require claims evidence, conversion evidence, and a minimum number of source types, so those controls block a governed recommendation for price movement with the current evidence set.\n\n## Specific next investigation\n- Connect the required evidence sources for claims, conversion, and pricing history at minimum, and add market intelligence if available.\n- Re-run the assessment once the evidence ledger contains valid evidence IDs and enough source types to satisfy governance controls.\n- Keep the outcome as investigate-only until human review has considered the newly connected evidence.",
+    "context": {
+      "scenario": "drift_monitoring",
+      "force_replay": false,
+      "product": "personal_motor",
+      "region": "north_west",
+      "segment": "renewal",
+      "analysis_start_month": "2025-01-01",
+      "analysis_end_month": "2025-12-01",
+      "pending_tool_name": null,
+      "pending_intent": null
+    },
+    "activities": [
+      {
+        "status": "working",
+        "label": "Conversation planning",
+        "purpose": "Interpreting the request and selecting the right tools.",
+        "agent": "conversation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Conversation planning",
+        "purpose": "Created a plan and selected the required tools.",
+        "agent": "conversation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 3611.3504169043154
+      },
+      {
+        "status": "working",
+        "label": "Portfolio analysis workflow",
+        "purpose": "Combining the requested portfolio evidence into an analyst answer.",
+        "agent": null,
+        "source": "portfolio_analysis",
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Portfolio analysis workflow",
+        "purpose": "Combined the requested portfolio evidence into an analyst answer.",
+        "agent": null,
+        "source": "portfolio_analysis",
+        "trace_id": null,
+        "duration_ms": 0.12879190035164356
+      }
+    ],
+    "tables": [],
+    "cited_evidence_ids": [],
+    "investigation_areas": [],
+    "requires_clarification": false,
+    "refused": false,
+    "route": "tool_call",
+    "clarification_question": null,
+    "limitations": [
+      "Recommendation depends on governed workflow outputs and available evidence for the active portfolio and period."
+    ],
+    "suggested_next_steps": [],
+    "workflow_result": {
+      "question": {
+        "product": "personal_motor",
+        "region": "north_west",
+        "segment": "renewal",
+        "analysis_period": {
+          "start_month": "2025-01-01",
+          "end_month": "2025-12-01"
+        },
+        "scenario": "drift_monitoring"
+      },
+      "specialist_reports": [
+        {
+          "domain": "claims",
+          "status": "missing_evidence",
+          "evidence_ids": [],
+          "summary": "claims specialist has no evidence source connected yet.",
+          "missing_evidence": [
+            {
+              "domain": "claims",
+              "reason": "No claims evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+            }
+          ]
+        },
+        {
+          "domain": "conversion",
+          "status": "missing_evidence",
+          "evidence_ids": [],
+          "summary": "conversion specialist has no evidence source connected yet.",
+          "missing_evidence": [
+            {
+              "domain": "conversion",
+              "reason": "No conversion evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+            }
+          ]
+        },
+        {
+          "domain": "market_intelligence",
+          "status": "missing_evidence",
+          "evidence_ids": [],
+          "summary": "market_intelligence specialist has no evidence source connected yet.",
+          "missing_evidence": [
+            {
+              "domain": "market_intelligence",
+              "reason": "No market_intelligence evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+            }
+          ]
+        },
+        {
+          "domain": "pricing_history",
+          "status": "missing_evidence",
+          "evidence_ids": [],
+          "summary": "pricing_history specialist has no evidence source connected yet.",
+          "missing_evidence": [
+            {
+              "domain": "pricing_history",
+              "reason": "No pricing_history evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+            }
+          ]
+        }
+      ],
+      "recommendation": {
+        "action": "investigate",
+        "price_range": null,
+        "rationale": "Investigation is required: no evidence sources are connected yet for this prototype slice, so no pricing claim can be supported.",
+        "counter_evidence": [],
+        "conditions": [],
+        "investigation_areas": [],
+        "cited_evidence_ids": [],
+        "confidence": null,
+        "fair_value_status": null,
+        "fair_value_follow_up": []
+      },
+      "governance_outcome": {
+        "approved": true,
+        "reasons": [
+          "An investigate outcome proposes no price movement and cites no unsupported claims."
+        ]
+      },
+      "missing_evidence": [
+        {
+          "domain": "claims",
+          "reason": "No claims evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+        },
+        {
+          "domain": "conversion",
+          "reason": "No conversion evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+        },
+        {
+          "domain": "market_intelligence",
+          "reason": "No market_intelligence evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+        },
+        {
+          "domain": "pricing_history",
+          "reason": "No pricing_history evidence source is connected in this prototype slice yet, so no claim in this domain can be supported."
+        }
+      ],
+      "analytics": null,
+      "evidence_ledger": null,
+      "execution_trace": null,
+      "source": "live"
+    },
+    "source": "live",
+    "elapsed_ms": null,
+    "plan_details": [
+      "Scope: North West Personal Motor Renewal.",
+      "Intent: pricing recommendation.",
+      "Question type: recommendation.",
+      "Sub-questions:",
+      "  - Produce a governed pricing recommendation from the required portfolio evidence.",
+      "Required tool calls: none.",
+      "Required filters: portfolio scope, analysis period, scenario.",
+      "Final-answer sections: Direct answer, Key evidence, Recommended action, Citations.",
+      "Evidence rule: The governed workflow determines the required sources and validates the recommendation."
+    ]
+  }
+}

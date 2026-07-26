@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from pricing_copilot.chat.contracts import (
+    AnalysisQuestionType,
     AnalyticsSource,
     ChatContext,
     ChatIntent,
@@ -14,6 +15,7 @@ from pricing_copilot.chat.contracts import (
     ConversationDecision,
     ConversationMessage,
     ConversationRoute,
+    StructuredQueryPlan,
 )
 from pricing_copilot.chat.service import (
     ChatService,
@@ -43,6 +45,7 @@ class PrototypePlanner:
         message: str,
         history: Sequence[ConversationMessage],
         available_tools: dict[str, str],
+        context: ChatContext,
     ) -> ConversationDecision:
         lowered = message.lower()
         if any(
@@ -127,6 +130,26 @@ class PrototypePlanner:
         )
 
 
+class RecordingAnswerGenerator:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, StructuredQueryPlan, WorkflowResult]] = []
+
+    def generate(
+        self,
+        *,
+        question: str,
+        plan: StructuredQueryPlan,
+        result: WorkflowResult,
+    ) -> str:
+        self.calls.append((question, plan, result))
+        return (
+            "## Direct answer\n"
+            f"Question-aware answer for {plan.analysis_type.value}: {question}\n\n"
+            "## Key evidence\n"
+            "- Evidence was collected and passed to final generation."
+        )
+
+
 @pytest.fixture
 def service(tmp_path: Path) -> ChatService:
     return ChatService(
@@ -170,11 +193,84 @@ def _record_controlled_increase_replay(service: ChatService) -> None:
 def test_chat_retrieves_multiple_permitted_sources_with_activity(service: ChatService) -> None:
     response = service.submit("Show claims and conversion performance")
 
-    assert response.intent is ChatIntent.MULTI_SOURCE_SUMMARY
-    assert {table.title for table in response.tables} == {"Claims", "Conversion"}
+    assert response.intent is ChatIntent.PRICING_ANALYSIS
+    assert response.workflow_result is not None
+    assert not response.tables
     labels = [activity.label for activity in response.activities]
     assert "Conversation planning" in labels
-    assert "Portfolio analysis workflow" not in labels
+    assert "Portfolio analysis workflow" in labels
+
+
+def test_scope_resolver_applies_an_explicit_region_change(service: ChatService) -> None:
+    response = service.submit("Show claims for the south east renewal portfolio")
+
+    assert response.context.region is Region.SOUTH_EAST
+    assert response.requires_clarification
+    assert "do not have data for south east" in response.message
+
+
+def test_multi_source_analysis_uses_the_governed_workflow(service: ChatService) -> None:
+    response = service.submit(
+        "Compare claims performance, conversion, and competitor pricing. What are the trends?"
+    )
+
+    assert response.intent is ChatIntent.PRICING_ANALYSIS
+    assert response.workflow_result is not None
+    assert "## Direct answer" in response.message
+    assert "## Key evidence" in response.message
+    assert not response.tables
+
+
+def test_each_analysis_type_reaches_final_generation_with_the_full_evidence_bundle(
+    tmp_path: Path,
+) -> None:
+    generator = RecordingAnswerGenerator()
+    service = ChatService(
+        Settings(analytics_database_path=tmp_path / "analysis-types.duckdb"),
+        planner=PrototypePlanner(),
+        analysis_answer_generator=generator,
+    )
+    questions = [
+        "Which sources contain conflicting, incomplete or outdated information, and how should "
+        "those limitations affect your conclusion?",
+        "Identify an unusual portfolio trend and determine the most plausible causes using "
+        "evidence from multiple sources.",
+        "What patterns in customer feedback and conversion data suggest changing customer "
+        "expectations or behaviour?",
+        "Review earlier pricing actions. Which produced the intended outcome, which did not, "
+        "and what should be learned from them?",
+        "Which findings should the copilot handle automatically, and which should be escalated "
+        "to a human specialist before any decision is made?",
+    ]
+
+    responses = [service.submit(question) for question in questions]
+
+    assert [call[1].analysis_type for call in generator.calls] == [
+        AnalysisQuestionType.RELIABILITY,
+        AnalysisQuestionType.ROOT_CAUSE,
+        AnalysisQuestionType.CUSTOMER_BEHAVIOR,
+        AnalysisQuestionType.PREVIOUS_DECISIONS,
+        AnalysisQuestionType.GOVERNANCE_ESCALATION,
+    ]
+    assert len({response.message for response in responses}) == len(questions)
+    assert all(call[2].analytics is not None for call in generator.calls)
+    assert all(call[2].evidence_ledger is not None for call in generator.calls)
+    assert all(call[1].sub_questions for call in generator.calls)
+    assert all(not response.recommendation_requested for response in responses)
+
+
+def test_competitor_lookup_returns_a_natural_language_answer_with_supporting_data(
+    service: ChatService,
+) -> None:
+    response = service.submit("What did competitors do this period?")
+
+    assert response.intent is ChatIntent.DATA_RETRIEVAL
+    assert "## Direct answer" in response.message
+    assert "Competitor pricing changed" in response.message
+    assert "Here is the requested data" not in response.message
+    assert "Retrieved 0 evidence item" not in response.message
+    assert response.tables[0].title == "Competitors"
+    assert "price_index" in response.tables[0].columns
 
 
 @pytest.mark.parametrize(
@@ -380,6 +476,7 @@ def test_claims_cost_and_conversion_question_produces_a_specific_pricing_conclus
     assert "average claim severity moved" in response.message.lower()
     assert "quote-to-sale conversion moved" in response.message.lower()
     assert "repair-cost" in response.message.lower()
+    assert response.recommendation_requested
 
 
 def test_partial_or_conflicting_evidence_returns_a_qualified_answer_not_a_dead_end(

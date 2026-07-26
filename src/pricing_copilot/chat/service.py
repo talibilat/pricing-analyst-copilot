@@ -8,6 +8,11 @@ from datetime import date
 from time import monotonic
 
 from pricing_copilot.catalog import SUPPORTED_PORTFOLIOS, UnsupportedPortfolioError
+from pricing_copilot.chat.answer_generation import (
+    AnalysisAnswerGenerator,
+    DeterministicAnalysisAnswerGenerator,
+    get_default_analysis_answer_generator,
+)
 from pricing_copilot.chat.contracts import (
     ActivityStatus,
     AnalyticsSource,
@@ -18,6 +23,7 @@ from pricing_copilot.chat.contracts import (
     ChatTable,
     ChatToolName,
     ConversationDecision,
+    ConversationIntent,
     ConversationMessage,
     ConversationRoute,
 )
@@ -74,6 +80,43 @@ _SOURCE_LABELS: dict[str, str] = {
     "customer_feedback": CUSTOMER_FEEDBACK_LABEL,
     "schema_catalogue": "Checking the portfolio data catalogue",
 }
+_SUMMARY_FIELDS: dict[str, frozenset[str]] = {
+    "claims": frozenset(
+        {
+            "period",
+            "product",
+            "region",
+            "segment",
+            "claim_count",
+            "incurred_loss_gbp",
+            "earned_premium_gbp",
+        }
+    ),
+    "conversion": frozenset(
+        {
+            "period",
+            "product",
+            "region",
+            "segment",
+            "quotes",
+            "sales",
+            "renewals_due",
+            "renewals_retained",
+        }
+    ),
+    "competitors": frozenset({"period", "region", "competitor_name", "price_index"}),
+    "pricing_history": frozenset(
+        {
+            "period",
+            "product",
+            "region",
+            "segment",
+            "price_change_pct",
+            "conversion_impact_pct",
+            "loss_ratio_impact_pct",
+        }
+    ),
+}
 _UNSAFE_QUERY_PATTERN = re.compile(
     r"\b(?:ignore (?:all |any )?(?:prior|previous|system) instructions|"
     r"(?:weaken|disable|bypass|ignore).{0,40}(?:policy|limit|guardrail)|"
@@ -109,9 +152,16 @@ def _portfolio_label(product: Product, region: Region, segment: Segment) -> str:
 class DefaultConversationTools:
     """Adapts the existing governed capabilities to the conversation graph."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        answer_generator: AnalysisAnswerGenerator | None = None,
+    ) -> None:
         self.settings = settings or get_settings()
         self.database = PersistentAnalyticsDatabase(self.settings.analytics_database_path)
+        self.answer_generator = (
+            answer_generator or get_default_analysis_answer_generator(self.settings)
+        )
 
     def available_tools(self) -> dict[str, object]:
         return coordinator_catalogue()
@@ -148,6 +198,8 @@ class DefaultConversationTools:
                 query=message,
             )
         if decision.tool_name is ChatToolName.DOCUMENTS:
+            if self._is_analytical_request(decision):
+                return self._run_pricing_analysis(message, decision, context, listener)
             document_sources = [
                 source.value
                 for source in decision.sources
@@ -166,6 +218,8 @@ class DefaultConversationTools:
                 document_categories=decision.document_categories,
             )
         if decision.tool_name is ChatToolName.MULTI_SOURCE:
+            if self._is_analytical_request(decision):
+                return self._run_pricing_analysis(message, decision, context, listener)
             selected_sources = [source.value for source in decision.sources]
             return self._retrieve_sources(
                 selected_sources,
@@ -189,6 +243,8 @@ class DefaultConversationTools:
             ]
             if self._is_unique_competitor_name_request(message):
                 return self._retrieve_unique_competitor_names(context, listener)
+            if self._is_analytical_request(decision):
+                return self._run_pricing_analysis(message, decision, context, listener)
             if sources:
                 return self._retrieve_sources(
                     sources,
@@ -226,6 +282,24 @@ class DefaultConversationTools:
             context=context,
             message="The selected capability is not available.",
             limitations=["No registered executor matched the requested tool."],
+        )
+
+    @staticmethod
+    def _is_analytical_request(decision: ConversationDecision) -> bool:
+        """Route planner-classified analysis to the governed synthesis workflow.
+
+        This relies on the conversation plan's semantic intent rather than a set of
+        hard-coded user phrasings.  Explicit data lookups remain on the retrieval path.
+        """
+        if decision.intent in {
+            ConversationIntent.TREND_ANALYSIS,
+            ConversationIntent.INVESTIGATION,
+        }:
+            return True
+        return (
+            decision.intent is ConversationIntent.DATA_LOOKUP
+            and len(decision.sources) > 1
+            and not decision.requested_fields
         )
 
     @staticmethod
@@ -563,11 +637,22 @@ class DefaultConversationTools:
                 evidence_ids.extend(document_ids)
                 limitations.extend(document_limitations)
             else:
+                planner_selected_fields = {
+                    field for field in requested_fields if field in SOURCE_TABLES[source]
+                }
+                explicitly_named_fields = {
+                    field for field in planner_selected_fields if field.lower() in query.lower()
+                }
+                selected_fields = (
+                    explicitly_named_fields
+                    if explicitly_named_fields
+                    else planner_selected_fields | set(_SUMMARY_FIELDS.get(source, ()))
+                )
                 table = self._query_table(
                     source,
                     context.scenario,
                     requested_fields=[
-                        field for field in requested_fields if field in SOURCE_TABLES[source]
+                        field for field in SOURCE_TABLES[source] if field in selected_fields
                     ]
                     or None,
                 )
@@ -593,22 +678,19 @@ class DefaultConversationTools:
             )
         else:
             source_names = _format_list([table.title.lower() for table in tables])
-            if evidence_ids:
+            if any(table.rows for table in tables):
                 message = self._compose_retrieval_response(
                     query=query,
                     source_names=source_names,
                     evidence_count=len(evidence_ids),
                     tables=tables,
-                )
-            elif any(
-                source in {"market_intelligence", "customer_feedback"} for source in source_list
-            ):
-                message = (
-                    f"Insufficient evidence: no safe document matched the requested scope in "
-                    f"{source_names}. I have not inferred a conclusion."
+                    context=context,
                 )
             else:
-                message = f"Here is the requested data from {source_names}."
+                message = (
+                    f"Insufficient evidence: no safe evidence matched the requested scope in "
+                    f"{source_names}. I have not inferred a conclusion."
+                )
         return ChatResponse(
             intent=(
                 ChatIntent.MULTI_SOURCE_SUMMARY if len(tables) > 1 else ChatIntent.DATA_RETRIEVAL
@@ -628,6 +710,7 @@ class DefaultConversationTools:
         source_names: str,
         evidence_count: int,
         tables: list[ChatTable],
+        context: ChatContext,
     ) -> str:
         """Compose a direct, bounded answer from retrieved evidence.
 
@@ -636,6 +719,7 @@ class DefaultConversationTools:
         preserves citations without turning the answer into a retrieval dump.
         """
         evidence = self._document_evidence_rows(tables)
+        structured_evidence, investigations = self._structured_evidence_lines(tables, context)
         lowered = query.lower()
         customer = [item for item in evidence if item["table"] == "Customer Feedback"]
         market = [item for item in evidence if item["table"] == "Market Intelligence"]
@@ -679,6 +763,36 @@ class DefaultConversationTools:
                 "customer will reject another increase. Validate it with aggregate retention "
                 "and elasticity monitoring before changing price."
             )
+        elif structured_evidence:
+            structured_titles = [
+                table.title
+                for table in tables
+                if table.title in {"Claims", "Conversion", "Competitors", "Pricing History"}
+            ]
+            if structured_titles == ["Claims"]:
+                direct = (
+                    "Claims performance changed over the selected period. "
+                    "The loss-ratio and claim-severity movements below should be investigated."
+                )
+            elif structured_titles == ["Conversion"]:
+                direct = (
+                    "Conversion performance changed over the selected period. "
+                    "Review the quote-to-sale and renewal-retention movements below."
+                )
+            elif structured_titles == ["Competitors"]:
+                direct = (
+                    "Competitor pricing changed over the selected period. "
+                    "Review the index movement below before drawing a pricing-headroom conclusion."
+                )
+            else:
+                direct = (
+                    f"The retrieved {source_names} evidence shows the portfolio movements below. "
+                    "The most material changes should be investigated before any pricing decision."
+                )
+            limitation = (
+                "These are portfolio-level observations from the selected period. "
+                "They show movement, not proof of causality."
+            )
         else:
             direct = (
                 f"The retrieved evidence directly addresses the requested question from "
@@ -688,19 +802,263 @@ class DefaultConversationTools:
                 "The answer is limited to the retrieved, scoped evidence. "
                 "No recommendation is implied unless one was explicitly requested."
             )
-        supporting = self._supporting_evidence_lines(evidence)
+        document_supporting = self._supporting_evidence_lines(evidence)
+        supporting = "\n".join(item for item in (structured_evidence, document_supporting) if item)
         no_summary = (
             f"Retrieved {evidence_count} evidence item(s), but no safe summary could be composed."
         )
+        investigation_text = "\n".join(f"- {item}" for item in investigations)
+        structured_citations = "\n".join(
+            f"- [{table.title}] scoped portfolio analytics"
+            for table in tables
+            if table.title
+            in {"Claims", "Conversion", "Competitors", "Pricing History"}
+        )
+        all_citations = "\n".join(item for item in (structured_citations, citations) if item)
+        evidence_heading = "Key evidence" if structured_evidence else "Supporting evidence"
         return (
             "## Direct answer\n"
             f"{direct}\n\n"
-            "## Supporting evidence\n"
+            f"## {evidence_heading}\n"
             f"{supporting or no_summary}\n\n"
             "## Investigation or limitation\n"
-            f"{limitation}\n\n"
+            f"{investigation_text or limitation}\n\n"
             "## Citations\n"
-            f"{citations}"
+            f"{all_citations}"
+        )
+
+    @staticmethod
+    def _structured_evidence_lines(
+        tables: list[ChatTable], context: ChatContext
+    ) -> tuple[str, list[str]]:
+        """Summarize each structured tool result before drafting the final answer.
+
+        The retrieval tools intentionally return raw tables for auditability.
+        This synthesis stage aggregates their scoped rows so a multi-source request
+        yields a specific answer rather than the same generic retrieval wording.
+        """
+        summaries: list[str] = []
+        investigations: list[str] = []
+        for table in tables:
+            rows = DefaultConversationTools._scoped_rows(table, context)
+            if not rows:
+                continue
+            if table.title == "Claims" and {
+                "period",
+                "incurred_loss_gbp",
+                "earned_premium_gbp",
+                "claim_count",
+            }.issubset(table.columns):
+                summary, investigation = DefaultConversationTools._claims_summary(table, rows)
+            elif table.title == "Conversion" and {
+                "period",
+                "quotes",
+                "sales",
+                "renewals_due",
+                "renewals_retained",
+            }.issubset(table.columns):
+                summary, investigation = DefaultConversationTools._conversion_summary(table, rows)
+            elif table.title == "Competitors" and {"period", "price_index"}.issubset(
+                table.columns
+            ):
+                summary, investigation = DefaultConversationTools._competitor_summary(table, rows)
+            elif table.title == "Pricing History" and {
+                "period",
+                "price_change_pct",
+                "conversion_impact_pct",
+                "loss_ratio_impact_pct",
+            }.issubset(table.columns):
+                summary, investigation = DefaultConversationTools._pricing_history_summary(
+                    table, rows
+                )
+            else:
+                continue
+            if summary:
+                summaries.append(f"- **{table.title}:** {summary}")
+            if investigation:
+                investigations.append(investigation)
+        return "\n".join(summaries), investigations
+
+    @staticmethod
+    def _scoped_rows(
+        table: ChatTable, context: ChatContext
+    ) -> list[list[str | int | float | None]]:
+        """Restrict raw source rows to the portfolio scope already resolved for the chat."""
+        filters = {
+            "product": context.product.value,
+            "region": context.region.value,
+            "segment": context.segment.value if context.segment is not None else None,
+        }
+        indexes = {
+            column: table.columns.index(column) for column in filters if column in table.columns
+        }
+        period_index = table.columns.index("period") if "period" in table.columns else None
+        return [
+            row
+            for row in table.rows
+            if all(
+                expected is None or str(row[indexes[column]]) == expected
+                for column, expected in filters.items()
+                if column in indexes
+            )
+            and (
+                period_index is None
+                or context.analysis_start_month is None
+                or str(row[period_index]) >= context.analysis_start_month.isoformat()
+            )
+            and (
+                period_index is None
+                or context.analysis_end_month is None
+                or str(row[period_index]) <= context.analysis_end_month.isoformat()
+            )
+        ]
+
+    @staticmethod
+    def _column_index(table: ChatTable, column: str) -> int:
+        return table.columns.index(column)
+
+    @staticmethod
+    def _period_groups(
+        table: ChatTable, rows: list[list[str | int | float | None]]
+    ) -> list[tuple[str, list[list[str | int | float | None]]]]:
+        period_index = DefaultConversationTools._column_index(table, "period")
+        grouped: dict[str, list[list[str | int | float | None]]] = {}
+        for row in rows:
+            grouped.setdefault(str(row[period_index]), []).append(row)
+        return sorted(grouped.items())
+
+    @staticmethod
+    def _number(row: list[str | int | float | None], index: int) -> float:
+        value = row[index]
+        if not isinstance(value, int | float):
+            raise ValueError("Expected a numeric analytics value.")
+        return float(value)
+
+    @staticmethod
+    def _claims_summary(
+        table: ChatTable, rows: list[list[str | int | float | None]]
+    ) -> tuple[str, str | None]:
+        periods = DefaultConversationTools._period_groups(table, rows)
+        if len(periods) < 2:
+            return "Only one claims period is available.", None
+        losses = DefaultConversationTools._column_index(table, "incurred_loss_gbp")
+        premium = DefaultConversationTools._column_index(table, "earned_premium_gbp")
+        claims = DefaultConversationTools._column_index(table, "claim_count")
+
+        def metrics(period_rows: list[list[str | int | float | None]]) -> tuple[float, float]:
+            incurred = sum(DefaultConversationTools._number(row, losses) for row in period_rows)
+            earned = sum(DefaultConversationTools._number(row, premium) for row in period_rows)
+            count = sum(DefaultConversationTools._number(row, claims) for row in period_rows)
+            return incurred / earned, incurred / count
+
+        first_ratio, first_severity = metrics(periods[0][1])
+        last_ratio, last_severity = metrics(periods[-1][1])
+        movement = last_ratio - first_ratio
+        investigation = (
+            "Investigate the loss-ratio deterioration and its claim-severity drivers."
+            if movement > 0
+            else None
+        )
+        return (
+            f"loss ratio moved from {first_ratio:.1%} to {last_ratio:.1%} "
+            f"({movement * 100:+.1f} percentage points); average incurred cost per claim "
+            "moved from "
+            f"£{first_severity:,.0f} to £{last_severity:,.0f}.",
+            investigation,
+        )
+
+    @staticmethod
+    def _conversion_summary(
+        table: ChatTable, rows: list[list[str | int | float | None]]
+    ) -> tuple[str, str | None]:
+        periods = DefaultConversationTools._period_groups(table, rows)
+        if len(periods) < 2:
+            return "Only one conversion period is available.", None
+        quotes = DefaultConversationTools._column_index(table, "quotes")
+        sales = DefaultConversationTools._column_index(table, "sales")
+        due = DefaultConversationTools._column_index(table, "renewals_due")
+        retained = DefaultConversationTools._column_index(table, "renewals_retained")
+
+        def metrics(period_rows: list[list[str | int | float | None]]) -> tuple[float, float]:
+            quote_count = sum(DefaultConversationTools._number(row, quotes) for row in period_rows)
+            sale_count = sum(DefaultConversationTools._number(row, sales) for row in period_rows)
+            renewal_due = sum(DefaultConversationTools._number(row, due) for row in period_rows)
+            renewal_retained = sum(
+                DefaultConversationTools._number(row, retained) for row in period_rows
+            )
+            return sale_count / quote_count, renewal_retained / renewal_due
+
+        first_conversion, first_retention = metrics(periods[0][1])
+        last_conversion, last_retention = metrics(periods[-1][1])
+        conversion_change = last_conversion - first_conversion
+        retention_change = last_retention - first_retention
+        investigation = (
+            (
+                "Investigate the deterioration in conversion or renewal retention before "
+                "widening a price change."
+            )
+            if conversion_change < 0 or retention_change < 0
+            else None
+        )
+        return (
+            f"quote-to-sale conversion moved from {first_conversion:.1%} to {last_conversion:.1%} "
+            f"({conversion_change * 100:+.1f} percentage points); renewal retention moved from "
+            f"{first_retention:.1%} to {last_retention:.1%} "
+            f"({retention_change * 100:+.1f} percentage points).",
+            investigation,
+        )
+
+    @staticmethod
+    def _competitor_summary(
+        table: ChatTable, rows: list[list[str | int | float | None]]
+    ) -> tuple[str, str | None]:
+        periods = DefaultConversationTools._period_groups(table, rows)
+        if len(periods) < 2:
+            return "Only one competitor-price period is available.", None
+        price_index = DefaultConversationTools._column_index(table, "price_index")
+
+        def average(period_rows: list[list[str | int | float | None]]) -> float:
+            return sum(
+                DefaultConversationTools._number(row, price_index) for row in period_rows
+            ) / len(period_rows)
+
+        first_average = average(periods[0][1])
+        last_average = average(periods[-1][1])
+        movement = last_average - first_average
+        return (
+            f"the average competitor price index moved from {first_average:.1f} to "
+            f"{last_average:.1f} ({movement:+.1f} index points).",
+            (
+                "Check whether the competitor movement is broad-based before treating it as "
+                "pricing headroom."
+            ),
+        )
+
+    @staticmethod
+    def _pricing_history_summary(
+        table: ChatTable, rows: list[list[str | int | float | None]]
+    ) -> tuple[str, str | None]:
+        period_index = DefaultConversationTools._column_index(table, "period")
+        latest = max(rows, key=lambda row: str(row[period_index]))
+        price_change = DefaultConversationTools._number(
+            latest, DefaultConversationTools._column_index(table, "price_change_pct")
+        )
+        conversion_impact = DefaultConversationTools._number(
+            latest, DefaultConversationTools._column_index(table, "conversion_impact_pct")
+        )
+        loss_ratio_impact = DefaultConversationTools._number(
+            latest, DefaultConversationTools._column_index(table, "loss_ratio_impact_pct")
+        )
+        return (
+            (
+                f"the latest recorded action was {price_change:+.1f}%, with recorded conversion "
+                f"impact of {conversion_impact:+.1f}% and loss-ratio impact of "
+                f"{loss_ratio_impact:+.1f}%."
+            ),
+            (
+                "Validate whether the recorded prior-action effects still apply to the current "
+                "portfolio conditions."
+            ),
         )
 
     @staticmethod
@@ -1058,14 +1416,21 @@ class DefaultConversationTools:
             except UnsupportedPortfolioError:
                 return self._unsupported_portfolio_response(context, selected_segment)
         recommendation = result.recommendation
-        message_summary = compose_analysis_response(
-            result,
-            segment_identification_requested=any(
-                phrase in message.lower()
-                for phrase in ("which segment", "identify the segment", "segment driving")
-            ),
-            focus=self._focus_for_message(message),
-        )
+        if decision.structured_plan is not None:
+            message_summary = self.answer_generator.generate(
+                question=message,
+                plan=decision.structured_plan,
+                result=result,
+            )
+        else:
+            message_summary = compose_analysis_response(
+                result,
+                segment_identification_requested=any(
+                    phrase in message.lower()
+                    for phrase in ("which segment", "identify the segment", "segment driving")
+                ),
+                focus=self._focus_for_message(message),
+            )
         return ChatResponse(
             intent=ChatIntent.PRICING_ANALYSIS,
             context=context.model_copy(update={"segment": selected_segment}),
@@ -1074,6 +1439,9 @@ class DefaultConversationTools:
             cited_evidence_ids=recommendation.cited_evidence_ids,
             investigation_areas=recommendation.investigation_areas,
             workflow_result=result,
+            recommendation_requested=(
+                decision.intent is ConversationIntent.PRICING_RECOMMENDATION
+            ),
         )
 
     @staticmethod
@@ -1206,9 +1574,16 @@ class ChatService:
         *,
         planner: ConversationPlanner | None = None,
         tools: ConversationToolExecutor | None = None,
+        analysis_answer_generator: AnalysisAnswerGenerator | None = None,
     ) -> None:
         self.settings = settings or get_settings()
-        self.tools = tools or DefaultConversationTools(self.settings)
+        selected_generator = analysis_answer_generator
+        if selected_generator is None and planner is not None:
+            selected_generator = DeterministicAnalysisAnswerGenerator()
+        self.tools = tools or DefaultConversationTools(
+            self.settings,
+            answer_generator=selected_generator,
+        )
         self.graph = ConversationGraph(
             planner or AgentsSdkConversationPlanner(self.settings),
             self.tools,
@@ -1245,6 +1620,12 @@ class ChatService:
             updates["segment"] = Segment.RENEWAL
         elif "new business" in lowered or "new-business" in lowered:
             updates["segment"] = Segment.NEW_BUSINESS
+        elif context.segment is None:
+            updates["segment"] = Segment.RENEWAL
+        if "north west" in lowered or "north-west" in lowered or "north_west" in lowered:
+            updates["region"] = Region.NORTH_WEST
+        elif "south east" in lowered or "south-east" in lowered or "south_east" in lowered:
+            updates["region"] = Region.SOUTH_EAST
         if any(term in lowered for term in ("last 12 months", "last twelve months", "12-month")):
             updates.update(
                 {

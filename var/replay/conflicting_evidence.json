@@ -1,9 +1,9 @@
 {
   "schema_version": "replay-artifact-schema-v1",
   "scenario": "conflicting_evidence",
-  "recorded_at": "2026-07-25T17:33:06.195128Z",
+  "recorded_at": "2026-07-26T19:36:06.605308Z",
   "configuration_versions": {
-    "model_name": "gpt-5.4",
+    "model_name": "gpt-4.1-mini",
     "recommendation_version": "governed-multi-agent-v1",
     "governance_version": "deterministic-governance-v1",
     "scenario_seed": 20260101,
@@ -18,152 +18,1154 @@
   },
   "chat_response": {
     "intent": "pricing_analysis",
-    "message": "The governed workflow recommends **investigate**. Investigation is required: conversion: expected 24 monthly periods, got 20. This gap is material enough that no pricing claim can be safely supported for this period. This is decision support only and needs an analyst’s explicit confirmation before any action is recorded.",
+    "message": "## Direct answer\nGoverned pricing recommendation: do not make a pricing change now; keep the renewal price position unchanged pending investigation and evidence refresh. The claims view is materially weaker, with loss ratio up from 71.8% to 92.4%, and there is supporting indication of severity pressure from repair-cost inflation. However, retention and quote-to-sale conversion are broadly flat on partial-year data, competitor structured metrics show only about +1.0% average movement, and the market reports are materially conflicting, with the latest commentary indicating competitors may be cutting prices while an older report says they were increasing. Because the market evidence is both conflicting and partly stale, the available evidence does not support a governed up or down pricing movement at this time. [claims-north_west-2025-12-01] [conversion-north_west-2025-08-01] [retention-north_west-2025-08-01] [competitors-north_west-2025-12-01] [mi-conflict-repair-2025-11:chunk-001] [mi-conflict-fresh-market-2025-12:chunk-001] [mi-conflict-stale-market-2025-03:chunk-001] [pricing-history-2024-06-01] [cf-conflict-feedback-2025-12:chunk-001]\n\n## Answer by question part\n### Produce a governed pricing recommendation from the required portfolio evidence.\nRecommend an investigate / no-change action for personal motor renewals in the North West, rather than a price increase or decrease. Observed portfolio performance is weaker, especially loss ratio deterioration from 71.8% to 92.4%, and that is consistent with a severity-pressure signal from repair-cost inflation. But customer response indicators are essentially unchanged on the available 8-month window: quote-to-sale conversion stayed around 20.0% and renewal retention stayed around 85.2%. Competitor structured data shows only modest average movement of about +1.0%, while the narrative market evidence conflicts on direction and includes a stale source outside the freshness policy. That conflict prevents a supported pricing movement recommendation. The prior +1.5% action also has inconclusive tracked outcome, so it does not give reliable support for another move now. [claims-north_west-2025-12-01] [conversion-north_west-2025-08-01] [retention-north_west-2025-08-01] [competitors-north_west-2025-12-01] [mi-conflict-repair-2025-11:chunk-001] [mi-conflict-fresh-market-2025-12:chunk-001] [mi-conflict-stale-market-2025-03:chunk-001] [pricing-history-2024-06-01]\n\n## Key evidence\n- Loss ratio worsened from 71.8% to 92.4% over the analysis period, indicating materially weaker portfolio performance. [claims-north_west-2025-12-01]\n- Quote-to-sale conversion was broadly flat at about 20.0% over the observed period. [conversion-north_west-2025-08-01]\n- Renewal retention was broadly flat at about 85.2% over the observed period. [retention-north_west-2025-08-01]\n- Tracked competitors show about +1.0% average price-index movement in structured competitor analytics. [competitors-north_west-2025-12-01]\n- Repair-cost intelligence is consistent with potential severity deterioration. [mi-conflict-repair-2025-11:chunk-001]\n- Latest market commentary says competitors have cut prices in a softening market, directly conflicting with prior-quarter commentary saying competitors were raising prices. [mi-conflict-fresh-market-2025-12:chunk-001] [mi-conflict-stale-market-2025-03:chunk-001]\n- The previous +1.5% pricing action has inconclusive outcome tracking. [pricing-history-2024-06-01]\n- Customer feedback coverage is materially lower than normal, so it should carry limited weight. [cf-conflict-feedback-2025-12:chunk-001]\n\n## Interpretation\nRecommend an investigate / no-change action for personal motor renewals in the North West, rather than a price increase or decrease. Observed portfolio performance is weaker, especially loss ratio deterioration from 71.8% to 92.4%, and that is consistent with a severity-pressure signal from repair-cost inflation. But customer response indicators are essentially unchanged on the available 8-month window: quote-to-sale conversion stayed around 20.0% and renewal retention stayed around 85.2%. Competitor structured data shows only modest average movement of about +1.0%, while the narrative market evidence conflicts on direction and includes a stale source outside the freshness policy. That conflict prevents a supported pricing movement recommendation. The prior +1.5% action also has inconclusive tracked outcome, so it does not give reliable support for another move now.\n\n## Recommended action\nGoverned pricing recommendation: do not make a pricing change now; keep the renewal price position unchanged pending investigation and evidence refresh. The claims view is materially weaker, with loss ratio up from 71.8% to 92.4%, and there is supporting indication of severity pressure from repair-cost inflation. However, retention and quote-to-sale conversion are broadly flat on partial-year data, competitor structured metrics show only about +1.0% average movement, and the market reports are materially conflicting, with the latest commentary indicating competitors may be cutting prices while an older report says they were increasing. Because the market evidence is both conflicting and partly stale, the available evidence does not support a governed up or down pricing movement at this time. [claims-north_west-2025-12-01] [conversion-north_west-2025-08-01] [retention-north_west-2025-08-01] [competitors-north_west-2025-12-01] [mi-conflict-repair-2025-11:chunk-001] [mi-conflict-fresh-market-2025-12:chunk-001] [mi-conflict-stale-market-2025-03:chunk-001] [pricing-history-2024-06-01] [cf-conflict-feedback-2025-12:chunk-001]\n\n## Confidence and limitations\n- Conversion and retention evidence cover only 8 of the 12 requested monthly periods, so conclusions on customer response are based on the observed contiguous period only and may miss later-year changes.\n- One market report is outside the 120-day freshness control, reducing how much weight it can carry in the recommendation.\n- Market intelligence is materially conflicting on competitive direction, which prevents a supported recommendation for either a price increase or a price decrease.\n- The prior pricing action has inconclusive tracked outcomes, so it cannot reliably inform the next pricing move.\n- Customer feedback volume is materially lower than normal, so it does not materially strengthen the recommendation.\n\n## Specific next investigation\n- Refresh current market evidence and reconcile the conflicting market reports before considering any pricing movement.\n- Validate whether the loss ratio deterioration is primarily correlating with severity pressure versus any other portfolio mix or operational effects using refreshed actuarial review.\n- Extend conversion and retention monitoring to the missing later months so customer response evidence aligns better with the full claims period.\n- Once refreshed evidence is available, reassess whether unchanged customer metrics still hold if a pricing movement is being considered.\n- Maintain human approval control before any future pricing change, consistent with governance requirements.",
     "context": {
       "scenario": "conflicting_evidence",
-      "force_replay": false
+      "force_replay": false,
+      "product": "personal_motor",
+      "region": "north_west",
+      "segment": "renewal",
+      "analysis_start_month": "2025-01-01",
+      "analysis_end_month": "2025-12-01",
+      "pending_tool_name": null,
+      "pending_intent": null
     },
     "activities": [
       {
-        "status": "scheduled",
-        "label": "Supervisor coordinating specialist agents",
-        "purpose": "Coordinating market intelligence, claims, conversion, pricing history, recommendation, and governance.",
-        "agent": "portfolio-supervisor",
+        "status": "working",
+        "label": "Conversation planning",
+        "purpose": "Interpreting the request and selecting the right tools.",
+        "agent": "conversation-agent",
         "source": null,
         "trace_id": null,
         "duration_ms": null
       },
       {
-        "status": "working",
-        "label": "Supervisor coordinating specialist agents",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": null,
+        "status": "completed",
+        "label": "Conversation planning",
+        "purpose": "Created a plan and selected the required tools.",
+        "agent": "conversation-agent",
         "source": null,
         "trace_id": null,
+        "duration_ms": 5095.640459097922
+      },
+      {
+        "status": "working",
+        "label": "Portfolio analysis workflow",
+        "purpose": "Combining the requested portfolio evidence into an analyst answer.",
+        "agent": null,
+        "source": "portfolio_analysis",
+        "trace_id": null,
         "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Portfolio analysis workflow",
+        "purpose": "Combined the requested portfolio evidence into an analyst answer.",
+        "agent": null,
+        "source": "portfolio_analysis",
+        "trace_id": null,
+        "duration_ms": 536.0002079978585
       }
     ],
     "tables": [],
-    "cited_evidence_ids": [],
-    "investigation_areas": [],
+    "cited_evidence_ids": [
+      "cf-conflict-feedback-2025-12:chunk-001",
+      "claims-north_west-2025-12-01",
+      "competitors-north_west-2025-12-01",
+      "conversion-north_west-2025-08-01",
+      "mi-conflict-fresh-market-2025-12:chunk-001",
+      "mi-conflict-repair-2025-11:chunk-001",
+      "mi-conflict-stale-market-2025-03:chunk-001",
+      "pricing-history-2024-06-01",
+      "retention-north_west-2025-08-01"
+    ],
+    "investigation_areas": [
+      "Refresh the dated market evidence and reconcile the conflicting market reports against the claims severity and conversion movements before recommending a price change."
+    ],
     "requires_clarification": false,
     "refused": false,
+    "route": "tool_call",
+    "clarification_question": null,
+    "limitations": [
+      "Recommendation depends on the governed workflow's available evidence and controls.",
+      "No portfolio outside personal_motor north_west renewal is in scope."
+    ],
+    "suggested_next_steps": [],
     "workflow_result": {
       "question": {
         "product": "personal_motor",
         "region": "north_west",
         "segment": "renewal",
         "analysis_period": {
-          "start_month": "2025-07-01",
+          "start_month": "2025-01-01",
           "end_month": "2025-12-01"
         },
         "scenario": "conflicting_evidence"
       },
       "specialist_reports": [
         {
+          "domain": "claims",
+          "status": "completed",
+          "evidence_ids": [
+            "claims-north_west-2025-12-01"
+          ],
+          "summary": "Loss ratio moved from 71.8% to 92.4% across 2025-01-01 to 2025-12-01.",
+          "missing_evidence": []
+        },
+        {
           "domain": "conversion",
-          "status": "error",
-          "evidence_ids": [],
-          "summary": "conversion: expected 24 monthly periods, got 20.",
-          "missing_evidence": [
-            {
-              "domain": "conversion",
-              "reason": "conversion: expected 24 monthly periods, got 20."
-            }
-          ]
+          "status": "completed",
+          "evidence_ids": [
+            "conversion-north_west-2025-08-01"
+          ],
+          "summary": "Quote-to-sale conversion moved from 20.0% to 20.0%.",
+          "missing_evidence": []
+        },
+        {
+          "domain": "market_intelligence",
+          "status": "completed",
+          "evidence_ids": [
+            "competitors-north_west-2025-12-01"
+          ],
+          "summary": "3 fictional competitors tracked and 4 market-intelligence document(s) retrieved.",
+          "missing_evidence": []
+        },
+        {
+          "domain": "pricing_history",
+          "status": "completed",
+          "evidence_ids": [
+            "pricing-history-2024-06-01"
+          ],
+          "summary": "1 previous pricing action(s) on record.",
+          "missing_evidence": []
         }
       ],
       "recommendation": {
         "action": "investigate",
         "price_range": null,
-        "rationale": "Investigation is required: conversion: expected 24 monthly periods, got 20. This gap is material enough that no pricing claim can be safely supported for this period.",
+        "rationale": "The available claims and conversion evidence is informative, but conflicting or stale market evidence prevents a supported pricing movement.",
         "counter_evidence": [],
         "conditions": [],
-        "investigation_areas": [],
-        "cited_evidence_ids": [],
-        "confidence": null,
+        "investigation_areas": [
+          "Refresh the dated market evidence and reconcile the conflicting market reports against the claims severity and conversion movements before recommending a price change."
+        ],
+        "cited_evidence_ids": [
+          "cf-conflict-feedback-2025-12:chunk-001",
+          "claims-north_west-2025-12-01",
+          "competitors-north_west-2025-12-01",
+          "conversion-north_west-2025-08-01",
+          "mi-conflict-fresh-market-2025-12:chunk-001",
+          "mi-conflict-repair-2025-11:chunk-001",
+          "mi-conflict-stale-market-2025-03:chunk-001",
+          "pricing-history-2024-06-01",
+          "retention-north_west-2025-08-01"
+        ],
+        "confidence": {
+          "evidence_coverage": 1.0,
+          "source_freshness": 0.7472,
+          "specialist_agreement": 1.0,
+          "data_quality": 0.6,
+          "conflict_penalty": 0.0,
+          "overall": 0.8694
+        },
         "fair_value_status": null,
         "fair_value_follow_up": []
       },
       "governance_outcome": {
         "approved": true,
         "reasons": [
-          "An investigate outcome proposes no price movement and cites no unsupported claims."
+          "A qualified investigate conclusion proposes no pricing movement."
         ]
       },
       "missing_evidence": [
         {
           "domain": "conversion",
-          "reason": "conversion: expected 24 monthly periods, got 20."
+          "reason": "conversion: 8 of 12 requested monthly periods are available; the conclusion uses the observed contiguous period only."
+        },
+        {
+          "domain": "market_intelligence",
+          "reason": "market_intelligence: 1 retrieved document(s) exceed the 120-day evidence freshness policy (mi-conflict-stale-market-2025-03)."
+        },
+        {
+          "domain": "market_intelligence",
+          "reason": "market_intelligence: materially conflicting market_report documents disagree on market direction and cannot be silently averaged away."
         }
       ],
-      "analytics": null,
-      "evidence_ledger": null,
-      "execution_trace": {
-        "trace_id": "trace_f66e4be3291c4251b6c7cf156243814e",
-        "workflow_name": "Governed Pricing Decision Copilot",
-        "started_at": "2026-07-25T17:33:06.160264Z",
-        "completed_at": "2026-07-25T17:33:06.194300Z",
-        "status": "safe_investigation",
-        "configuration_versions": {
-          "model_name": "gpt-5.4",
-          "prompt_version": "governed-prompts-v2",
-          "agent_registry_version": "approved-agent-registry-v1",
-          "tool_version": "deterministic-read-only-tools-v2",
-          "dataset_version": "v1",
-          "scenario_seed": 20260101,
-          "governance_version": "deterministic-governance-v1",
-          "recommendation_version": "governed-multi-agent-v1",
-          "policy_version": "recommendation-policy-v2",
-          "recommendation_policy_version": "recommendation-policy-v2"
-        },
-        "limits": {
-          "max_agent_turns": 6,
-          "max_tool_calls_per_agent": 4,
-          "tool_timeout_seconds": 5.0,
-          "request_timeout_seconds": 30.0,
-          "max_workflow_seconds": 90.0,
-          "max_retries": 1
-        },
-        "usage": {
-          "requests": 0,
-          "input_tokens": 0,
-          "output_tokens": 0,
-          "total_tokens": 0,
-          "estimated_cost_gbp": 0.0,
-          "pricing_configured": false
-        },
-        "events": [
-          {
-            "timestamp": "2026-07-25T17:33:06.171476Z",
-            "kind": "agents_sdk",
-            "name": "trace",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
+      "analytics": {
+        "claims": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-01",
+          "claim_frequency": {
+            "baseline": 0.08442708771266545,
+            "current": 0.08396598694786157,
+            "movement_pct": -0.5461526357194318,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 0.08269617706237424
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.08538785327720987
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.08430818878580072
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.08338344357586691
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.08224934960976586
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.08361536930121441
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.0846774193548387
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.08211202569765108
+              },
+              {
+                "period": "2025-09-01",
+                "value": 0.08520357497517378
+              },
+              {
+                "period": "2025-10-01",
+                "value": 0.0831505483549352
+              },
+              {
+                "period": "2025-11-01",
+                "value": 0.08522500995619275
+              },
+              {
+                "period": "2025-12-01",
+                "value": 0.08558288342331534
+              }
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
-          {
-            "timestamp": "2026-07-25T17:33:06.171507Z",
-            "kind": "routing",
-            "name": "portfolio-supervisor",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "scenario": "conflicting_evidence"
+          "average_severity_gbp": {
+            "baseline": 1615.2992335575184,
+            "current": 2088.923997172497,
+            "movement_pct": 29.321178006868255,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 2053.280632603406
+              },
+              {
+                "period": "2025-02-01",
+                "value": 2121.9341549295773
+              },
+              {
+                "period": "2025-03-01",
+                "value": 2052.158086124402
+              },
+              {
+                "period": "2025-04-01",
+                "value": 2088.4537259615386
+              },
+              {
+                "period": "2025-05-01",
+                "value": 2088.4082238442825
+              },
+              {
+                "period": "2025-06-01",
+                "value": 2107.506023809524
+              },
+              {
+                "period": "2025-07-01",
+                "value": 2071.810238095238
+              },
+              {
+                "period": "2025-08-01",
+                "value": 2108.914987775061
+              },
+              {
+                "period": "2025-09-01",
+                "value": 2104.191002331002
+              },
+              {
+                "period": "2025-10-01",
+                "value": 2053.004652278177
+              },
+              {
+                "period": "2025-11-01",
+                "value": 2109.6084112149533
+              },
+              {
+                "period": "2025-12-01",
+                "value": 2107.8178271028037
+              }
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
+          },
+          "incurred_loss_gbp": {
+            "baseline": 682120.0491666667,
+            "current": 876207.9391666666,
+            "movement_pct": 28.453626342916245,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 843898.34
+              },
+              {
+                "period": "2025-02-01",
+                "value": 903943.95
+              },
+              {
+                "period": "2025-03-01",
+                "value": 857802.08
+              },
+              {
+                "period": "2025-04-01",
+                "value": 868796.75
+              },
+              {
+                "period": "2025-05-01",
+                "value": 858335.78
+              },
+              {
+                "period": "2025-06-01",
+                "value": 885152.53
+              },
+              {
+                "period": "2025-07-01",
+                "value": 870160.3
+              },
+              {
+                "period": "2025-08-01",
+                "value": 862546.23
+              },
+              {
+                "period": "2025-09-01",
+                "value": 902697.94
+              },
+              {
+                "period": "2025-10-01",
+                "value": 856102.94
+              },
+              {
+                "period": "2025-11-01",
+                "value": 902912.4
+              },
+              {
+                "period": "2025-12-01",
+                "value": 902146.03
+              }
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
+          },
+          "loss_ratio": {
+            "baseline": 0.7183278072540175,
+            "current": 0.9239401631210424,
+            "movement_pct": 28.62375001923261,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 0.8847470029568787
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.9512379003244595
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.896348760703664
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.9217387116875188
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.8973814855783696
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.9374248091130966
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.9232045401413103
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.9066372506589506
+              },
+              {
+                "period": "2025-09-01",
+                "value": 0.9556378191941612
+              },
+              {
+                "period": "2025-10-01",
+                "value": 0.8998988103475288
+              },
+              {
+                "period": "2025-11-01",
+                "value": 0.9542433946713493
+              },
+              {
+                "period": "2025-12-01",
+                "value": 0.9587814720752219
+              }
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
+          }
+        },
+        "conversion": {
+          "period_start": "2025-01-01",
+          "period_end": "2025-08-01",
+          "quote_to_sale_conversion": {
+            "baseline": 0.19994600682373662,
+            "current": 0.19976094917183024,
+            "movement_pct": -0.09255381232470271,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 0.19524987629886195
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.19410779387131738
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.20420657647872026
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.20472827153227388
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.19517143436802598
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.20044296788482835
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.20125285870537934
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.20292781423523473
+              }
+            ],
+            "observed_periods": 8,
+            "expected_periods": 12
+          },
+          "renewal_retention": {
+            "baseline": 0.8529524032438714,
+            "current": 0.8521701866562923,
+            "movement_pct": -0.09170694456153694,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 0.8481012658227848
+              },
+              {
+                "period": "2025-02-01",
+                "value": 0.847273624475697
+              },
+              {
+                "period": "2025-03-01",
+                "value": 0.8627351296390442
+              },
+              {
+                "period": "2025-04-01",
+                "value": 0.8546643198390746
+              },
+              {
+                "period": "2025-05-01",
+                "value": 0.8479068615308397
+              },
+              {
+                "period": "2025-06-01",
+                "value": 0.8646429460064693
+              },
+              {
+                "period": "2025-07-01",
+                "value": 0.8457070707070707
+              },
+              {
+                "period": "2025-08-01",
+                "value": 0.8463302752293578
+              }
+            ],
+            "observed_periods": 8,
+            "expected_periods": 12
+          },
+          "average_quoted_premium_gbp": {
+            "baseline": 620.185,
+            "current": 621.835,
+            "movement_pct": 0.2660496464764693,
+            "monthly": [
+              {
+                "period": "2025-01-01",
+                "value": 624.66
+              },
+              {
+                "period": "2025-02-01",
+                "value": 624.5
+              },
+              {
+                "period": "2025-03-01",
+                "value": 619.9
+              },
+              {
+                "period": "2025-04-01",
+                "value": 625.37
+              },
+              {
+                "period": "2025-05-01",
+                "value": 616.43
+              },
+              {
+                "period": "2025-06-01",
+                "value": 618.34
+              },
+              {
+                "period": "2025-07-01",
+                "value": 623.87
+              },
+              {
+                "period": "2025-08-01",
+                "value": 621.61
+              }
+            ],
+            "observed_periods": 8,
+            "expected_periods": 12
+          },
+          "segment_comparison": {
+            "new_business": {
+              "baseline": 0.1399513156620494,
+              "current": 0.14046827348271682,
+              "movement_pct": 0.36938403774334144,
+              "monthly": [
+                {
+                  "period": "2025-01-01",
+                  "value": 0.14233756020839478
+                },
+                {
+                  "period": "2025-02-01",
+                  "value": 0.13893858079904592
+                },
+                {
+                  "period": "2025-03-01",
+                  "value": 0.1432063556732532
+                },
+                {
+                  "period": "2025-04-01",
+                  "value": 0.13730493669643734
+                },
+                {
+                  "period": "2025-05-01",
+                  "value": 0.1414061729612464
+                },
+                {
+                  "period": "2025-06-01",
+                  "value": 0.1384756470348482
+                },
+                {
+                  "period": "2025-07-01",
+                  "value": 0.13929106340489267
+                },
+                {
+                  "period": "2025-08-01",
+                  "value": 0.14278587108361604
+                }
+              ],
+              "observed_periods": 8,
+              "expected_periods": 12
+            },
+            "renewal": {
+              "baseline": 0.19994600682373662,
+              "current": 0.19976094917183024,
+              "movement_pct": -0.09255381232470271,
+              "monthly": [
+                {
+                  "period": "2025-01-01",
+                  "value": 0.19524987629886195
+                },
+                {
+                  "period": "2025-02-01",
+                  "value": 0.19410779387131738
+                },
+                {
+                  "period": "2025-03-01",
+                  "value": 0.20420657647872026
+                },
+                {
+                  "period": "2025-04-01",
+                  "value": 0.20472827153227388
+                },
+                {
+                  "period": "2025-05-01",
+                  "value": 0.19517143436802598
+                },
+                {
+                  "period": "2025-06-01",
+                  "value": 0.20044296788482835
+                },
+                {
+                  "period": "2025-07-01",
+                  "value": 0.20125285870537934
+                },
+                {
+                  "period": "2025-08-01",
+                  "value": 0.20292781423523473
+                }
+              ],
+              "observed_periods": 8,
+              "expected_periods": 12
             }
-          },
+          }
+        },
+        "competitors": {
+          "period_start": "2024-01-01",
+          "period_end": "2025-12-01",
+          "competitors": [
+            {
+              "competitor_name": "Bracken Mutual",
+              "price_index": {
+                "baseline": 102.95083333333334,
+                "current": 104.13916666666667,
+                "movement_pct": 1.1542726706113753,
+                "monthly": [
+                  {
+                    "period": "2025-01-01",
+                    "value": 103.15
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 103.03
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 105.05
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 104.96
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 105.06
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 103.47
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 103.49
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 103.43
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 103.96
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 104.65
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 104.92
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 104.5
+                  }
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
+              },
+              "rank": {
+                "baseline": 3.0,
+                "current": 3.0,
+                "movement_pct": 0.0,
+                "monthly": [
+                  {
+                    "period": "2025-01-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 3.0
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 3.0
+                  }
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
+              }
+            },
+            {
+              "competitor_name": "Meridian Insure",
+              "price_index": {
+                "baseline": 99.96416666666666,
+                "current": 100.955,
+                "movement_pct": 0.9911885092158108,
+                "monthly": [
+                  {
+                    "period": "2025-01-01",
+                    "value": 100.25
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 101.68
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 101.85
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 100.64
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 100.8
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 101.23
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 101.31
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 99.99
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 101.36
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 101.82
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 100.25
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 100.28
+                  }
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
+              },
+              "rank": {
+                "baseline": 2.0,
+                "current": 2.0,
+                "movement_pct": 0.0,
+                "monthly": [
+                  {
+                    "period": "2025-01-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 2.0
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 2.0
+                  }
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
+              }
+            },
+            {
+              "competitor_name": "Northgate Cover",
+              "price_index": {
+                "baseline": 97.0025,
+                "current": 97.84583333333335,
+                "movement_pct": 0.8693934005137476,
+                "monthly": [
+                  {
+                    "period": "2025-01-01",
+                    "value": 97.79
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 97.89
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 98.16
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 98.4
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 98.29
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 98.27
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 97.39
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 97.81
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 98.12
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 97.21
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 97.01
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 97.81
+                  }
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
+              },
+              "rank": {
+                "baseline": 1.0,
+                "current": 1.0,
+                "movement_pct": 0.0,
+                "monthly": [
+                  {
+                    "period": "2025-01-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-02-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-03-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-04-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-05-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-06-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-07-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-08-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-09-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-10-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-11-01",
+                    "value": 1.0
+                  },
+                  {
+                    "period": "2025-12-01",
+                    "value": 1.0
+                  }
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
+              }
+            }
+          ]
+        },
+        "pricing_history": [
           {
-            "timestamp": "2026-07-25T17:33:06.194286Z",
-            "kind": "agents_sdk",
-            "name": "trace",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {}
+            "period": "2024-06-01",
+            "price_change_pct": 1.5,
+            "rationale": "Small portfolio-level adjustment applied earlier this year; outcome data is inconclusive given gaps in the tracking period.",
+            "conversion_impact_pct": -1.0,
+            "loss_ratio_impact_pct": 0.0
           }
         ]
       },
+      "evidence_ledger": {
+        "entries": [
+          {
+            "evidence_id": "claims-north_west-2025-12-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic claims analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2025-01-01",
+            "period_end": "2025-12-01",
+            "metric_name": "loss_ratio",
+            "value": 0.9239401631210424,
+            "baseline_value": 0.7183278072540175,
+            "interpretation": "Loss ratio moved from 71.8% to 92.4%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
+          },
+          {
+            "evidence_id": "conversion-north_west-2025-08-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic conversion analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2025-01-01",
+            "period_end": "2025-08-01",
+            "metric_name": "quote_to_sale_conversion",
+            "value": 0.19976094917183024,
+            "baseline_value": 0.19994600682373662,
+            "interpretation": "Quote-to-sale conversion moved from 20.0% to 20.0%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
+          },
+          {
+            "evidence_id": "retention-north_west-2025-08-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic conversion analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2025-01-01",
+            "period_end": "2025-08-01",
+            "metric_name": "renewal_retention",
+            "value": 0.8521701866562923,
+            "baseline_value": 0.8529524032438714,
+            "interpretation": "Renewal retention moved from 85.3% to 85.2%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
+          },
+          {
+            "evidence_id": "competitors-north_west-2025-12-01",
+            "source_type": "structured_metric",
+            "source_reference": "Deterministic competitor analytics",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-01-01",
+            "period_end": "2025-12-01",
+            "metric_name": "competitor_index_average_movement_pct",
+            "value": 1.0,
+            "baseline_value": null,
+            "interpretation": "3 fictional competitors tracked; average price-index movement +1.0%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
+          },
+          {
+            "evidence_id": "pricing-history-2024-06-01",
+            "source_type": "structured_metric",
+            "source_reference": "Previous pricing action record",
+            "source_date": null,
+            "retrieval_timestamp": null,
+            "period_start": "2024-06-01",
+            "period_end": "2024-06-01",
+            "metric_name": "price_change_pct",
+            "value": 1.5,
+            "baseline_value": null,
+            "interpretation": "Previous +1.5% action: Small portfolio-level adjustment applied earlier this year; outcome data is inconclusive given gaps in the tracking period.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
+          },
+          {
+            "evidence_id": "mi-conflict-repair-2025-11:chunk-001",
+            "source_type": "repair_cost_report",
+            "source_reference": "Vehicle Repair-Cost Deterioration Signal",
+            "source_date": "2025-11-25",
+            "retrieval_timestamp": "2026-07-26T19:35:41.280892Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Repair-cost inflation\n\nSynthetic cost intelligence indicates a sharp rise in parts and labour costs during the period.\nThis is consistent with a potential severity deterioration, but it does not resolve the conflicting competitor evidence.",
+            "document_id": "mi-conflict-repair-2025-11",
+            "chunk_id": "mi-conflict-repair-2025-11:chunk-001",
+            "retrieval_score": 0.03278689
+          },
+          {
+            "evidence_id": "cf-conflict-feedback-2025-12:chunk-001",
+            "source_type": "customer_feedback",
+            "source_reference": "Renewal Feedback Themes - Sparse Period",
+            "source_date": "2025-12-01",
+            "retrieval_timestamp": "2026-07-26T19:35:41.280892Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Feedback coverage\n\nSynthetic and anonymised aggregate summary.\nFeedback volume is materially lower than normal, limiting how much weight this period can carry in a pricing recommendation.",
+            "document_id": "cf-conflict-feedback-2025-12",
+            "chunk_id": "cf-conflict-feedback-2025-12:chunk-001",
+            "retrieval_score": 0.03225806
+          },
+          {
+            "evidence_id": "mi-conflict-fresh-market-2025-12:chunk-001",
+            "source_type": "market_report",
+            "source_reference": "North West Market Briefing - Latest Repricing Signal",
+            "source_date": "2025-12-05",
+            "retrieval_timestamp": "2026-07-26T19:35:41.280892Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Latest market view\n\nSynthetic current commentary directly contradicts the previous quarter: fictional competitors have cut prices in a softening market.\nThe conflict requires reconciliation before a pricing movement can be supported.",
+            "document_id": "mi-conflict-fresh-market-2025-12",
+            "chunk_id": "mi-conflict-fresh-market-2025-12:chunk-001",
+            "retrieval_score": 0.03149802
+          },
+          {
+            "evidence_id": "mi-conflict-stale-market-2025-03:chunk-001",
+            "source_type": "market_report",
+            "source_reference": "North West Market Briefing - Prior Quarter Snapshot",
+            "source_date": "2025-03-01",
+            "retrieval_timestamp": "2026-07-26T19:35:41.280892Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Historical market view\n\nSynthetic prior-quarter commentary states that fictional competitors were raising prices.\nThis dated snapshot should not be treated as current evidence without refresh.",
+            "document_id": "mi-conflict-stale-market-2025-03",
+            "chunk_id": "mi-conflict-stale-market-2025-03:chunk-001",
+            "retrieval_score": 0.03149802
+          }
+        ]
+      },
+      "execution_trace": null,
       "source": "live"
     },
-    "source": "live"
+    "source": "live",
+    "elapsed_ms": null,
+    "plan_details": [
+      "Scope: North West Personal Motor Renewal.",
+      "Intent: pricing recommendation.",
+      "Question type: recommendation.",
+      "Sub-questions:",
+      "  - Produce a governed pricing recommendation from the required portfolio evidence.",
+      "Required tool calls: none.",
+      "Required filters: portfolio scope, analysis period, scenario.",
+      "Final-answer sections: Direct answer, Key evidence, Recommended action, Citations.",
+      "Evidence rule: The governed workflow determines the required sources and validates the recommendation."
+    ]
   }
 }

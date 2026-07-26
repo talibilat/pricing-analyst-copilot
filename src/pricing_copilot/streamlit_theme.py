@@ -216,7 +216,11 @@ html, body, [data-testid="stAppViewContainer"] {
   font-family:'IBM Plex Mono', monospace; font-size:12px; color:oklch(42% 0.02 85);
 }
 
-[data-testid="stDataFrame"] { border-radius:12px; overflow:hidden; }
+[data-testid="stDataFrame"] {
+  border:1px solid oklch(88% 0.012 85); border-radius:12px; overflow:hidden;
+  background:white;
+}
+[data-testid="stDataFrame"] * { color:var(--pc-text) !important; }
 
 .pc-workflow-card {
   border:1px solid oklch(89% 0.012 85); border-radius:14px; background:white;
@@ -244,7 +248,7 @@ html, body, [data-testid="stAppViewContainer"] {
   font-size:13.5px; font-weight:500; padding:12px 2px;
 }
 [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-  padding:4px 18px 16px; background:var(--pc-surface); color:var(--pc-text);
+  padding:4px 18px 16px; background:white; color:var(--pc-text);
 }
 [data-testid="stExpanderDetails"] [data-testid="stMarkdownContainer"],
 [data-testid="stExpanderDetails"] [data-testid="stMarkdownContainer"] :is(p, li, strong, em) {

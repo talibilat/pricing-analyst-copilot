@@ -10,6 +10,7 @@ from agents import Agent, OpenAIChatCompletionsModel, RunConfig, Runner
 from agents.exceptions import MaxTurnsExceeded, ModelBehaviorError
 from openai import AsyncOpenAI
 
+from pricing_copilot.catalog import SUPPORTED_PORTFOLIOS
 from pricing_copilot.chat.contracts import (
     ActivityStatus,
     ChatActivity,
@@ -40,6 +41,7 @@ class ConversationPlanner(Protocol):
         message: str,
         history: Sequence[ConversationMessage],
         available_tools: dict[str, object],
+        context: ChatContext,
     ) -> ConversationDecision: ...
 
 
@@ -68,19 +70,21 @@ class AgentsSdkConversationPlanner:
         message: str,
         history: Sequence[ConversationMessage],
         available_tools: dict[str, object],
+        context: ChatContext,
     ) -> ConversationDecision:
         azure = get_azure_openai_settings()
         if not azure.api_key or not azure.endpoint:
             raise PlannerUnavailableError(
                 "The conversation model is not configured in this environment."
             )
-        return asyncio.run(self._plan_and_close(message, history, available_tools))
+        return asyncio.run(self._plan_and_close(message, history, available_tools, context))
 
     async def _plan_and_close(
         self,
         message: str,
         history: Sequence[ConversationMessage],
         available_tools: dict[str, object],
+        context: ChatContext,
     ) -> ConversationDecision:
         azure = get_azure_openai_settings()
         if not azure.api_key or not azure.endpoint:
@@ -111,6 +115,15 @@ class AgentsSdkConversationPlanner:
             {
                 "current_message": message,
                 "session_history": [item.model_dump(mode="json") for item in history[-20:]],
+                "active_scope": context.model_dump(mode="json"),
+                "supported_portfolios": [
+                    {
+                        "product": product.value,
+                        "region": region.value,
+                        "segment": segment.value,
+                    }
+                    for product, region, segment in sorted(SUPPORTED_PORTFOLIOS)
+                ],
                 "available_tools": available_tools,
             },
             ensure_ascii=False,
@@ -196,6 +209,7 @@ class ConversationGraph:
                     state.message,
                     state.history,
                     self.tools.available_tools(),
+                    context,
                 )
             except Exception as exc:
                 report_planning(
@@ -235,7 +249,9 @@ class ConversationGraph:
                     duration_ms=(monotonic() - planning_started) * 1_000,
                 )
             )
+        decision = self._recover_pending_request(decision, context)
         decision = plan_request(state.message, decision)
+        decision = self._execute_scoped_recommendation(decision, context)
         state = state.model_copy(update={"decision": decision})
         active_context = context.model_copy(
             update={
@@ -247,6 +263,17 @@ class ConversationGraph:
                 "analysis_end_month": decision.end_month or context.analysis_end_month,
             }
         )
+        if decision.route is ConversationRoute.CLARIFY:
+            active_context = active_context.model_copy(
+                update={
+                    "pending_tool_name": decision.tool_name or context.pending_tool_name,
+                    "pending_intent": decision.intent or context.pending_intent,
+                }
+            )
+        else:
+            active_context = active_context.model_copy(
+                update={"pending_tool_name": None, "pending_intent": None}
+            )
         if decision.route is ConversationRoute.DIRECT_ANSWER:
             response = self._compose_without_tool(
                 ChatIntent.GENERAL_ANSWER,
@@ -304,6 +331,49 @@ class ConversationGraph:
         )
 
     @staticmethod
+    def _recover_pending_request(
+        decision: ConversationDecision, context: ChatContext
+    ) -> ConversationDecision:
+        """Recover a terse suggestion reply when the model drops its prior tool choice.
+
+        This deliberately applies only to the planner's empty analytics fallback.
+        A new, explicit question remains free to take its own route.
+        """
+        if (
+            context.pending_tool_name is None
+            or decision.route is not ConversationRoute.TOOL_CALL
+            or decision.tool_name is not ChatToolName.ANALYTICS
+            or decision.sources
+            or decision.requested_fields
+        ):
+            return decision
+        return decision.model_copy(
+            update={
+                "tool_name": context.pending_tool_name,
+                "intent": context.pending_intent,
+            }
+        )
+
+    @staticmethod
+    def _execute_scoped_recommendation(
+        decision: ConversationDecision, context: ChatContext
+    ) -> ConversationDecision:
+        """Do not re-ask for a portfolio scope that the session already supplies."""
+        if (
+            decision.route is not ConversationRoute.CLARIFY
+            or decision.tool_name is not ChatToolName.RECOMMENDATION
+            or context.segment is None
+        ):
+            return decision
+        return decision.model_copy(
+            update={
+                "route": ConversationRoute.TOOL_CALL,
+                "clarification_question": None,
+                "suggested_next_steps": [],
+            }
+        )
+
+    @staticmethod
     def _plan_details(decision: ConversationDecision, context: ChatContext) -> list[str]:
         scope = " ".join(
             value.replace("_", " ").title()
@@ -325,6 +395,7 @@ class ConversationGraph:
             details.append("Next: call the selected tool and present its result.")
             return details
         details.append(f"Intent: {plan.intent.value.replace('_', ' ')}.")
+        details.append(f"Question type: {plan.analysis_type.value.replace('_', ' ')}.")
         details.append("Sub-questions:")
         details.extend(f"  - {question}" for question in plan.sub_questions)
         if plan.tool_calls:

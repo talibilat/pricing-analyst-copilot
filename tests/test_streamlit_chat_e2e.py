@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from pricing_copilot.chat.answer_generation import DeterministicAnalysisAnswerGenerator
 from pricing_copilot.chat.contracts import (
     AnalyticsSource,
     ChatToolName,
@@ -26,6 +27,7 @@ def _prototype_plan(
     message: str,
     history: Sequence[ConversationMessage],
     available_tools: dict[str, str],
+    context: object,
 ) -> ConversationDecision:
     lowered = message.lower()
     if "capital of france" in lowered:
@@ -129,6 +131,10 @@ def configure_offline_conversation_planner(
         "pricing_copilot.chat.conversation_graph.AgentsSdkConversationPlanner.plan",
         _prototype_plan,
     )
+    monkeypatch.setattr(
+        "pricing_copilot.chat.service.get_default_analysis_answer_generator",
+        lambda _settings: DeterministicAnalysisAnswerGenerator(),
+    )
     yield
     get_settings.cache_clear()
     get_azure_openai_settings.cache_clear()
@@ -230,7 +236,7 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
 
     assert not app.exception
     assert len(app.chat_message) == 3
-    assert len(app.dataframe) == 2
+    assert len(app.dataframe) == 0
     assert any("Completed in" in caption.value for caption in app.caption)
 
 
@@ -399,9 +405,9 @@ def test_claims_only_question_returns_an_interpreted_answer() -> None:
     app.run()
 
     assert not app.exception
-    assert len(app.dataframe) == 0
+    assert len(app.dataframe) == 1
     markdown = "\n".join(item.value for item in app.markdown)
-    assert "Claims performance deteriorated" in markdown
+    assert "Claims performance changed" in markdown
 
 
 def test_evaluation_question_renders_the_targets_vs_actuals_table_in_the_ui() -> None:

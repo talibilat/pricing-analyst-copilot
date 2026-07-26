@@ -11,20 +11,22 @@ from pricing_copilot.chat.contracts import (
     ConversationRoute,
 )
 from pricing_copilot.chat.conversation_graph import ConversationGraph
+from pricing_copilot.contracts import Segment
 
 
 class RecordingPlanner:
     def __init__(self, decision: ConversationDecision) -> None:
         self.decision = decision
-        self.calls: list[tuple[str, list[ConversationMessage], dict[str, str]]] = []
+        self.calls: list[tuple[str, list[ConversationMessage], dict[str, str], ChatContext]] = []
 
     def plan(
         self,
         message: str,
         history: Sequence[ConversationMessage],
         available_tools: dict[str, str],
+        context: ChatContext,
     ) -> ConversationDecision:
-        self.calls.append((message, list(history), available_tools))
+        self.calls.append((message, list(history), available_tools, context))
         return self.decision
 
 
@@ -123,7 +125,75 @@ def test_ambiguity_uses_history_and_returns_a_personalized_question() -> None:
     assert response.requires_clarification
     assert "approved renewal action" in response.message
     assert planner.calls[0][1] == history
+    assert planner.calls[0][3] == ChatContext()
     assert len(response.suggested_next_steps) == 2
+
+
+def test_terse_reply_to_a_clarification_keeps_the_pending_tool() -> None:
+    class SequencedPlanner:
+        def __init__(self) -> None:
+            self.decisions = iter(
+                [
+                    ConversationDecision(
+                        route=ConversationRoute.CLARIFY,
+                        clarification_question="Which supported portfolio should I assess?",
+                    ),
+                    ConversationDecision(
+                        route=ConversationRoute.TOOL_CALL,
+                        tool_name=ChatToolName.ANALYTICS,
+                    ),
+                ]
+            )
+
+        def plan(
+            self,
+            message: str,
+            history: Sequence[ConversationMessage],
+            available_tools: dict[str, str],
+            context: ChatContext,
+        ) -> ConversationDecision:
+            return next(self.decisions)
+
+    planner = SequencedPlanner()
+    tools = RecordingTools()
+    first_response = ConversationGraph(planner, tools).run(
+        "Analyse everything and recommend a pricing action.",
+        ChatContext(),
+    )
+
+    assert first_response.context.pending_tool_name is ChatToolName.RECOMMENDATION
+    assert first_response.context.pending_intent is not None
+
+    ConversationGraph(planner, tools).run(
+        "Assess personal motor renewal in the south east.",
+        first_response.context,
+        history=[
+            ConversationMessage(
+                role="user", content="Analyse everything and recommend a pricing action."
+            ),
+            ConversationMessage(role="assistant", content=first_response.message),
+        ],
+    )
+
+    assert tools.calls[-1][1].tool_name is ChatToolName.RECOMMENDATION
+
+
+def test_recommendation_uses_the_complete_session_scope_without_clarifying() -> None:
+    planner = RecordingPlanner(
+        ConversationDecision(
+            route=ConversationRoute.CLARIFY,
+            clarification_question="Which portfolio should I assess?",
+        )
+    )
+    tools = RecordingTools()
+
+    response = ConversationGraph(planner, tools).run(
+        "Analyse everything and recommend a pricing action.",
+        ChatContext(segment=Segment.RENEWAL),
+    )
+
+    assert not response.requires_clarification
+    assert tools.calls[0][1].tool_name is ChatToolName.RECOMMENDATION
 
 
 def test_business_request_invokes_only_the_selected_tool() -> None:
@@ -170,6 +240,7 @@ def test_planner_failure_is_honest_and_does_not_call_a_tool() -> None:
             message: str,
             history: Sequence[ConversationMessage],
             available_tools: dict[str, str],
+            context: ChatContext,
         ) -> ConversationDecision:
             raise RuntimeError("model unavailable")
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pricing_copilot.chat.contracts import (
+    AnalysisQuestionType,
     AnalyticsSource,
     ChatToolName,
     ConversationDecision,
@@ -73,6 +74,51 @@ _RECOMMENDATION_TERMS = (
 )
 _INVESTIGATION_TERMS = ("investigate", "investigation", "driver", "why did", "root cause")
 _TREND_TERMS = ("trend", "over time", "movement", "change", "compare")
+_RELIABILITY_TERMS = (
+    "reliability",
+    "conflicting",
+    "conflict",
+    "incomplete",
+    "outdated",
+    "stale",
+    "data quality",
+)
+_ROOT_CAUSE_TERMS = (
+    "root cause",
+    "plausible cause",
+    "most plausible",
+    "unusual portfolio",
+    "what caused",
+)
+_CUSTOMER_BEHAVIOR_TERMS = (
+    "customer behaviour",
+    "customer behavior",
+    "customer expectation",
+    "changing behaviour",
+    "changing behavior",
+)
+_PREVIOUS_DECISION_TERMS = (
+    "previous decision",
+    "earlier pricing",
+    "earlier action",
+    "intended outcome",
+    "what should be learned",
+)
+_GOVERNANCE_TERMS = (
+    "governance",
+    "escalat",
+    "human specialist",
+    "handle automatically",
+    "human review",
+)
+_COUNTERFACTUAL_TERMS = ("counterfactual", "if no pricing action", "if no action")
+_SEGMENTATION_TERMS = (
+    "customer segment",
+    "different profitability",
+    "selection risk",
+    "unfair customer",
+    "differentiated pricing",
+)
 
 _SOURCE_REASONS: dict[AnalyticsSource, str] = {
     AnalyticsSource.CLAIMS: (
@@ -94,6 +140,23 @@ def _contains_any(message: str, terms: tuple[str, ...]) -> bool:
     return any(term in message for term in terms)
 
 
+def _explicit_recommendation_requested(message: str) -> bool:
+    negated_requests = (
+        "without recommend",
+        "do not recommend",
+        "don't recommend",
+        "no recommendation",
+        "not asking for a recommendation",
+        "if no pricing action",
+        "if no action",
+    )
+    if _contains_any(message, negated_requests):
+        return False
+    return _contains_any(message, _RECOMMENDATION_TERMS) or (
+        "pricing action" in message and "pricing actions" not in message
+    )
+
+
 def _deduplicated_sources(message: str, decision: ConversationDecision) -> list[AnalyticsSource]:
     if "competitor" in message and any(
         term in message for term in ("announced", "announcement", "published", "source")
@@ -105,7 +168,101 @@ def _deduplicated_sources(message: str, decision: ConversationDecision) -> list[
     return list(dict.fromkeys(inferred or decision.sources))
 
 
-def _sub_questions(message: str, sources: list[AnalyticsSource]) -> list[str]:
+def _analysis_type(
+    message: str, *, explicit_recommendation: bool
+) -> AnalysisQuestionType:
+    if _contains_any(message, _RELIABILITY_TERMS):
+        return AnalysisQuestionType.RELIABILITY
+    if _contains_any(message, _ROOT_CAUSE_TERMS):
+        return AnalysisQuestionType.ROOT_CAUSE
+    if _contains_any(message, _CUSTOMER_BEHAVIOR_TERMS):
+        return AnalysisQuestionType.CUSTOMER_BEHAVIOR
+    if _contains_any(message, _PREVIOUS_DECISION_TERMS):
+        return AnalysisQuestionType.PREVIOUS_DECISIONS
+    if _contains_any(message, _GOVERNANCE_TERMS):
+        return AnalysisQuestionType.GOVERNANCE_ESCALATION
+    if _contains_any(message, _COUNTERFACTUAL_TERMS):
+        return AnalysisQuestionType.COUNTERFACTUAL
+    if _contains_any(message, _SEGMENTATION_TERMS):
+        return AnalysisQuestionType.SEGMENTATION
+    if explicit_recommendation:
+        return AnalysisQuestionType.RECOMMENDATION
+    if _contains_any(message, _TREND_TERMS):
+        return AnalysisQuestionType.TREND
+    return AnalysisQuestionType.LOOKUP
+
+
+def _sources_for_analysis_type(
+    analysis_type: AnalysisQuestionType,
+    inferred_sources: list[AnalyticsSource],
+) -> list[AnalyticsSource]:
+    broad_types = {
+        AnalysisQuestionType.RELIABILITY,
+        AnalysisQuestionType.ROOT_CAUSE,
+        AnalysisQuestionType.GOVERNANCE_ESCALATION,
+        AnalysisQuestionType.COUNTERFACTUAL,
+        AnalysisQuestionType.SEGMENTATION,
+    }
+    if analysis_type in broad_types:
+        return list(AnalyticsSource)
+    if analysis_type is AnalysisQuestionType.CUSTOMER_BEHAVIOR:
+        return [AnalyticsSource.CONVERSION, AnalyticsSource.CUSTOMER_FEEDBACK]
+    if analysis_type is AnalysisQuestionType.PREVIOUS_DECISIONS:
+        return [
+            AnalyticsSource.PRICING_HISTORY,
+            AnalyticsSource.CLAIMS,
+            AnalyticsSource.CONVERSION,
+        ]
+    return inferred_sources
+
+
+def _sub_questions(
+    message: str,
+    sources: list[AnalyticsSource],
+    analysis_type: AnalysisQuestionType,
+) -> list[str]:
+    typed_questions: dict[AnalysisQuestionType, list[str]] = {
+        AnalysisQuestionType.RELIABILITY: [
+            "Which sources conflict with other evidence?",
+            "Which sources are incomplete or outdated?",
+            "How should those limitations change the conclusion?",
+        ],
+        AnalysisQuestionType.ROOT_CAUSE: [
+            "What is the most unusual portfolio trend?",
+            "What are the most plausible contributing factors?",
+            "Which sources corroborate or contradict each explanation?",
+        ],
+        AnalysisQuestionType.CUSTOMER_BEHAVIOR: [
+            "What patterns appear in aggregate customer feedback?",
+            "What patterns appear in conversion and retention?",
+            "What combined behavioral interpretation is supported?",
+        ],
+        AnalysisQuestionType.PREVIOUS_DECISIONS: [
+            "Which earlier pricing actions and outcomes are recorded?",
+            "Which actions coincided with the intended outcome, and which did not?",
+            "What lessons are supported for future decisions?",
+        ],
+        AnalysisQuestionType.GOVERNANCE_ESCALATION: [
+            "Which findings can be calculated or flagged automatically?",
+            "Which findings require a human specialist before a decision?",
+            "What evidence or governance rule explains each escalation?",
+        ],
+        AnalysisQuestionType.COUNTERFACTUAL: [
+            "What is the likely direction of profitability if no action is taken?",
+            "What is the likely direction of retention and market position?",
+            "Which assumptions and uncertainties constrain the counterfactual?",
+        ],
+        AnalysisQuestionType.SEGMENTATION: [
+            "What evidence supports materially different segment treatment?",
+            "How should unfair outcomes and selection risk be controlled?",
+            "Which evidence gaps prevent a supported differentiated action?",
+        ],
+        AnalysisQuestionType.RECOMMENDATION: [
+            "What governed pricing action is supported by the complete evidence?",
+        ],
+    }
+    if analysis_type in typed_questions:
+        return typed_questions[analysis_type]
     questions: list[str] = []
     if AnalyticsSource.CUSTOMER_FEEDBACK in sources:
         if _contains_any(message, ("attrition", "cancellation", "retention risk")):
@@ -142,7 +299,29 @@ def _sub_questions(message: str, sources: list[AnalyticsSource]) -> list[str]:
         message, ("should follow", "next investigation")
     ):
         questions.append("What investigation or limitation follows from the available evidence?")
-    return list(dict.fromkeys(questions)) or ["Answer the user's requested evidence question."]
+    unique_questions = list(dict.fromkeys(questions))
+    # StructuredQueryPlan intentionally exposes at most five questions.  A broad
+    # model-selected source list can otherwise yield one question per source plus
+    # an investigation question, exceeding the contract before it reaches the UI.
+    return unique_questions[:5] or ["Answer the user's requested evidence question."]
+
+
+def _questions_supported_by(source: AnalyticsSource, questions: list[str]) -> list[str]:
+    """Associate a tool with the question it can answer, not the entire plan."""
+    terms_by_source: dict[AnalyticsSource, tuple[str, ...]] = {
+        AnalyticsSource.CLAIMS: ("claims",),
+        AnalyticsSource.CONVERSION: ("conversion", "renewal-retention"),
+        AnalyticsSource.COMPETITORS: ("competitor",),
+        AnalyticsSource.PRICING_HISTORY: ("pricing-history",),
+        AnalyticsSource.MARKET_INTELLIGENCE: ("market-intelligence", "competitor announced"),
+        AnalyticsSource.CUSTOMER_FEEDBACK: ("customer-feedback", "attrition", "affordability"),
+    }
+    supported = [
+        question
+        for question in questions
+        if any(term in question.lower() for term in terms_by_source[source])
+    ]
+    return supported or ["Provide scoped evidence for the final synthesis."]
 
 
 def _structured_plan(
@@ -150,12 +329,14 @@ def _structured_plan(
     intent: ConversationIntent,
     sources: list[AnalyticsSource],
     *,
+    analysis_type: AnalysisQuestionType,
     recommendation: bool = False,
 ) -> StructuredQueryPlan:
-    questions = _sub_questions(message, sources)
+    questions = _sub_questions(message, sources, analysis_type)
     if recommendation:
         return StructuredQueryPlan(
             intent=intent,
+            analysis_type=analysis_type,
             sub_questions=[
                 "Produce a governed pricing recommendation from the required portfolio evidence."
             ],
@@ -174,12 +355,13 @@ def _structured_plan(
         filters.extend(["document source", "metadata category when relevant"])
     return StructuredQueryPlan(
         intent=intent,
+        analysis_type=analysis_type,
         sub_questions=questions,
         tool_calls=[
             PlannedToolCall(
                 source=source,
                 reason=_SOURCE_REASONS[source],
-                supports_questions=questions,
+                supports_questions=_questions_supported_by(source, questions),
             )
             for source in sources
         ],
@@ -209,6 +391,48 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
     ):
         inferred_scenario = ScenarioName.RETENTION_CONCERN
     inferred_sources = _deduplicated_sources(lowered, decision)
+    explicit_recommendation = _explicit_recommendation_requested(lowered)
+    analysis_type = _analysis_type(
+        lowered, explicit_recommendation=explicit_recommendation
+    )
+    inferred_sources = _sources_for_analysis_type(analysis_type, inferred_sources)
+    evidence_workflow_types = {
+        AnalysisQuestionType.RELIABILITY,
+        AnalysisQuestionType.ROOT_CAUSE,
+        AnalysisQuestionType.CUSTOMER_BEHAVIOR,
+        AnalysisQuestionType.PREVIOUS_DECISIONS,
+        AnalysisQuestionType.GOVERNANCE_ESCALATION,
+        AnalysisQuestionType.COUNTERFACTUAL,
+        AnalysisQuestionType.SEGMENTATION,
+    }
+    if (
+        decision.route is not ConversationRoute.TOOL_CALL
+        and analysis_type in evidence_workflow_types
+    ):
+        document_sources = [
+            source
+            for source in inferred_sources
+            if source
+            in {AnalyticsSource.MARKET_INTELLIGENCE, AnalyticsSource.CUSTOMER_FEEDBACK}
+        ]
+        structured_sources = [
+            source for source in inferred_sources if source not in document_sources
+        ]
+        decision = decision.model_copy(
+            update={
+                "route": ConversationRoute.TOOL_CALL,
+                "tool_name": (
+                    ChatToolName.MULTI_SOURCE
+                    if document_sources and structured_sources
+                    else ChatToolName.DOCUMENTS
+                    if document_sources
+                    else ChatToolName.ANALYTICS
+                ),
+                "response": None,
+                "clarification_question": None,
+                "suggested_next_steps": [],
+            }
+        )
     # The chat surface always supplies a governed portfolio context.  When the user
     # explicitly names a source, do not let an over-cautious model ask them to repeat
     # that context instead of retrieving the scoped evidence.
@@ -224,7 +448,27 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
     if decision.route is not ConversationRoute.TOOL_CALL:
         intent = decision.intent or ConversationIntent.DATA_LOOKUP
         return decision.model_copy(
-            update={"intent": intent, "structured_plan": _structured_plan(lowered, intent, [])}
+            update={
+                "intent": (
+                    ConversationIntent.PRICING_RECOMMENDATION
+                    if explicit_recommendation
+                    else intent
+                ),
+                "tool_name": (
+                    ChatToolName.RECOMMENDATION if explicit_recommendation else decision.tool_name
+                ),
+                "structured_plan": _structured_plan(
+                    lowered,
+                    (
+                        ConversationIntent.PRICING_RECOMMENDATION
+                        if explicit_recommendation
+                        else intent
+                    ),
+                    [],
+                    analysis_type=analysis_type,
+                    recommendation=explicit_recommendation,
+                ),
+            }
         )
     if decision.tool_name in {
         ChatToolName.READ_ONLY_SQL,
@@ -236,12 +480,32 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
         return decision.model_copy(
             update={
                 "intent": ConversationIntent.DATA_LOOKUP,
-                "structured_plan": _structured_plan(lowered, ConversationIntent.DATA_LOOKUP, []),
+                "structured_plan": _structured_plan(
+                    lowered,
+                    ConversationIntent.DATA_LOOKUP,
+                    [],
+                    analysis_type=analysis_type,
+                ),
             }
         )
-    explicit_recommendation = any(term in lowered for term in _RECOMMENDATION_TERMS) or (
-        "pricing action" in lowered and "pricing actions" not in lowered
-    )
+    if (
+        decision.tool_name is ChatToolName.RECOMMENDATION
+        and decision.intent is ConversationIntent.PRICING_RECOMMENDATION
+    ):
+        return decision.model_copy(
+            update={
+                "intent": ConversationIntent.PRICING_RECOMMENDATION,
+                "sources": [],
+                "document_categories": [],
+                "structured_plan": _structured_plan(
+                    lowered,
+                    ConversationIntent.PRICING_RECOMMENDATION,
+                    [],
+                    analysis_type=AnalysisQuestionType.RECOMMENDATION,
+                    recommendation=True,
+                ),
+            }
+        )
     if explicit_recommendation:
         return decision.model_copy(
             update={
@@ -250,7 +514,11 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
                 "sources": [],
                 "document_categories": [],
                 "structured_plan": _structured_plan(
-                    lowered, ConversationIntent.PRICING_RECOMMENDATION, [], recommendation=True
+                    lowered,
+                    ConversationIntent.PRICING_RECOMMENDATION,
+                    [],
+                    analysis_type=AnalysisQuestionType.RECOMMENDATION,
+                    recommendation=True,
                 ),
             }
         )
@@ -271,7 +539,17 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
     else:
         intent = (
             ConversationIntent.INVESTIGATION
-            if _contains_any(lowered, _INVESTIGATION_TERMS)
+            if analysis_type
+            in {
+                AnalysisQuestionType.RELIABILITY,
+                AnalysisQuestionType.ROOT_CAUSE,
+                AnalysisQuestionType.CUSTOMER_BEHAVIOR,
+                AnalysisQuestionType.PREVIOUS_DECISIONS,
+                AnalysisQuestionType.GOVERNANCE_ESCALATION,
+                AnalysisQuestionType.COUNTERFACTUAL,
+                AnalysisQuestionType.SEGMENTATION,
+            }
+            or _contains_any(lowered, _INVESTIGATION_TERMS)
             else ConversationIntent.TREND_ANALYSIS
             if _contains_any(lowered, _TREND_TERMS)
             else ConversationIntent.DATA_LOOKUP
@@ -285,6 +563,8 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
             "document_query": message if document_sources else decision.document_query,
             "document_categories": categories if document_sources else [],
             "scenario": inferred_scenario,
-            "structured_plan": _structured_plan(lowered, intent, sources),
+            "structured_plan": _structured_plan(
+                lowered, intent, sources, analysis_type=analysis_type
+            ),
         }
     )

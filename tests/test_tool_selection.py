@@ -2,11 +2,15 @@ from collections.abc import Sequence
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from pricing_copilot.chat.contracts import (
+    AnalysisQuestionType,
     AnalyticsSource,
     ChatIntent,
     ChatToolName,
     ConversationDecision,
+    ConversationIntent,
     ConversationMessage,
     ConversationRoute,
 )
@@ -26,6 +30,7 @@ class BroadDocumentPlanner:
         message: str,
         history: Sequence[ConversationMessage],
         available_tools: dict[str, object],
+        context: object,
     ) -> ConversationDecision:
         assert "data_sources" in available_tools
         return ConversationDecision(
@@ -75,6 +80,131 @@ def test_competitor_announcement_uses_market_documents_not_name_lookup() -> None
     assert planned.tool_name is ChatToolName.DOCUMENTS
     assert planned.sources == [AnalyticsSource.MARKET_INTELLIGENCE]
     assert planned.document_categories == ["competitor"]
+
+
+def test_broad_plan_caps_sub_questions_at_contract_limit() -> None:
+    planned = plan_request(
+        "Investigate claims, conversion, competitors, pricing history, market intelligence, "
+        "and customer feedback.",
+        ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.MULTI_SOURCE,
+            sources=list(AnalyticsSource),
+        ),
+    )
+
+    assert planned.structured_plan is not None
+    assert len(planned.structured_plan.sub_questions) == 5
+
+
+@pytest.mark.parametrize(
+    ("question", "expected_type", "expected_sources"),
+    [
+        (
+            "Which sources contain conflicting, incomplete or outdated information?",
+            AnalysisQuestionType.RELIABILITY,
+            set(AnalyticsSource),
+        ),
+        (
+            "Identify an unusual portfolio trend and determine the most plausible causes.",
+            AnalysisQuestionType.ROOT_CAUSE,
+            set(AnalyticsSource),
+        ),
+        (
+            "What patterns in customer feedback and conversion data suggest changing "
+            "customer expectations or behaviour?",
+            AnalysisQuestionType.CUSTOMER_BEHAVIOR,
+            {AnalyticsSource.CONVERSION, AnalyticsSource.CUSTOMER_FEEDBACK},
+        ),
+        (
+            "Review earlier pricing actions and what should be learned from them.",
+            AnalysisQuestionType.PREVIOUS_DECISIONS,
+            {
+                AnalyticsSource.PRICING_HISTORY,
+                AnalyticsSource.CLAIMS,
+                AnalyticsSource.CONVERSION,
+            },
+        ),
+        (
+            "Which findings should be handled automatically and which need human escalation?",
+            AnalysisQuestionType.GOVERNANCE_ESCALATION,
+            set(AnalyticsSource),
+        ),
+    ],
+)
+def test_analytical_question_types_build_question_specific_plans(
+    question: str,
+    expected_type: AnalysisQuestionType,
+    expected_sources: set[AnalyticsSource],
+) -> None:
+    planned = plan_request(
+        question,
+        ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.ANALYTICS,
+        ),
+    )
+
+    assert planned.structured_plan is not None
+    assert planned.structured_plan.analysis_type is expected_type
+    assert set(planned.sources) == expected_sources
+    assert len(planned.structured_plan.sub_questions) >= 2
+
+
+def test_governance_question_cannot_be_answered_directly_without_evidence() -> None:
+    planned = plan_request(
+        (
+            "Which findings should the copilot handle automatically, and which should be "
+            "escalated to a human specialist before any decision is made?"
+        ),
+        ConversationDecision(
+            route=ConversationRoute.DIRECT_ANSWER,
+            response="Use human review for uncertain cases.",
+        ),
+    )
+
+    assert planned.route is ConversationRoute.TOOL_CALL
+    assert planned.tool_name is ChatToolName.MULTI_SOURCE
+    assert planned.intent is ConversationIntent.INVESTIGATION
+    assert set(planned.sources) == set(AnalyticsSource)
+    assert planned.structured_plan is not None
+    assert (
+        planned.structured_plan.analysis_type
+        is AnalysisQuestionType.GOVERNANCE_ESCALATION
+    )
+
+
+@pytest.mark.parametrize(
+    ("question", "expected_type"),
+    [
+        (
+            "Without recommending any pricing action, identify the most plausible "
+            "customer-behaviour explanations for lower retention.",
+            AnalysisQuestionType.ROOT_CAUSE,
+        ),
+        (
+            "What happens if no pricing action is taken over the next six months?",
+            AnalysisQuestionType.COUNTERFACTUAL,
+        ),
+    ],
+)
+def test_negated_pricing_action_language_does_not_request_a_recommendation(
+    question: str,
+    expected_type: AnalysisQuestionType,
+) -> None:
+    planned = plan_request(
+        question,
+        ConversationDecision(
+            route=ConversationRoute.DIRECT_ANSWER,
+            response="A generic answer that should be replaced by evidence.",
+        ),
+    )
+
+    assert planned.route is ConversationRoute.TOOL_CALL
+    assert planned.tool_name is ChatToolName.MULTI_SOURCE
+    assert planned.intent is ConversationIntent.INVESTIGATION
+    assert planned.structured_plan is not None
+    assert planned.structured_plan.analysis_type is expected_type
 
 
 def test_repair_cost_question_uses_only_document_retrieval_with_chunk_evidence(

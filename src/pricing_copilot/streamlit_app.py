@@ -39,6 +39,7 @@ from pricing_copilot.streamlit_scroll import AUTO_SCROLL_SCRIPT
 from pricing_copilot.streamlit_theme import (
     INJECT_CSS,
     assistant_avatar_data_uri,
+    badge_html,
     confidence_bars_html,
     portfolio_pill_text,
 )
@@ -98,8 +99,27 @@ def _render_evidence_detail(ledger: EvidenceLedger, cited_ids: list[str]) -> Non
             st.divider()
 
 
-def _render_workflow_result(result: WorkflowResult) -> None:
+def _render_workflow_result(
+    result: WorkflowResult, *, show_recommendation: bool
+) -> None:
     recommendation = result.recommendation
+    if show_recommendation:
+        price_range = recommendation.price_range
+        range_detail = (
+            f"{price_range.lower_pct:g}% to {price_range.upper_pct:g}%"
+            if price_range is not None
+            else "No price range proposed"
+        )
+        st.markdown(
+            badge_html(recommendation.action.value, range_detail),
+            unsafe_allow_html=True,
+        )
+        if recommendation.counter_evidence:
+            st.warning(
+                "Counter-evidence\n\n"
+                + "\n".join(f"- {item}" for item in recommendation.counter_evidence),
+                icon="⚠️",
+            )
     with st.expander("Supporting evidence and optional audit trace", expanded=False):
         if recommendation.cited_evidence_ids and result.evidence_ledger is not None:
             _render_evidence_detail(result.evidence_ledger, recommendation.cited_evidence_ids)
@@ -229,8 +249,14 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             for table in response.tables:
                 _render_table(table)
     if response.workflow_result is not None:
-        _render_workflow_result(response.workflow_result)
-        if can_record and _can_record_decision(response.workflow_result):
+        show_recommendation = (
+            response.recommendation_requested or response.source is ResultSource.REPLAY
+        )
+        _render_workflow_result(
+            response.workflow_result,
+            show_recommendation=show_recommendation,
+        )
+        if can_record and show_recommendation and _can_record_decision(response.workflow_result):
             _render_decision_controls(response.workflow_result, message_number)
 
 

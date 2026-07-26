@@ -1,9 +1,9 @@
 {
   "schema_version": "replay-artifact-schema-v1",
   "scenario": "retention_concern",
-  "recorded_at": "2026-07-25T17:33:06.159328Z",
+  "recorded_at": "2026-07-26T19:35:35.067175Z",
   "configuration_versions": {
-    "model_name": "gpt-5.4",
+    "model_name": "gpt-4.1-mini",
     "recommendation_version": "governed-multi-agent-v1",
     "governance_version": "deterministic-governance-v1",
     "scenario_seed": 20260101,
@@ -18,18 +18,43 @@
   },
   "chat_response": {
     "intent": "pricing_analysis",
-    "message": "The governed workflow recommends **decrease**. A modest price decrease is supported because claims performance was slightly better than baseline, with loss ratio moving from 71.8% to 71.1%, while commercial performance softened materially: quote-to-sale conversion moved from 21.9% to 19.0% and renewal retention moved from 88.0% to 74.0% [claims-north_west-2025-12-01, conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External market signals were also softer, with tracked competitors showing average price-index movement of -5.0%, and specialist market evidence stated that competitor price reductions coincided with stronger price sensitivity in broker and customer signals [competitors-north_west-2025-12-01, doc-market-retention, doc-broker-retention, doc-feedback-retention-1, doc-feedback-retention-2]. Pricing history adds caution on further firmness because a previous +2.0% action was associated with materially softer retention in following months [pricing-history-2024-06-01]. This is decision support only and needs an analyst’s explicit confirmation before any action is recorded.",
+    "message": "## Direct answer\nRecommend a modest renewal price decrease of -3% to -1% for North West personal motor. This is a retention-oriented recommendation, not a full match to competitor price softening. The observed evidence shows materially weaker renewal retention and quote-to-sale conversion, while claims performance is modestly improved and average quoted premium is broadly flat. External market and customer evidence is also consistent with heightened price sensitivity, so a further increase is not supported by the available evidence. This remains decision support only and requires qualified human approval before any pricing action is considered. [retention-north_west-2025-12-01] [conversion-north_west-2025-12-01] [claims-north_west-2025-12-01] [competitors-north_west-2025-12-01] [mi-retention-industry-2025-11:chunk-001] [cf-retention-affordability-2025-12:chunk-001] [cf-retention-cancellation-2025-11:chunk-001] [cf-retention-calls-2025-12:chunk-001] [mi-retention-economic-2025-12:chunk-001] [pricing-history-2024-06-01]\n\n## Answer by question part\n### Produce a governed pricing recommendation from the required portfolio evidence.\nA governed recommendation is to test a modest price decrease of -3% to -1% for the North West personal motor renewal segment. Observed retention fell from 88.0% to 74.0% and quote-to-sale conversion fell from 21.9% to 19.0%, while loss ratio improved from 71.8% to 71.1%. Competitor pricing also softened by about 5% on average, and market commentary describes competitor renewal reductions of roughly 4% to 6%. Customer and market evidence repeatedly indicates affordability pressure, price-related cancellations, and comparison shopping. Taken together, these factors are correlated with a cautious retention-led decrease rather than any increase. The recommendation should stay within governance limits and requires qualified human approval before implementation. [retention-north_west-2025-12-01] [conversion-north_west-2025-12-01] [claims-north_west-2025-12-01] [competitors-north_west-2025-12-01] [mi-retention-industry-2025-11:chunk-001] [cf-retention-affordability-2025-12:chunk-001] [cf-retention-cancellation-2025-11:chunk-001] [cf-retention-calls-2025-12:chunk-001] [mi-retention-economic-2025-12:chunk-001] [pricing-history-2024-06-01] [mi-retention-repair-2025-11:chunk-001]\n\n## Key evidence\n- Renewal retention moved from 88.0% to 74.0%, indicating materially weaker renewal take-up. [retention-north_west-2025-12-01]\n- Quote-to-sale conversion moved from 21.9% to 19.0%, consistent with softer demand. [conversion-north_west-2025-12-01]\n- Loss ratio improved from 71.8% to 71.1%, so the claims view does not indicate worsening performance that would support a price increase. [claims-north_west-2025-12-01]\n- Tracked competitor price indices averaged about -5.0%, and market commentary says competitors reduced renewal prices by roughly 4% to 6%. [competitors-north_west-2025-12-01] [mi-retention-industry-2025-11:chunk-001]\n- Customer evidence shows recurring affordability concerns, price-related cancellations, and comparison shopping at renewal. [cf-retention-affordability-2025-12:chunk-001] [cf-retention-cancellation-2025-11:chunk-001] [cf-retention-calls-2025-12:chunk-001] [mi-retention-economic-2025-12:chunk-001]\n- A prior +2.0% renewal increase was associated with subsequent retention softening. [pricing-history-2024-06-01]\n- Repair-cost intelligence shows no clear external severity signal in either direction. [mi-retention-repair-2025-11:chunk-001]\n\n## Interpretation\nA governed recommendation is to test a modest price decrease of -3% to -1% for the North West personal motor renewal segment. Observed retention fell from 88.0% to 74.0% and quote-to-sale conversion fell from 21.9% to 19.0%, while loss ratio improved from 71.8% to 71.1%. Competitor pricing also softened by about 5% on average, and market commentary describes competitor renewal reductions of roughly 4% to 6%. Customer and market evidence repeatedly indicates affordability pressure, price-related cancellations, and comparison shopping. Taken together, these factors are correlated with a cautious retention-led decrease rather than any increase. The recommendation should stay within governance limits and requires qualified human approval before implementation.\n\n## Recommended action\nRecommend a modest renewal price decrease of -3% to -1% for North West personal motor. This is a retention-oriented recommendation, not a full match to competitor price softening. The observed evidence shows materially weaker renewal retention and quote-to-sale conversion, while claims performance is modestly improved and average quoted premium is broadly flat. External market and customer evidence is also consistent with heightened price sensitivity, so a further increase is not supported by the available evidence. This remains decision support only and requires qualified human approval before any pricing action is considered. [retention-north_west-2025-12-01] [conversion-north_west-2025-12-01] [claims-north_west-2025-12-01] [competitors-north_west-2025-12-01] [mi-retention-industry-2025-11:chunk-001] [cf-retention-affordability-2025-12:chunk-001] [cf-retention-cancellation-2025-11:chunk-001] [cf-retention-calls-2025-12:chunk-001] [mi-retention-economic-2025-12:chunk-001] [pricing-history-2024-06-01]\n\n## Confidence and limitations\n- The evidence is correlational only, so the recommendation cannot prove that price changes caused the observed retention and conversion deterioration.\n- The recommendation range is smaller than the average competitor softening of about -5.0%, so it may only partially address competitive pressure.\n- Average quoted premium was broadly flat at portfolio level, which means factors beyond own-price may also be contributing to weaker retention and conversion; this reduces certainty on the size of the recommended move.\n- No elasticity study is included in the evidence bundle, so the data cannot quantify the retention response expected at specific price points within the -3% to -1% range.\n\n## Specific next investigation\n- Have a qualified pricing analyst review and approve any proposed test before actioning it, in line with governance controls.\n- If tested, monitor renewal retention, quote-to-sale conversion, and margin/loss ratio closely to confirm whether the decrease improves demand without disproportionate value loss.\n- Run renewal elasticity analysis for North West personal motor to estimate response across different renewal price movements.\n- Compare post-change renewal outcomes against current competitor price positioning to assess whether the -3% to -1% range is sufficient.\n- Review cohorts affected after the 2024-06-01 +2.0% increase to better understand the association between prior pricing, shopping behaviour, and retention softening.",
     "context": {
       "scenario": "retention_concern",
-      "force_replay": false
+      "force_replay": false,
+      "product": "personal_motor",
+      "region": "north_west",
+      "segment": "renewal",
+      "analysis_start_month": "2025-01-01",
+      "analysis_end_month": "2025-12-01",
+      "pending_tool_name": null,
+      "pending_intent": null
     },
     "activities": [
       {
-        "status": "scheduled",
-        "label": "Supervisor coordinating specialist agents",
-        "purpose": "Coordinating market intelligence, claims, conversion, pricing history, recommendation, and governance.",
-        "agent": "portfolio-supervisor",
+        "status": "working",
+        "label": "Conversation planning",
+        "purpose": "Interpreting the request and selecting the right tools.",
+        "agent": "conversation-agent",
         "source": null,
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Conversation planning",
+        "purpose": "Created a plan and selected the required tools.",
+        "agent": "conversation-agent",
+        "source": null,
+        "trace_id": null,
+        "duration_ms": 3786.1488750204444
+      },
+      {
+        "status": "working",
+        "label": "Portfolio analysis workflow",
+        "purpose": "Combining the requested portfolio evidence into an analyst answer.",
+        "agent": null,
+        "source": "portfolio_analysis",
         "trace_id": null,
         "duration_ms": null
       },
@@ -38,7 +63,7 @@
         "label": "Supervisor coordinating specialist agents",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "portfolio_analysis",
         "trace_id": null,
         "duration_ms": null
       },
@@ -47,7 +72,7 @@
         "label": "Getting information from claims performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "claims-specialist",
-        "source": null,
+        "source": "claims",
         "trace_id": null,
         "duration_ms": null
       },
@@ -56,7 +81,7 @@
         "label": "Getting information from conversion performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "conversion-specialist",
-        "source": null,
+        "source": "conversion",
         "trace_id": null,
         "duration_ms": null
       },
@@ -65,7 +90,7 @@
         "label": "Market intelligence gathering",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "market-intelligence-specialist",
-        "source": null,
+        "source": "market_intelligence",
         "trace_id": null,
         "duration_ms": null
       },
@@ -74,61 +99,34 @@
         "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "pricing-history-specialist",
-        "source": null,
+        "source": "pricing_history",
         "trace_id": null,
         "duration_ms": null
       },
       {
         "status": "working",
-        "label": "Getting information from claims performance data",
+        "label": "Getting information from conversion performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "completed",
-        "label": "Getting information from claims performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": null,
-        "source": null,
-        "trace_id": null,
-        "duration_ms": 0.6097920704632998
-      },
-      {
-        "status": "working",
-        "label": "Getting information from claims performance data",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "claims-specialist",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "working",
-        "label": "Checking previous pricing actions",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": null,
-        "source": null,
+        "source": "conversion",
         "trace_id": null,
         "duration_ms": null
       },
       {
         "status": "completed",
-        "label": "Checking previous pricing actions",
+        "label": "Getting information from conversion performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "conversion",
         "trace_id": null,
-        "duration_ms": 0.39199995808303356
+        "duration_ms": 0.701917102560401
       },
       {
         "status": "working",
-        "label": "Checking previous pricing actions",
+        "label": "Getting information from conversion performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "pricing-history-specialist",
-        "source": null,
+        "agent": "conversion-specialist",
+        "source": "conversion",
         "trace_id": null,
         "duration_ms": null
       },
@@ -137,7 +135,7 @@
         "label": "Getting information from competitor information data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "competitors",
         "trace_id": null,
         "duration_ms": null
       },
@@ -146,7 +144,7 @@
         "label": "Market intelligence gathering",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "market_intelligence",
         "trace_id": null,
         "duration_ms": null
       },
@@ -155,52 +153,79 @@
         "label": "Getting information from competitor information data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "competitors",
         "trace_id": null,
-        "duration_ms": 1.066375058144331
+        "duration_ms": 0.8768751285970211
       },
       {
         "status": "completed",
         "label": "Market intelligence gathering",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "market_intelligence",
         "trace_id": null,
-        "duration_ms": 1.072749961167574
+        "duration_ms": 0.8742909412831068
       },
       {
         "status": "working",
         "label": "Market intelligence gathering",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "market-intelligence-specialist",
-        "source": null,
+        "source": "market_intelligence",
         "trace_id": null,
         "duration_ms": null
       },
       {
         "status": "working",
-        "label": "Getting information from conversion performance data",
+        "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "pricing_history",
         "trace_id": null,
         "duration_ms": null
       },
       {
         "status": "completed",
-        "label": "Getting information from conversion performance data",
+        "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": null,
-        "source": null,
+        "source": "pricing_history",
         "trace_id": null,
-        "duration_ms": 0.6870001088827848
+        "duration_ms": 0.5030839238315821
       },
       {
         "status": "working",
-        "label": "Getting information from conversion performance data",
+        "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "conversion-specialist",
-        "source": null,
+        "agent": "pricing-history-specialist",
+        "source": "pricing_history",
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": "claims",
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": null,
+        "source": "claims",
+        "trace_id": null,
+        "duration_ms": 0.3612090367823839
+      },
+      {
+        "status": "working",
+        "label": "Getting information from claims performance data",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "claims-specialist",
+        "source": "claims",
         "trace_id": null,
         "duration_ms": null
       },
@@ -209,7 +234,7 @@
         "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "pricing-history-specialist",
-        "source": null,
+        "source": "pricing_history",
         "trace_id": null,
         "duration_ms": null
       },
@@ -218,16 +243,16 @@
         "label": "Checking previous pricing actions",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "pricing-history-specialist",
-        "source": null,
+        "source": "pricing_history",
         "trace_id": null,
-        "duration_ms": 3428.25729213655
+        "duration_ms": 3122.1409591380507
       },
       {
         "status": "completed",
         "label": "Getting information from claims performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "claims-specialist",
-        "source": null,
+        "source": "claims",
         "trace_id": null,
         "duration_ms": null
       },
@@ -236,34 +261,16 @@
         "label": "Getting information from claims performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "claims-specialist",
-        "source": null,
+        "source": "claims",
         "trace_id": null,
-        "duration_ms": 3496.5950830373913
-      },
-      {
-        "status": "completed",
-        "label": "Market intelligence gathering",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "market-intelligence-specialist",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": null
-      },
-      {
-        "status": "completed",
-        "label": "Market intelligence gathering",
-        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
-        "agent": "market-intelligence-specialist",
-        "source": null,
-        "trace_id": null,
-        "duration_ms": 4906.981667038053
+        "duration_ms": 3473.6830829642713
       },
       {
         "status": "completed",
         "label": "Getting information from conversion performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "conversion-specialist",
-        "source": null,
+        "source": "conversion",
         "trace_id": null,
         "duration_ms": null
       },
@@ -272,16 +279,34 @@
         "label": "Getting information from conversion performance data",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "conversion-specialist",
-        "source": null,
+        "source": "conversion",
         "trace_id": null,
-        "duration_ms": 6952.012666966766
+        "duration_ms": 5905.5025421548635
+      },
+      {
+        "status": "completed",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "market-intelligence-specialist",
+        "source": "market_intelligence",
+        "trace_id": null,
+        "duration_ms": null
+      },
+      {
+        "status": "completed",
+        "label": "Market intelligence gathering",
+        "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
+        "agent": "market-intelligence-specialist",
+        "source": "market_intelligence",
+        "trace_id": null,
+        "duration_ms": 6291.043667122722
       },
       {
         "status": "working",
         "label": "Preparing a governed pricing recommendation",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "recommendation-agent",
-        "source": null,
+        "source": "recommendation",
         "trace_id": null,
         "duration_ms": null
       },
@@ -290,7 +315,7 @@
         "label": "Preparing a governed pricing recommendation",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "recommendation-agent",
-        "source": null,
+        "source": "recommendation",
         "trace_id": null,
         "duration_ms": null
       },
@@ -299,16 +324,16 @@
         "label": "Preparing a governed pricing recommendation",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "recommendation-agent",
-        "source": null,
+        "source": "recommendation",
         "trace_id": null,
-        "duration_ms": 8386.541291838512
+        "duration_ms": 14293.700292007998
       },
       {
         "status": "working",
         "label": "Checking recommendation governance",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "governance-agent",
-        "source": null,
+        "source": "governance",
         "trace_id": null,
         "duration_ms": null
       },
@@ -317,7 +342,7 @@
         "label": "Checking recommendation governance",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "governance-agent",
-        "source": null,
+        "source": "governance",
         "trace_id": null,
         "duration_ms": null
       },
@@ -326,38 +351,54 @@
         "label": "Checking recommendation governance",
         "purpose": "Showing governed workflow activity without exposing private prompts or chain-of-thought.",
         "agent": "governance-agent",
-        "source": null,
+        "source": "governance",
         "trace_id": null,
-        "duration_ms": 2056.0351670719683
+        "duration_ms": 1678.9083748590201
+      },
+      {
+        "status": "completed",
+        "label": "Portfolio analysis workflow",
+        "purpose": "Combined the requested portfolio evidence into an analyst answer.",
+        "agent": null,
+        "source": "portfolio_analysis",
+        "trace_id": null,
+        "duration_ms": 23447.365375002846
       }
     ],
     "tables": [],
     "cited_evidence_ids": [
-      "claims-north_west-2025-12-01",
-      "conversion-north_west-2025-12-01",
       "retention-north_west-2025-12-01",
+      "conversion-north_west-2025-12-01",
+      "claims-north_west-2025-12-01",
       "competitors-north_west-2025-12-01",
-      "pricing-history-2024-06-01",
-      "doc-market-retention",
-      "doc-broker-retention",
-      "doc-feedback-retention-1",
-      "doc-feedback-retention-2",
-      "doc-repair-cost-retention"
+      "mi-retention-industry-2025-11:chunk-001",
+      "cf-retention-affordability-2025-12:chunk-001",
+      "cf-retention-cancellation-2025-11:chunk-001",
+      "cf-retention-calls-2025-12:chunk-001",
+      "mi-retention-economic-2025-12:chunk-001",
+      "mi-retention-repair-2025-11:chunk-001",
+      "pricing-history-2024-06-01"
     ],
     "investigation_areas": [
-      "Validate whether renewal-specific shopping-around and price sensitivity themes seen in broker and customer evidence are concentrated in particular sub-segments or channels [doc-broker-retention, doc-feedback-retention-1, doc-feedback-retention-2].",
-      "Check whether unchanged competitor rank despite average competitor movement of -5.0% implies selective rather than broad-based repricing is sufficient [competitors-north_west-2025-12-01].",
-      "Review whether non-price factors are contributing to the drop in quote-to-sale conversion and renewal retention, since specialist evidence said average quoted premium was broadly flat while outcomes weakened [conversion-north_west-2025-12-01, retention-north_west-2025-12-01]."
+      "Run renewal elasticity analysis for North West personal motor over 2025 to quantify how retention changed at different renewal premium movements, because retention fell from 88.0% to 74.0% while market and customer evidence indicates price sensitivity [retention-north_west-2025-12-01, cf-retention-cancellation-2025-11:chunk-001, mi-retention-economic-2025-12:chunk-001].",
+      "Compare renewal quote outcomes against the fictional competitor price-index softening of -5.0% to determine whether the recommended -3% to -1% range is sufficient relative to current market position [competitors-north_west-2025-12-01, mi-retention-industry-2025-11:chunk-001].",
+      "Review post-2024-06-01 renewal cohorts specifically to test how the prior +2.0% increase was associated with shopping behaviour, cancellations, and retention softening in subsequent months [pricing-history-2024-06-01, cf-retention-calls-2025-12:chunk-001].",
+      "Check whether conversion deterioration in 2025 is concentrated in particular renewal customer subgroups or renewal cycles, since price-related concern appears repeatedly in cancellations and affordability feedback [conversion-north_west-2025-12-01, cf-retention-affordability-2025-12:chunk-001, cf-retention-cancellation-2025-11:chunk-001].",
+      "Validate that the modestly improved claims position persists in the same North West renewal population before considering any broader retention-led price response, because current claims evidence is supportive but only modestly so [claims-north_west-2025-12-01]."
     ],
     "requires_clarification": false,
     "refused": false,
+    "route": "tool_call",
+    "clarification_question": null,
+    "limitations": [],
+    "suggested_next_steps": [],
     "workflow_result": {
       "question": {
         "product": "personal_motor",
         "region": "north_west",
         "segment": "renewal",
         "analysis_period": {
-          "start_month": "2025-07-01",
+          "start_month": "2025-01-01",
           "end_month": "2025-12-01"
         },
         "scenario": "retention_concern"
@@ -369,7 +410,7 @@
           "evidence_ids": [
             "claims-north_west-2025-12-01"
           ],
-          "summary": "For the period 2024-01-01 to 2025-12-01, claims performance was modestly better than baseline across the main measures. Claim frequency was 0.084 versus a baseline of 0.0844, a movement of -0.55%. Average severity was £1,606.8646 versus £1,615.2992, a movement of -0.52%. Incurred loss was £674,006.1067 versus £682,120.0492, a movement of -1.19%. Loss ratio was 0.7107 versus 0.7183, a movement of -1.06%. Overall, lower claim frequency and lower average severity coincided with lower incurred loss, and the period was associated with a slightly improved loss ratio relative to baseline.",
+          "summary": "For the period 2025-01-01 to 2025-12-01, claims performance was modestly improved versus baseline. Claim frequency was 0.084 versus 0.0844 at baseline, a movement of -0.55%. Average severity was £1,606.8646 versus £1,615.2992, a movement of -0.52%. Incurred loss was £674,006.1067 versus £682,120.0492, a movement of -1.19%. Loss ratio was 0.7107 versus 0.7183, a movement of -1.06%. Overall, lower claim frequency and lower average severity coincided with lower incurred loss and a slightly improved loss ratio.",
           "missing_evidence": []
         },
         {
@@ -378,7 +419,7 @@
           "evidence_ids": [
             "conversion-north_west-2025-12-01"
           ],
-          "summary": "For the period 2024-01-01 to 2025-12-01, quote-to-sale conversion moved from 0.2185 to 0.1896, a change of -13.24%. Renewal retention moved from 0.8797 to 0.7405, a change of -15.83%. Average quoted premium was broadly flat, moving from £621.5842 to £620.9067, or -0.11%.\n\nThe main pattern is that weaker conversion and weaker retention coincided with almost no movement in average quoted premium, so the portfolio’s softer outcomes were associated with factors other than any material change in quoted price level.\n\nBy segment, new business was essentially stable, moving from 0.1499 to 0.1498, or -0.06%. The more material movement was in the renewal segment, which moved from 0.2185 to 0.1896, or -13.24%. This indicates the deterioration was concentrated in renewal rather than new business.",
+          "summary": "For the period 2025-01-01 to 2025-12-01, quote-to-sale conversion was 18.96%, down 13.24% versus the baseline of 21.85%. Renewal retention was 74.05%, down 15.83% versus the baseline of 87.97%. Average quoted premium was £620.91, broadly flat versus the baseline of £621.58, a movement of -0.11%.\n\nThis pattern means weaker conversion and retention coincided with almost no movement in quoted premium at portfolio level.\n\nBy segment, new business conversion was 14.98%, essentially unchanged from the baseline of 14.99% with a movement of -0.06%. The larger deterioration was in the renewal segment, where conversion was 18.96% versus 21.85% at baseline, a movement of -13.24%. This indicates the material pressure in the period was associated with renewal performance rather than new business.",
           "missing_evidence": []
         },
         {
@@ -386,13 +427,14 @@
           "status": "completed",
           "evidence_ids": [
             "competitors-north_west-2025-12-01",
-            "doc-market-retention",
-            "doc-broker-retention",
-            "doc-feedback-retention-1",
-            "doc-feedback-retention-2",
-            "doc-repair-cost-retention"
+            "mi-retention-industry-2025-11:chunk-001",
+            "cf-retention-affordability-2025-12:chunk-001",
+            "cf-retention-cancellation-2025-11:chunk-001",
+            "cf-retention-calls-2025-12:chunk-001",
+            "mi-retention-economic-2025-12:chunk-001",
+            "mi-retention-repair-2025-11:chunk-001"
           ],
-          "summary": "Fictional competitor pricing moved down across the portfolio period while competitor price-position ranks were unchanged. Northgate Cover remained rank 1 with a price index movement of -4.89%, Meridian Insure remained rank 2 with a movement of -5.12%, and Bracken Mutual remained rank 3 with a movement of -5.06%. This is consistent with retrieved market reporting that said these fictional competitors reduced personal motor renewal pricing by roughly 4% to 6% over the past quarter, indicating a softer competitive backdrop for any further increase. Broker notes said renewal shopping-around behaviour had risen following the previous portfolio-level increase, and brokers flagged retention risk if pricing firms further. Customer feedback also showed price as the dominant renewal theme across November and December, with repeated price-related comments rather than a one-off spike. Repair-cost intelligence was broadly in line with historical norms and did not show a clear signal in either direction for claims severity. Overall, competitor price reductions coincided with stronger price sensitivity in broker and customer signals, while cost intelligence was stable rather than supportive of firmer pricing.",
+          "summary": "Fictional competitor pricing was softer over the portfolio period, with Northgate Cover down 4.89%, Meridian Insure down 5.12%, and Bracken Mutual down 5.06% on price index, while all three held the same rank positions as at baseline. This is consistent with retrieved market commentary describing renewal price reductions of roughly four to six percent across the same fictional competitors and a softer competitive backdrop. [competitors-north_west-2025-12-01; mi-retention-industry-2025-11:chunk-001]\n\nRetrieved customer and broker-style market intelligence indicates affordability and retention pressure. Aggregate feedback shows price-related concerns across consecutive renewal cycles, price as the most frequent cancellation theme, and renewal callers frequently comparison shopping after the prior portfolio increase. Continued household budget pressure was also noted in economic commentary, and further price increases were associated with greater shopping around and a need for explicit elasticity investigation. [cf-retention-affordability-2025-12:chunk-001; cf-retention-cancellation-2025-11:chunk-001; cf-retention-calls-2025-12:chunk-001; mi-retention-economic-2025-12:chunk-001]\n\nOn costs, the retrieved repair-cost report indicated trends broadly in line with historical norms and no clear external severity signal in either direction for this scenario. Taken together, the available evidence points to a market where pricing pressure is more visible on the demand and retention side than from any new external repair-cost signal, so any further portfolio increase would need careful retention and elasticity review against this softer fictional competitor position. [mi-retention-repair-2025-11:chunk-001; mi-retention-industry-2025-11:chunk-001; competitors-north_west-2025-12-01]",
           "missing_evidence": []
         },
         {
@@ -401,54 +443,58 @@
           "evidence_ids": [
             "pricing-history-2024-06-01"
           ],
-          "summary": "On 2024-06-01, the portfolio took a 2.0% renewal price increase. In the recorded history, this action was associated with conversion moving down 8.0% and loss ratio improving by 0.5%. The recorded rationale notes that retention softened materially in the following months. [pricing-history-2024-06-01]",
+          "summary": "On 2024-06-01, the portfolio took a 2.0% renewal price increase. In the recorded history, this was associated with conversion softening by 8.0% in the following months, while loss ratio improved by 0.5%.",
           "missing_evidence": []
         }
       ],
       "recommendation": {
         "action": "decrease",
         "price_range": {
-          "lower_pct": -2.0,
-          "upper_pct": 0.0
+          "lower_pct": -3.0,
+          "upper_pct": -1.0
         },
-        "rationale": "A modest price decrease is supported because claims performance was slightly better than baseline, with loss ratio moving from 71.8% to 71.1%, while commercial performance softened materially: quote-to-sale conversion moved from 21.9% to 19.0% and renewal retention moved from 88.0% to 74.0% [claims-north_west-2025-12-01, conversion-north_west-2025-12-01, retention-north_west-2025-12-01]. External market signals were also softer, with tracked competitors showing average price-index movement of -5.0%, and specialist market evidence stated that competitor price reductions coincided with stronger price sensitivity in broker and customer signals [competitors-north_west-2025-12-01, doc-market-retention, doc-broker-retention, doc-feedback-retention-1, doc-feedback-retention-2]. Pricing history adds caution on further firmness because a previous +2.0% action was associated with materially softer retention in following months [pricing-history-2024-06-01].",
+        "rationale": "A modest renewal price decrease is supported for personal motor in the North West because retention and conversion weakened materially during 2025 while average quoted premium was broadly flat, suggesting the current retention concern is more closely associated with demand-side pressure than with worsening claims. Renewal retention moved from 88.0% to 74.0% and quote-to-sale conversion moved from 21.9% to 19.0% over the period, while claims loss ratio improved from 71.8% to 71.1% [retention-north_west-2025-12-01, conversion-north_west-2025-12-01, claims-north_west-2025-12-01]. External market context is also softer: the tracked fictional competitor index averaged -5.0%, and market commentary describes competitors reducing renewal prices by roughly four to six percent, with retention risk elevated for any further increase [competitors-north_west-2025-12-01, mi-retention-industry-2025-11:chunk-001]. Customer and market feedback repeatedly points to affordability pressure, price-related cancellations, and comparison shopping at renewal, which is consistent with a cautious retention response [cf-retention-affordability-2025-12:chunk-001, cf-retention-cancellation-2025-11:chunk-001, cf-retention-calls-2025-12:chunk-001, mi-retention-economic-2025-12:chunk-001]. Pricing history adds supporting context: a prior +2.0% renewal increase was associated with subsequent retention softening, while loss ratio improved [pricing-history-2024-06-01]. Within the +/-5% policy limit, a -3% to -1% range best fits the evidence as a measured retention-oriented option rather than a full match to competitor softness.",
         "counter_evidence": [
-          "Claims performance was somewhat favorable versus baseline, with loss ratio moving from 71.8% to 71.1%, which does not create strong urgency for a larger price decrease [claims-north_west-2025-12-01].",
-          "Repair-cost intelligence was described as broadly in line with historical norms and did not show a clear signal in either direction for claims severity, so cost evidence is neutral rather than strongly supportive of repricing [doc-repair-cost-retention].",
-          "Competitor price-position ranks were described as unchanged, so the evidence indicates softer market pricing but not worsening relative rank position within the tracked set [competitors-north_west-2025-12-01].",
-          "The specialist conversion summary said average quoted premium was broadly flat, so weaker conversion and retention were associated with factors other than any material change in quoted price level; that means a price reduction may not fully address the softer outcomes on its own [conversion-north_west-2025-12-01, retention-north_west-2025-12-01]."
+          "Claims were modestly better, not deteriorating: loss ratio moved from 71.8% to 71.1%, which weakens the case for any urgent corrective repricing beyond a measured retention response [claims-north_west-2025-12-01].",
+          "Repair-cost intelligence showed trends broadly in line with historical norms and no clear external severity signal in either direction, so the evidence does not point to a strong cost-based reason for either a larger decrease or a larger increase [mi-retention-repair-2025-11:chunk-001].",
+          "The tracked fictional competitor movement averaged -5.0%, which is softer than the recommended range; a smaller decrease may only partially address competitive pressure [competitors-north_west-2025-12-01].",
+          "Pricing history shows the prior +2.0% action was associated with loss-ratio improvement as well as softer retention, so reducing price could ease retention pressure but may give back some margin if claims stay stable [pricing-history-2024-06-01].",
+          "Quote-to-sale conversion and retention weakened while premium was broadly flat at portfolio level, so factors beyond own-price alone may also be present and should not be overstated [conversion-north_west-2025-12-01, retention-north_west-2025-12-01]."
         ],
         "conditions": [
-          "Keep any analyst-selected action within the stated policy limit of +/-5%.",
-          "If a decrease is considered, keep it modest and targeted within -2.0% to 0.0% given only slight claims improvement and neutral repair-cost signals [claims-north_west-2025-12-01, doc-repair-cost-retention].",
-          "Review renewal-focused execution first, because the specialist conversion evidence said deterioration was concentrated in renewal rather than new business [conversion-north_west-2025-12-01].",
-          "Monitor retention and conversion closely after any analyst decision because prior +2.0% pricing history was associated with materially softer retention [pricing-history-2024-06-01].",
+          "Any recommendation should be treated as decision support only and requires analyst validation before any pricing action is considered.",
+          "Keep any tested change within the stated policy limit of +/-5%.",
+          "Prioritise the recommendation to the renewal segment in the North West, where the evidence identifies the material pressure, rather than extrapolating automatically to new business [conversion-north_west-2025-12-01].",
+          "If implemented for testing, monitor whether renewal retention and quote-to-sale conversion improve without disproportionate loss of margin, given claims are currently modestly improved [retention-north_west-2025-12-01, conversion-north_west-2025-12-01, claims-north_west-2025-12-01].",
           "Requires explicit approval from a qualified pricing analyst before any action; the copilot cannot execute a pricing change."
         ],
         "investigation_areas": [
-          "Validate whether renewal-specific shopping-around and price sensitivity themes seen in broker and customer evidence are concentrated in particular sub-segments or channels [doc-broker-retention, doc-feedback-retention-1, doc-feedback-retention-2].",
-          "Check whether unchanged competitor rank despite average competitor movement of -5.0% implies selective rather than broad-based repricing is sufficient [competitors-north_west-2025-12-01].",
-          "Review whether non-price factors are contributing to the drop in quote-to-sale conversion and renewal retention, since specialist evidence said average quoted premium was broadly flat while outcomes weakened [conversion-north_west-2025-12-01, retention-north_west-2025-12-01]."
+          "Run renewal elasticity analysis for North West personal motor over 2025 to quantify how retention changed at different renewal premium movements, because retention fell from 88.0% to 74.0% while market and customer evidence indicates price sensitivity [retention-north_west-2025-12-01, cf-retention-cancellation-2025-11:chunk-001, mi-retention-economic-2025-12:chunk-001].",
+          "Compare renewal quote outcomes against the fictional competitor price-index softening of -5.0% to determine whether the recommended -3% to -1% range is sufficient relative to current market position [competitors-north_west-2025-12-01, mi-retention-industry-2025-11:chunk-001].",
+          "Review post-2024-06-01 renewal cohorts specifically to test how the prior +2.0% increase was associated with shopping behaviour, cancellations, and retention softening in subsequent months [pricing-history-2024-06-01, cf-retention-calls-2025-12:chunk-001].",
+          "Check whether conversion deterioration in 2025 is concentrated in particular renewal customer subgroups or renewal cycles, since price-related concern appears repeatedly in cancellations and affordability feedback [conversion-north_west-2025-12-01, cf-retention-affordability-2025-12:chunk-001, cf-retention-cancellation-2025-11:chunk-001].",
+          "Validate that the modestly improved claims position persists in the same North West renewal population before considering any broader retention-led price response, because current claims evidence is supportive but only modestly so [claims-north_west-2025-12-01]."
         ],
         "cited_evidence_ids": [
-          "claims-north_west-2025-12-01",
-          "conversion-north_west-2025-12-01",
           "retention-north_west-2025-12-01",
+          "conversion-north_west-2025-12-01",
+          "claims-north_west-2025-12-01",
           "competitors-north_west-2025-12-01",
-          "pricing-history-2024-06-01",
-          "doc-market-retention",
-          "doc-broker-retention",
-          "doc-feedback-retention-1",
-          "doc-feedback-retention-2",
-          "doc-repair-cost-retention"
+          "mi-retention-industry-2025-11:chunk-001",
+          "cf-retention-affordability-2025-12:chunk-001",
+          "cf-retention-cancellation-2025-11:chunk-001",
+          "cf-retention-calls-2025-12:chunk-001",
+          "mi-retention-economic-2025-12:chunk-001",
+          "mi-retention-repair-2025-11:chunk-001",
+          "pricing-history-2024-06-01"
         ],
         "confidence": {
           "evidence_coverage": 1.0,
-          "source_freshness": 0.9356,
+          "source_freshness": 0.9472,
           "specialist_agreement": 1.0,
           "data_quality": 1.0,
           "conflict_penalty": 0.0,
-          "overall": 0.9871
+          "overall": 0.9894
         },
         "fair_value_status": "no_concern",
         "fair_value_follow_up": []
@@ -463,61 +509,13 @@
       "missing_evidence": [],
       "analytics": {
         "claims": {
-          "period_start": "2024-01-01",
+          "period_start": "2025-01-01",
           "period_end": "2025-12-01",
           "claim_frequency": {
             "baseline": 0.08442708771266545,
             "current": 0.08396598694786157,
             "movement_pct": -0.5461526357194318,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 0.08377069035123133
-              },
-              {
-                "period": "2024-02-01",
-                "value": 0.08267248215701824
-              },
-              {
-                "period": "2024-03-01",
-                "value": 0.08158368326334733
-              },
-              {
-                "period": "2024-04-01",
-                "value": 0.0860128617363344
-              },
-              {
-                "period": "2024-05-01",
-                "value": 0.08445336008024072
-              },
-              {
-                "period": "2024-06-01",
-                "value": 0.081522822403827
-              },
-              {
-                "period": "2024-07-01",
-                "value": 0.08662522558652497
-              },
-              {
-                "period": "2024-08-01",
-                "value": 0.08649407987156331
-              },
-              {
-                "period": "2024-09-01",
-                "value": 0.08696529459241324
-              },
-              {
-                "period": "2024-10-01",
-                "value": 0.0830848737825482
-              },
-              {
-                "period": "2024-11-01",
-                "value": 0.08438985736925515
-              },
-              {
-                "period": "2024-12-01",
-                "value": 0.08554982135768162
-              },
               {
                 "period": "2025-01-01",
                 "value": 0.08269617706237424
@@ -566,61 +564,15 @@
                 "period": "2025-12-01",
                 "value": 0.08558288342331534
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
           "average_severity_gbp": {
             "baseline": 1615.2992335575184,
             "current": 1606.864612309325,
             "movement_pct": -0.5221708196825647,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 1574.296361445783
-              },
-              {
-                "period": "2024-02-01",
-                "value": 1631.3592805755395
-              },
-              {
-                "period": "2024-03-01",
-                "value": 1591.7641421568628
-              },
-              {
-                "period": "2024-04-01",
-                "value": 1626.5879672897197
-              },
-              {
-                "period": "2024-05-01",
-                "value": 1621.6749881235155
-              },
-              {
-                "period": "2024-06-01",
-                "value": 1618.439902200489
-              },
-              {
-                "period": "2024-07-01",
-                "value": 1629.0943287037037
-              },
-              {
-                "period": "2024-08-01",
-                "value": 1620.5400696055685
-              },
-              {
-                "period": "2024-09-01",
-                "value": 1619.4573781902552
-              },
-              {
-                "period": "2024-10-01",
-                "value": 1626.7321531100479
-              },
-              {
-                "period": "2024-11-01",
-                "value": 1605.616737089202
-              },
-              {
-                "period": "2024-12-01",
-                "value": 1618.027494199536
-              },
               {
                 "period": "2025-01-01",
                 "value": 1579.4466423357662
@@ -669,61 +621,15 @@
                 "period": "2025-12-01",
                 "value": 1621.3983177570094
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
           "incurred_loss_gbp": {
             "baseline": 682120.0491666667,
             "current": 674006.1066666667,
             "movement_pct": -1.1895182541420175,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 653332.99
-              },
-              {
-                "period": "2024-02-01",
-                "value": 680276.82
-              },
-              {
-                "period": "2024-03-01",
-                "value": 649439.77
-              },
-              {
-                "period": "2024-04-01",
-                "value": 696179.65
-              },
-              {
-                "period": "2024-05-01",
-                "value": 682725.17
-              },
-              {
-                "period": "2024-06-01",
-                "value": 661941.92
-              },
-              {
-                "period": "2024-07-01",
-                "value": 703768.75
-              },
-              {
-                "period": "2024-08-01",
-                "value": 698452.77
-              },
-              {
-                "period": "2024-09-01",
-                "value": 697986.13
-              },
-              {
-                "period": "2024-10-01",
-                "value": 679974.04
-              },
-              {
-                "period": "2024-11-01",
-                "value": 683992.73
-              },
-              {
-                "period": "2024-12-01",
-                "value": 697369.85
-              },
               {
                 "period": "2025-01-01",
                 "value": 649152.57
@@ -772,61 +678,15 @@
                 "period": "2025-12-01",
                 "value": 693958.48
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
           "loss_ratio": {
             "baseline": 0.7183278072540175,
             "current": 0.7107232019940882,
             "movement_pct": -1.0586538879790388,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 0.6824976003058371
-              },
-              {
-                "period": "2024-02-01",
-                "value": 0.7207285685784628
-              },
-              {
-                "period": "2024-03-01",
-                "value": 0.6886039254509221
-              },
-              {
-                "period": "2024-04-01",
-                "value": 0.7369222304465938
-              },
-              {
-                "period": "2024-05-01",
-                "value": 0.7165675444444158
-              },
-              {
-                "period": "2024-06-01",
-                "value": 0.6947842681372055
-              },
-              {
-                "period": "2024-07-01",
-                "value": 0.7431783222047699
-              },
-              {
-                "period": "2024-08-01",
-                "value": 0.7358674346053025
-              },
-              {
-                "period": "2024-09-01",
-                "value": 0.7308961316480251
-              },
-              {
-                "period": "2024-10-01",
-                "value": 0.7146253589592497
-              },
-              {
-                "period": "2024-11-01",
-                "value": 0.7157112639396452
-              },
-              {
-                "period": "2024-12-01",
-                "value": 0.7395510383277814
-              },
               {
                 "period": "2025-01-01",
                 "value": 0.6805746184656026
@@ -875,65 +735,19 @@
                 "period": "2025-12-01",
                 "value": 0.7375242043835003
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           }
         },
         "conversion": {
-          "period_start": "2024-01-01",
+          "period_start": "2025-01-01",
           "period_end": "2025-12-01",
           "quote_to_sale_conversion": {
             "baseline": 0.21851955669716783,
             "current": 0.18958933078330764,
             "movement_pct": -13.239193027447296,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 0.21788537549407114
-              },
-              {
-                "period": "2024-02-01",
-                "value": 0.2138756927949327
-              },
-              {
-                "period": "2024-03-01",
-                "value": 0.21359605911330048
-              },
-              {
-                "period": "2024-04-01",
-                "value": 0.21751495537903304
-              },
-              {
-                "period": "2024-05-01",
-                "value": 0.214068209500609
-              },
-              {
-                "period": "2024-06-01",
-                "value": 0.22041314745090057
-              },
-              {
-                "period": "2024-07-01",
-                "value": 0.22597429096102836
-              },
-              {
-                "period": "2024-08-01",
-                "value": 0.22405402721223558
-              },
-              {
-                "period": "2024-09-01",
-                "value": 0.2165146909827761
-              },
-              {
-                "period": "2024-10-01",
-                "value": 0.21467310916083227
-              },
-              {
-                "period": "2024-11-01",
-                "value": 0.22238017871649066
-              },
-              {
-                "period": "2024-12-01",
-                "value": 0.22128494359980383
-              },
               {
                 "period": "2025-01-01",
                 "value": 0.1855517070757051
@@ -982,61 +796,15 @@
                 "period": "2025-12-01",
                 "value": 0.18858985989315594
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
           "renewal_retention": {
             "baseline": 0.8796859367880024,
             "current": 0.7404622315016153,
             "movement_pct": -15.826523929066633,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 0.8762860727728984
-              },
-              {
-                "period": "2024-02-01",
-                "value": 0.875784190715182
-              },
-              {
-                "period": "2024-03-01",
-                "value": 0.8638426626323752
-              },
-              {
-                "period": "2024-04-01",
-                "value": 0.8758723828514456
-              },
-              {
-                "period": "2024-05-01",
-                "value": 0.8907393388846834
-              },
-              {
-                "period": "2024-06-01",
-                "value": 0.873271310032688
-              },
-              {
-                "period": "2024-07-01",
-                "value": 0.895242914979757
-              },
-              {
-                "period": "2024-08-01",
-                "value": 0.8851248089658685
-              },
-              {
-                "period": "2024-09-01",
-                "value": 0.890314465408805
-              },
-              {
-                "period": "2024-10-01",
-                "value": 0.8820564516129032
-              },
-              {
-                "period": "2024-11-01",
-                "value": 0.8815529179030662
-              },
-              {
-                "period": "2024-12-01",
-                "value": 0.8661437246963563
-              },
               {
                 "period": "2025-01-01",
                 "value": 0.7383966244725738
@@ -1085,61 +853,15 @@
                 "period": "2025-12-01",
                 "value": 0.7371668311944719
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
           "average_quoted_premium_gbp": {
             "baseline": 621.5841666666666,
             "current": 620.9066666666666,
             "movement_pct": -0.1089956978204897,
             "monthly": [
-              {
-                "period": "2024-01-01",
-                "value": 625.9
-              },
-              {
-                "period": "2024-02-01",
-                "value": 624.08
-              },
-              {
-                "period": "2024-03-01",
-                "value": 624.71
-              },
-              {
-                "period": "2024-04-01",
-                "value": 622.84
-              },
-              {
-                "period": "2024-05-01",
-                "value": 614.12
-              },
-              {
-                "period": "2024-06-01",
-                "value": 622.99
-              },
-              {
-                "period": "2024-07-01",
-                "value": 622.85
-              },
-              {
-                "period": "2024-08-01",
-                "value": 618.56
-              },
-              {
-                "period": "2024-09-01",
-                "value": 623.93
-              },
-              {
-                "period": "2024-10-01",
-                "value": 619.87
-              },
-              {
-                "period": "2024-11-01",
-                "value": 618.07
-              },
-              {
-                "period": "2024-12-01",
-                "value": 621.09
-              },
               {
                 "period": "2025-01-01",
                 "value": 624.66
@@ -1188,7 +910,9 @@
                 "period": "2025-12-01",
                 "value": 620.68
               }
-            ]
+            ],
+            "observed_periods": 12,
+            "expected_periods": 12
           },
           "segment_comparison": {
             "new_business": {
@@ -1196,54 +920,6 @@
               "current": 0.14980013425651617,
               "movement_pct": -0.05779905012609134,
               "monthly": [
-                {
-                  "period": "2024-01-01",
-                  "value": 0.15279878971255673
-                },
-                {
-                  "period": "2024-02-01",
-                  "value": 0.1478481012658228
-                },
-                {
-                  "period": "2024-03-01",
-                  "value": 0.1459926507101003
-                },
-                {
-                  "period": "2024-04-01",
-                  "value": 0.1463019250253293
-                },
-                {
-                  "period": "2024-05-01",
-                  "value": 0.1509060303000297
-                },
-                {
-                  "period": "2024-06-01",
-                  "value": 0.15391485561178922
-                },
-                {
-                  "period": "2024-07-01",
-                  "value": 0.15138425289613194
-                },
-                {
-                  "period": "2024-08-01",
-                  "value": 0.1459
-                },
-                {
-                  "period": "2024-09-01",
-                  "value": 0.154291319274154
-                },
-                {
-                  "period": "2024-10-01",
-                  "value": 0.15316744324377912
-                },
-                {
-                  "period": "2024-11-01",
-                  "value": 0.1457833733013589
-                },
-                {
-                  "period": "2024-12-01",
-                  "value": 0.15035246727089627
-                },
                 {
                   "period": "2025-01-01",
                   "value": 0.15053546170943624
@@ -1292,61 +968,15 @@
                   "period": "2025-12-01",
                   "value": 0.15180698967434472
                 }
-              ]
+              ],
+              "observed_periods": 12,
+              "expected_periods": 12
             },
             "renewal": {
               "baseline": 0.21851955669716783,
               "current": 0.18958933078330764,
               "movement_pct": -13.239193027447296,
               "monthly": [
-                {
-                  "period": "2024-01-01",
-                  "value": 0.21788537549407114
-                },
-                {
-                  "period": "2024-02-01",
-                  "value": 0.2138756927949327
-                },
-                {
-                  "period": "2024-03-01",
-                  "value": 0.21359605911330048
-                },
-                {
-                  "period": "2024-04-01",
-                  "value": 0.21751495537903304
-                },
-                {
-                  "period": "2024-05-01",
-                  "value": 0.214068209500609
-                },
-                {
-                  "period": "2024-06-01",
-                  "value": 0.22041314745090057
-                },
-                {
-                  "period": "2024-07-01",
-                  "value": 0.22597429096102836
-                },
-                {
-                  "period": "2024-08-01",
-                  "value": 0.22405402721223558
-                },
-                {
-                  "period": "2024-09-01",
-                  "value": 0.2165146909827761
-                },
-                {
-                  "period": "2024-10-01",
-                  "value": 0.21467310916083227
-                },
-                {
-                  "period": "2024-11-01",
-                  "value": 0.22238017871649066
-                },
-                {
-                  "period": "2024-12-01",
-                  "value": 0.22128494359980383
-                },
                 {
                   "period": "2025-01-01",
                   "value": 0.1855517070757051
@@ -1395,7 +1025,9 @@
                   "period": "2025-12-01",
                   "value": 0.18858985989315594
                 }
-              ]
+              ],
+              "observed_periods": 12,
+              "expected_periods": 12
             }
           }
         },
@@ -1410,54 +1042,6 @@
                 "current": 97.82,
                 "movement_pct": -5.063690403979148,
                 "monthly": [
-                  {
-                    "period": "2024-01-01",
-                    "value": 103.91
-                  },
-                  {
-                    "period": "2024-02-01",
-                    "value": 103.95
-                  },
-                  {
-                    "period": "2024-03-01",
-                    "value": 102.5
-                  },
-                  {
-                    "period": "2024-04-01",
-                    "value": 103.12
-                  },
-                  {
-                    "period": "2024-05-01",
-                    "value": 102.92
-                  },
-                  {
-                    "period": "2024-06-01",
-                    "value": 103.73
-                  },
-                  {
-                    "period": "2024-07-01",
-                    "value": 102.1
-                  },
-                  {
-                    "period": "2024-08-01",
-                    "value": 102.31
-                  },
-                  {
-                    "period": "2024-09-01",
-                    "value": 103.4
-                  },
-                  {
-                    "period": "2024-10-01",
-                    "value": 103.06
-                  },
-                  {
-                    "period": "2024-11-01",
-                    "value": 103.2
-                  },
-                  {
-                    "period": "2024-12-01",
-                    "value": 102.25
-                  },
                   {
                     "period": "2025-01-01",
                     "value": 98.49
@@ -1506,61 +1090,15 @@
                     "period": "2025-12-01",
                     "value": 97.89
                   }
-                ]
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
               },
               "rank": {
                 "baseline": 3.0,
                 "current": 3.0,
                 "movement_pct": 0.0,
                 "monthly": [
-                  {
-                    "period": "2024-01-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-02-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-03-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-04-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-05-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-06-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-07-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-08-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-09-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-10-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-11-01",
-                    "value": 3.0
-                  },
-                  {
-                    "period": "2024-12-01",
-                    "value": 3.0
-                  },
                   {
                     "period": "2025-01-01",
                     "value": 3.0
@@ -1609,7 +1147,9 @@
                     "period": "2025-12-01",
                     "value": 3.0
                   }
-                ]
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
               }
             },
             {
@@ -1619,54 +1159,6 @@
                 "current": 94.8125,
                 "movement_pct": -5.121875964208583,
                 "monthly": [
-                  {
-                    "period": "2024-01-01",
-                    "value": 100.25
-                  },
-                  {
-                    "period": "2024-02-01",
-                    "value": 99.22
-                  },
-                  {
-                    "period": "2024-03-01",
-                    "value": 99.02
-                  },
-                  {
-                    "period": "2024-04-01",
-                    "value": 100.44
-                  },
-                  {
-                    "period": "2024-05-01",
-                    "value": 99.82
-                  },
-                  {
-                    "period": "2024-06-01",
-                    "value": 99.92
-                  },
-                  {
-                    "period": "2024-07-01",
-                    "value": 100.2
-                  },
-                  {
-                    "period": "2024-08-01",
-                    "value": 100.44
-                  },
-                  {
-                    "period": "2024-09-01",
-                    "value": 100.32
-                  },
-                  {
-                    "period": "2024-10-01",
-                    "value": 100.3
-                  },
-                  {
-                    "period": "2024-11-01",
-                    "value": 99.41
-                  },
-                  {
-                    "period": "2024-12-01",
-                    "value": 99.83
-                  },
                   {
                     "period": "2025-01-01",
                     "value": 95.15
@@ -1715,61 +1207,15 @@
                     "period": "2025-12-01",
                     "value": 94.72
                   }
-                ]
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
               },
               "rank": {
                 "baseline": 2.0,
                 "current": 2.0,
                 "movement_pct": 0.0,
                 "monthly": [
-                  {
-                    "period": "2024-01-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-02-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-03-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-04-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-05-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-06-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-07-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-08-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-09-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-10-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-11-01",
-                    "value": 2.0
-                  },
-                  {
-                    "period": "2024-12-01",
-                    "value": 2.0
-                  },
                   {
                     "period": "2025-01-01",
                     "value": 2.0
@@ -1818,7 +1264,9 @@
                     "period": "2025-12-01",
                     "value": 2.0
                   }
-                ]
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
               }
             },
             {
@@ -1828,54 +1276,6 @@
                 "current": 92.21583333333332,
                 "movement_pct": -4.887188963857503,
                 "monthly": [
-                  {
-                    "period": "2024-01-01",
-                    "value": 96.97
-                  },
-                  {
-                    "period": "2024-02-01",
-                    "value": 97.37
-                  },
-                  {
-                    "period": "2024-03-01",
-                    "value": 96.84
-                  },
-                  {
-                    "period": "2024-04-01",
-                    "value": 96.84
-                  },
-                  {
-                    "period": "2024-05-01",
-                    "value": 96.17
-                  },
-                  {
-                    "period": "2024-06-01",
-                    "value": 96.07
-                  },
-                  {
-                    "period": "2024-07-01",
-                    "value": 97.95
-                  },
-                  {
-                    "period": "2024-08-01",
-                    "value": 97.87
-                  },
-                  {
-                    "period": "2024-09-01",
-                    "value": 97.96
-                  },
-                  {
-                    "period": "2024-10-01",
-                    "value": 96.47
-                  },
-                  {
-                    "period": "2024-11-01",
-                    "value": 96.5
-                  },
-                  {
-                    "period": "2024-12-01",
-                    "value": 96.44
-                  },
                   {
                     "period": "2025-01-01",
                     "value": 92.08
@@ -1924,61 +1324,15 @@
                     "period": "2025-12-01",
                     "value": 92.38
                   }
-                ]
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
               },
               "rank": {
                 "baseline": 1.0,
                 "current": 1.0,
                 "movement_pct": 0.0,
                 "monthly": [
-                  {
-                    "period": "2024-01-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-02-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-03-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-04-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-05-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-06-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-07-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-08-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-09-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-10-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-11-01",
-                    "value": 1.0
-                  },
-                  {
-                    "period": "2024-12-01",
-                    "value": 1.0
-                  },
                   {
                     "period": "2025-01-01",
                     "value": 1.0
@@ -2027,7 +1381,9 @@
                     "period": "2025-12-01",
                     "value": 1.0
                   }
-                ]
+                ],
+                "observed_periods": 12,
+                "expected_periods": 12
               }
             }
           ]
@@ -2050,12 +1406,15 @@
             "source_reference": "Deterministic claims analytics",
             "source_date": null,
             "retrieval_timestamp": null,
-            "period_start": "2024-01-01",
+            "period_start": "2025-01-01",
             "period_end": "2025-12-01",
             "metric_name": "loss_ratio",
             "value": 0.7107232019940882,
             "baseline_value": 0.7183278072540175,
-            "interpretation": "Loss ratio moved from 71.8% to 71.1%."
+            "interpretation": "Loss ratio moved from 71.8% to 71.1%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
           },
           {
             "evidence_id": "conversion-north_west-2025-12-01",
@@ -2063,12 +1422,15 @@
             "source_reference": "Deterministic conversion analytics",
             "source_date": null,
             "retrieval_timestamp": null,
-            "period_start": "2024-01-01",
+            "period_start": "2025-01-01",
             "period_end": "2025-12-01",
             "metric_name": "quote_to_sale_conversion",
             "value": 0.18958933078330764,
             "baseline_value": 0.21851955669716783,
-            "interpretation": "Quote-to-sale conversion moved from 21.9% to 19.0%."
+            "interpretation": "Quote-to-sale conversion moved from 21.9% to 19.0%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
           },
           {
             "evidence_id": "retention-north_west-2025-12-01",
@@ -2076,12 +1438,15 @@
             "source_reference": "Deterministic conversion analytics",
             "source_date": null,
             "retrieval_timestamp": null,
-            "period_start": "2024-01-01",
+            "period_start": "2025-01-01",
             "period_end": "2025-12-01",
             "metric_name": "renewal_retention",
             "value": 0.7404622315016153,
             "baseline_value": 0.8796859367880024,
-            "interpretation": "Renewal retention moved from 88.0% to 74.0%."
+            "interpretation": "Renewal retention moved from 88.0% to 74.0%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
           },
           {
             "evidence_id": "competitors-north_west-2025-12-01",
@@ -2094,7 +1459,10 @@
             "metric_name": "competitor_index_average_movement_pct",
             "value": -5.0,
             "baseline_value": null,
-            "interpretation": "3 fictional competitors tracked; average price-index movement -5.0%."
+            "interpretation": "3 fictional competitors tracked; average price-index movement -5.0%.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
           },
           {
             "evidence_id": "pricing-history-2024-06-01",
@@ -2107,83 +1475,117 @@
             "metric_name": "price_change_pct",
             "value": 2.0,
             "baseline_value": null,
-            "interpretation": "Previous +2.0% action: Portfolio-level 2% renewal price increase applied earlier this year; retention softened materially in the months that followed."
+            "interpretation": "Previous +2.0% action: Portfolio-level 2% renewal price increase applied earlier this year; retention softened materially in the months that followed.",
+            "document_id": null,
+            "chunk_id": null,
+            "retrieval_score": null
           },
           {
-            "evidence_id": "doc-repair-cost-retention",
-            "source_type": "repair_cost_report",
-            "source_reference": "Synthetic UK Vehicle Repair Cost Index - Retention Period",
-            "source_date": "2025-11-01",
-            "retrieval_timestamp": "2026-07-25T17:32:55.707867Z",
-            "period_start": null,
-            "period_end": null,
-            "metric_name": null,
-            "value": null,
-            "baseline_value": null,
-            "interpretation": "Synthetic UK Vehicle Repair Cost Index - Retention Period"
-          },
-          {
-            "evidence_id": "doc-broker-retention",
-            "source_type": "broker_note",
-            "source_reference": "Broker Panel Observations - Retention Risk",
-            "source_date": "2025-12-05",
-            "retrieval_timestamp": "2026-07-25T17:32:55.707867Z",
-            "period_start": null,
-            "period_end": null,
-            "metric_name": null,
-            "value": null,
-            "baseline_value": null,
-            "interpretation": "Broker Panel Observations - Retention Risk"
-          },
-          {
-            "evidence_id": "doc-market-retention",
+            "evidence_id": "mi-retention-industry-2025-11:chunk-001",
             "source_type": "market_report",
-            "source_reference": "North West Personal Motor Market Pulse - Retention Watch",
+            "source_reference": "North West Personal Motor Retention Watch",
             "source_date": "2025-11-20",
-            "retrieval_timestamp": "2026-07-25T17:32:55.707867Z",
+            "retrieval_timestamp": "2026-07-26T19:35:06.979961Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
             "value": null,
             "baseline_value": null,
-            "interpretation": "North West Personal Motor Market Pulse - Retention Watch"
+            "interpretation": "## Market pricing\n\nSynthetic market commentary reports Meridian Insure, Northgate Cover and Bracken Mutual reducing renewal prices by roughly four to six percent.\nThe competitive backdrop is softer, increasing the retention risk associated with any further portfolio price increase.",
+            "document_id": "mi-retention-industry-2025-11",
+            "chunk_id": "mi-retention-industry-2025-11:chunk-001",
+            "retrieval_score": 0.03225806
           },
           {
-            "evidence_id": "doc-feedback-retention-1",
+            "evidence_id": "cf-retention-affordability-2025-12:chunk-001",
             "source_type": "customer_feedback",
-            "source_reference": "Aggregate North West Renewal Feedback Themes - November 2025",
-            "source_date": "2025-11-10",
-            "retrieval_timestamp": "2026-07-25T17:32:55.707867Z",
-            "period_start": null,
-            "period_end": null,
-            "metric_name": null,
-            "value": null,
-            "baseline_value": null,
-            "interpretation": "Aggregate North West Renewal Feedback Themes - November 2025"
-          },
-          {
-            "evidence_id": "doc-feedback-retention-2",
-            "source_type": "customer_feedback",
-            "source_reference": "Aggregate North West Renewal Feedback Themes - December 2025",
+            "source_reference": "Renewal Affordability Feedback - December 2025",
             "source_date": "2025-12-01",
-            "retrieval_timestamp": "2026-07-25T17:32:55.707867Z",
+            "retrieval_timestamp": "2026-07-26T19:35:06.979961Z",
             "period_start": null,
             "period_end": null,
             "metric_name": null,
             "value": null,
             "baseline_value": null,
-            "interpretation": "Aggregate North West Renewal Feedback Themes - December 2025"
+            "interpretation": "## Affordability feedback\n\nSynthetic and anonymised aggregate feedback shows price-related concerns across consecutive renewal cycles.\nThe evidence supports a cautious retention response, not an assumption that a further increase will be absorbed.",
+            "document_id": "cf-retention-affordability-2025-12",
+            "chunk_id": "cf-retention-affordability-2025-12:chunk-001",
+            "retrieval_score": 0.03201844
+          },
+          {
+            "evidence_id": "mi-retention-repair-2025-11:chunk-001",
+            "source_type": "repair_cost_report",
+            "source_reference": "UK Vehicle Repair-Cost Index - Retention Period",
+            "source_date": "2025-11-01",
+            "retrieval_timestamp": "2026-07-26T19:35:06.979961Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Repair-cost inflation\n\nSynthetic repair-cost intelligence indicates cost trends broadly in line with historical norms.\nThe report contains no clear external severity signal in either direction for this scenario.",
+            "document_id": "mi-retention-repair-2025-11",
+            "chunk_id": "mi-retention-repair-2025-11:chunk-001",
+            "retrieval_score": 0.03201844
+          },
+          {
+            "evidence_id": "cf-retention-cancellation-2025-11:chunk-001",
+            "source_type": "customer_feedback",
+            "source_reference": "Cancellation Reason Themes - November 2025",
+            "source_date": "2025-11-10",
+            "retrieval_timestamp": "2026-07-26T19:35:06.979961Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Cancellation reasons\n\nSynthetic and anonymised aggregate summary.\nPrice is the most frequently recorded renewal cancellation theme, appearing repeatedly rather than as isolated feedback.\nThe pattern warrants retention and price-elasticity investigation.",
+            "document_id": "cf-retention-cancellation-2025-11",
+            "chunk_id": "cf-retention-cancellation-2025-11:chunk-001",
+            "retrieval_score": 0.03125763
+          },
+          {
+            "evidence_id": "cf-retention-calls-2025-12:chunk-001",
+            "source_type": "customer_feedback",
+            "source_reference": "Call-Centre Renewal Theme Summary - Retention Watch",
+            "source_date": "2025-12-05",
+            "retrieval_timestamp": "2026-07-26T19:35:06.979961Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Call-centre themes\n\nSynthetic aggregate transcript themes only.\nRenewal callers frequently report comparison shopping after the prior portfolio increase.\nNo individual customer details are included in this data set.",
+            "document_id": "cf-retention-calls-2025-12",
+            "chunk_id": "cf-retention-calls-2025-12:chunk-001",
+            "retrieval_score": 0.03125763
+          },
+          {
+            "evidence_id": "mi-retention-economic-2025-12:chunk-001",
+            "source_type": "market_report",
+            "source_reference": "Household Affordability Commentary - December 2025",
+            "source_date": "2025-12-02",
+            "retrieval_timestamp": "2026-07-26T19:35:06.979961Z",
+            "period_start": null,
+            "period_end": null,
+            "metric_name": null,
+            "value": null,
+            "baseline_value": null,
+            "interpretation": "## Affordability\n\nSynthetic economic commentary notes continued household budget pressure.\nFor motor renewals, a further price increase may coincide with greater shopping around and requires explicit elasticity investigation.",
+            "document_id": "mi-retention-economic-2025-12",
+            "chunk_id": "mi-retention-economic-2025-12:chunk-001",
+            "retrieval_score": 0.03030303
           }
         ]
       },
       "execution_trace": {
-        "trace_id": "trace_d76f4b7686034c3280312ea033aafd04",
+        "trace_id": "trace_700e455f1457451593f0dd7aa9b2969f",
         "workflow_name": "Governed Pricing Decision Copilot",
-        "started_at": "2026-07-25T17:32:48.721286Z",
-        "completed_at": "2026-07-25T17:33:06.156048Z",
+        "started_at": "2026-07-26T19:35:00.113118Z",
+        "completed_at": "2026-07-26T19:35:22.957058Z",
         "status": "completed",
         "configuration_versions": {
-          "model_name": "gpt-5.4",
+          "model_name": "gpt-4.1-mini",
           "prompt_version": "governed-prompts-v2",
           "agent_registry_version": "approved-agent-registry-v1",
           "tool_version": "deterministic-read-only-tools-v2",
@@ -2204,15 +1606,15 @@
         },
         "usage": {
           "requests": 10,
-          "input_tokens": 9794,
-          "output_tokens": 1919,
-          "total_tokens": 11713,
+          "input_tokens": 11671,
+          "output_tokens": 2547,
+          "total_tokens": 14218,
           "estimated_cost_gbp": 0.0,
           "pricing_configured": false
         },
         "events": [
           {
-            "timestamp": "2026-07-25T17:32:48.732754Z",
+            "timestamp": "2026-07-26T19:35:00.130932Z",
             "kind": "agents_sdk",
             "name": "trace",
             "status": "started",
@@ -2220,7 +1622,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.732785Z",
+            "timestamp": "2026-07-26T19:35:00.130965Z",
             "kind": "routing",
             "name": "portfolio-supervisor",
             "status": "started",
@@ -2230,7 +1632,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755397Z",
+            "timestamp": "2026-07-26T19:35:00.687706Z",
             "kind": "routing",
             "name": "claims",
             "status": "scheduled",
@@ -2240,7 +1642,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755406Z",
+            "timestamp": "2026-07-26T19:35:00.687725Z",
             "kind": "routing",
             "name": "conversion",
             "status": "scheduled",
@@ -2250,7 +1652,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755408Z",
+            "timestamp": "2026-07-26T19:35:00.687730Z",
             "kind": "routing",
             "name": "market_intelligence",
             "status": "scheduled",
@@ -2260,7 +1662,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755410Z",
+            "timestamp": "2026-07-26T19:35:00.687734Z",
             "kind": "routing",
             "name": "pricing_history",
             "status": "scheduled",
@@ -2270,7 +1672,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755569Z",
+            "timestamp": "2026-07-26T19:35:00.687989Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2278,7 +1680,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755734Z",
+            "timestamp": "2026-07-26T19:35:00.688260Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2286,7 +1688,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755842Z",
+            "timestamp": "2026-07-26T19:35:00.688451Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2294,7 +1696,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.755945Z",
+            "timestamp": "2026-07-26T19:35:00.688646Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -2302,7 +1704,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.756374Z",
+            "timestamp": "2026-07-26T19:35:00.689050Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2310,7 +1712,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.756413Z",
+            "timestamp": "2026-07-26T19:35:00.689084Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2318,7 +1720,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.756560Z",
+            "timestamp": "2026-07-26T19:35:00.689268Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2326,7 +1728,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.756580Z",
+            "timestamp": "2026-07-26T19:35:00.689297Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2334,7 +1736,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.757537Z",
+            "timestamp": "2026-07-26T19:35:00.689576Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2342,7 +1744,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.757574Z",
+            "timestamp": "2026-07-26T19:35:00.689607Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2350,7 +1752,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.757715Z",
+            "timestamp": "2026-07-26T19:35:00.689781Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -2358,7 +1760,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.757740Z",
+            "timestamp": "2026-07-26T19:35:00.689809Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2366,7 +1768,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.758389Z",
+            "timestamp": "2026-07-26T19:35:00.690784Z",
             "kind": "model_call",
             "name": "claims-specialist",
             "status": "started",
@@ -2376,7 +1778,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.758403Z",
+            "timestamp": "2026-07-26T19:35:00.690800Z",
             "kind": "model_call",
             "name": "conversion-specialist",
             "status": "started",
@@ -2386,7 +1788,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.758411Z",
+            "timestamp": "2026-07-26T19:35:00.690807Z",
             "kind": "model_call",
             "name": "market-intelligence-specialist",
             "status": "started",
@@ -2396,7 +1798,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.758416Z",
+            "timestamp": "2026-07-26T19:35:00.690813Z",
             "kind": "model_call",
             "name": "pricing-history-specialist",
             "status": "started",
@@ -2406,7 +1808,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:48.758582Z",
+            "timestamp": "2026-07-26T19:35:00.690928Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2414,7 +1816,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.759361Z",
+            "timestamp": "2026-07-26T19:35:00.691735Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2422,7 +1824,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.759680Z",
+            "timestamp": "2026-07-26T19:35:00.692360Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2430,7 +1832,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:48.760095Z",
+            "timestamp": "2026-07-26T19:35:00.692881Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2438,7 +1840,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:49.961634Z",
+            "timestamp": "2026-07-26T19:35:01.881500Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2448,7 +1850,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:49.962363Z",
+            "timestamp": "2026-07-26T19:35:01.882135Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "started",
@@ -2456,301 +1858,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:49.962527Z",
-            "kind": "tool_call",
-            "name": "get_claims_metrics",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "agent": "claims-specialist",
-              "tool_call": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:49.963137Z",
-            "kind": "tool_call",
-            "name": "get_claims_metrics",
-            "status": "completed",
-            "duration_ms": 0.6097920704632998,
-            "details": {
-              "agent": "claims-specialist"
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:49.963259Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:49.963610Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:49.963811Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:49.964495Z",
-            "kind": "model_call",
-            "name": "claims-specialist",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "model_call": 2
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:49.964654Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.380114Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.380657Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.380728Z",
-            "kind": "tool_call",
-            "name": "get_pricing_history",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "agent": "pricing-history-specialist",
-              "tool_call": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.381120Z",
-            "kind": "tool_call",
-            "name": "get_pricing_history",
-            "status": "completed",
-            "duration_ms": 0.39199995808303356,
-            "details": {
-              "agent": "pricing-history-specialist"
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.381259Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.381488Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.381642Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.382368Z",
-            "kind": "model_call",
-            "name": "pricing-history-specialist",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "model_call": 2
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.382673Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.413629Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.414211Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.414301Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.414353Z",
-            "kind": "tool_call",
-            "name": "get_competitor_metrics",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "agent": "market-intelligence-specialist",
-              "tool_call": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.414383Z",
-            "kind": "tool_call",
-            "name": "get_market_intelligence_documents",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "agent": "market-intelligence-specialist",
-              "tool_call": 2
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.415420Z",
-            "kind": "tool_call",
-            "name": "get_competitor_metrics",
-            "status": "completed",
-            "duration_ms": 1.066375058144331,
-            "details": {
-              "agent": "market-intelligence-specialist"
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.415456Z",
-            "kind": "tool_call",
-            "name": "get_market_intelligence_documents",
-            "status": "completed",
-            "duration_ms": 1.072749961167574,
-            "details": {
-              "agent": "market-intelligence-specialist"
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.415634Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.415738Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.416061Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.416286Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.416912Z",
-            "kind": "model_call",
-            "name": "market-intelligence-specialist",
-            "status": "started",
-            "duration_ms": null,
-            "details": {
-              "model_call": 2
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:50.417105Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:51.232485Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:51.233364Z",
-            "kind": "agents_sdk",
-            "name": "function",
-            "status": "started",
-            "duration_ms": null,
-            "details": {}
-          },
-          {
-            "timestamp": "2026-07-25T17:32:51.233497Z",
+            "timestamp": "2026-07-26T19:35:01.882297Z",
             "kind": "tool_call",
             "name": "get_conversion_metrics",
             "status": "started",
@@ -2761,17 +1869,17 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:51.234186Z",
+            "timestamp": "2026-07-26T19:35:01.882999Z",
             "kind": "tool_call",
             "name": "get_conversion_metrics",
             "status": "completed",
-            "duration_ms": 0.6870001088827848,
+            "duration_ms": 0.701917102560401,
             "details": {
               "agent": "conversion-specialist"
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:51.234380Z",
+            "timestamp": "2026-07-26T19:35:01.883124Z",
             "kind": "agents_sdk",
             "name": "function",
             "status": "completed",
@@ -2781,7 +1889,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:51.234712Z",
+            "timestamp": "2026-07-26T19:35:01.883423Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2791,7 +1899,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:51.235011Z",
+            "timestamp": "2026-07-26T19:35:01.883592Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -2799,7 +1907,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:51.236465Z",
+            "timestamp": "2026-07-26T19:35:01.884241Z",
             "kind": "model_call",
             "name": "conversion-specialist",
             "status": "started",
@@ -2809,7 +1917,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:51.236748Z",
+            "timestamp": "2026-07-26T19:35:01.884419Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -2817,7 +1925,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:52.182122Z",
+            "timestamp": "2026-07-26T19:35:01.923237Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2827,7 +1935,85 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.183550Z",
+            "timestamp": "2026-07-26T19:35:01.924373Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.924524Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.924585Z",
+            "kind": "tool_call",
+            "name": "get_competitor_metrics",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "market-intelligence-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.924631Z",
+            "kind": "tool_call",
+            "name": "get_market_intelligence_documents",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "market-intelligence-specialist",
+              "tool_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.925463Z",
+            "kind": "tool_call",
+            "name": "get_competitor_metrics",
+            "status": "completed",
+            "duration_ms": 0.8768751285970211,
+            "details": {
+              "agent": "market-intelligence-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.925505Z",
+            "kind": "tool_call",
+            "name": "get_market_intelligence_documents",
+            "status": "completed",
+            "duration_ms": 0.8742909412831068,
+            "details": {
+              "agent": "market-intelligence-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.925650Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.925682Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.926042Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2837,7 +2023,223 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.184017Z",
+            "timestamp": "2026-07-26T19:35:01.926474Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.927438Z",
+            "kind": "model_call",
+            "name": "market-intelligence-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:01.927704Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.108491Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.109007Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.109403Z",
+            "kind": "tool_call",
+            "name": "get_pricing_history",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "pricing-history-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.109906Z",
+            "kind": "tool_call",
+            "name": "get_pricing_history",
+            "status": "completed",
+            "duration_ms": 0.5030839238315821,
+            "details": {
+              "agent": "pricing-history-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.110032Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.110249Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.110407Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.110976Z",
+            "kind": "model_call",
+            "name": "pricing-history-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.111698Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.113711Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.114482Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.114548Z",
+            "kind": "tool_call",
+            "name": "get_claims_metrics",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "agent": "claims-specialist",
+              "tool_call": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.114910Z",
+            "kind": "tool_call",
+            "name": "get_claims_metrics",
+            "status": "completed",
+            "duration_ms": 0.3612090367823839,
+            "details": {
+              "agent": "claims-specialist"
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.115015Z",
+            "kind": "agents_sdk",
+            "name": "function",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.115190Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.115320Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.115799Z",
+            "kind": "model_call",
+            "name": "claims-specialist",
+            "status": "started",
+            "duration_ms": null,
+            "details": {
+              "model_call": 2
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:02.115940Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "started",
+            "duration_ms": null,
+            "details": {}
+          },
+          {
+            "timestamp": "2026-07-26T19:35:03.809335Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:03.810220Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:03.810547Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -2847,7 +2249,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.184064Z",
+            "timestamp": "2026-07-26T19:35:03.810592Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -2857,7 +2259,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.184156Z",
+            "timestamp": "2026-07-26T19:35:03.810680Z",
             "kind": "model_call",
             "name": "pricing-history-specialist",
             "status": "completed",
@@ -2865,17 +2267,17 @@
             "details": {
               "requests": 2,
               "input_tokens": 984,
-              "output_tokens": 119,
-              "total_tokens": 1103,
+              "output_tokens": 100,
+              "total_tokens": 1084,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.184201Z",
+            "timestamp": "2026-07-26T19:35:03.810720Z",
             "kind": "routing",
             "name": "pricing-history-specialist",
             "status": "completed",
-            "duration_ms": 3428.25729213655,
+            "duration_ms": 3122.1409591380507,
             "details": {
               "turn_limit": 6,
               "tool_calls": 1,
@@ -2884,7 +2286,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.250830Z",
+            "timestamp": "2026-07-26T19:35:04.160168Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2894,7 +2296,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.251613Z",
+            "timestamp": "2026-07-26T19:35:04.160890Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2904,7 +2306,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.251918Z",
+            "timestamp": "2026-07-26T19:35:04.161207Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -2914,7 +2316,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.251965Z",
+            "timestamp": "2026-07-26T19:35:04.161249Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -2924,7 +2326,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.252044Z",
+            "timestamp": "2026-07-26T19:35:04.161463Z",
             "kind": "model_call",
             "name": "claims-specialist",
             "status": "completed",
@@ -2932,17 +2334,17 @@
             "details": {
               "requests": 2,
               "input_tokens": 1080,
-              "output_tokens": 214,
-              "total_tokens": 1294,
+              "output_tokens": 200,
+              "total_tokens": 1280,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:52.252093Z",
+            "timestamp": "2026-07-26T19:35:04.161497Z",
             "kind": "routing",
             "name": "claims-specialist",
             "status": "completed",
-            "duration_ms": 3496.5950830373913,
+            "duration_ms": 3473.6830829642713,
             "details": {
               "turn_limit": 6,
               "tool_calls": 1,
@@ -2951,7 +2353,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:53.662137Z",
+            "timestamp": "2026-07-26T19:35:06.592234Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -2961,7 +2363,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:53.662611Z",
+            "timestamp": "2026-07-26T19:35:06.593211Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -2971,7 +2373,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:53.662760Z",
+            "timestamp": "2026-07-26T19:35:06.593531Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -2981,7 +2383,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:53.662778Z",
+            "timestamp": "2026-07-26T19:35:06.593573Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -2991,25 +2393,92 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:53.662812Z",
+            "timestamp": "2026-07-26T19:35:06.593652Z",
+            "kind": "model_call",
+            "name": "conversion-specialist",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "requests": 2,
+              "input_tokens": 1135,
+              "output_tokens": 250,
+              "total_tokens": 1385,
+              "estimated_cost_gbp": 0.0
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:06.593679Z",
+            "kind": "routing",
+            "name": "conversion-specialist",
+            "status": "completed",
+            "duration_ms": 5905.5025421548635,
+            "details": {
+              "turn_limit": 6,
+              "tool_calls": 1,
+              "model_calls": 2,
+              "attempt": 1
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:06.976559Z",
+            "kind": "agents_sdk",
+            "name": "generation",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:06.977999Z",
+            "kind": "agents_sdk",
+            "name": "turn",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:06.979110Z",
+            "kind": "agents_sdk",
+            "name": "agent",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:06.979258Z",
+            "kind": "agents_sdk",
+            "name": "task",
+            "status": "completed",
+            "duration_ms": null,
+            "details": {
+              "has_error": false
+            }
+          },
+          {
+            "timestamp": "2026-07-26T19:35:06.979382Z",
             "kind": "model_call",
             "name": "market-intelligence-specialist",
             "status": "completed",
             "duration_ms": null,
             "details": {
               "requests": 2,
-              "input_tokens": 1876,
-              "output_tokens": 331,
-              "total_tokens": 2207,
+              "input_tokens": 2312,
+              "output_tokens": 548,
+              "total_tokens": 2860,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:53.662825Z",
+            "timestamp": "2026-07-26T19:35:06.979428Z",
             "kind": "routing",
             "name": "market-intelligence-specialist",
             "status": "completed",
-            "duration_ms": 4906.981667038053,
+            "duration_ms": 6291.043667122722,
             "details": {
               "turn_limit": 6,
               "tool_calls": 2,
@@ -3018,74 +2487,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:55.707233Z",
-            "kind": "agents_sdk",
-            "name": "generation",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:55.707589Z",
-            "kind": "agents_sdk",
-            "name": "turn",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:55.707702Z",
-            "kind": "agents_sdk",
-            "name": "agent",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:55.707718Z",
-            "kind": "agents_sdk",
-            "name": "task",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "has_error": false
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:55.707743Z",
-            "kind": "model_call",
-            "name": "conversion-specialist",
-            "status": "completed",
-            "duration_ms": null,
-            "details": {
-              "requests": 2,
-              "input_tokens": 1135,
-              "output_tokens": 261,
-              "total_tokens": 1396,
-              "estimated_cost_gbp": 0.0
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:55.707755Z",
-            "kind": "routing",
-            "name": "conversion-specialist",
-            "status": "completed",
-            "duration_ms": 6952.012666966766,
-            "details": {
-              "turn_limit": 6,
-              "tool_calls": 1,
-              "model_calls": 2,
-              "attempt": 1
-            }
-          },
-          {
-            "timestamp": "2026-07-25T17:32:55.708005Z",
+            "timestamp": "2026-07-26T19:35:06.980423Z",
             "kind": "guardrail",
             "name": "evidence_policy",
             "status": "passed",
@@ -3096,7 +2498,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:55.708379Z",
+            "timestamp": "2026-07-26T19:35:06.981509Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -3104,7 +2506,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:55.711286Z",
+            "timestamp": "2026-07-26T19:35:06.983594Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -3112,7 +2514,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:55.711329Z",
+            "timestamp": "2026-07-26T19:35:06.983663Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -3120,7 +2522,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:32:55.711988Z",
+            "timestamp": "2026-07-26T19:35:06.985061Z",
             "kind": "model_call",
             "name": "recommendation-agent",
             "status": "started",
@@ -3130,7 +2532,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:32:55.712142Z",
+            "timestamp": "2026-07-26T19:35:06.985406Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -3138,7 +2540,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:33:04.093464Z",
+            "timestamp": "2026-07-26T19:35:21.271563Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -3148,7 +2550,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.094287Z",
+            "timestamp": "2026-07-26T19:35:21.273559Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -3158,7 +2560,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.094550Z",
+            "timestamp": "2026-07-26T19:35:21.274209Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -3168,7 +2570,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.094595Z",
+            "timestamp": "2026-07-26T19:35:21.274243Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -3178,25 +2580,25 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.094663Z",
+            "timestamp": "2026-07-26T19:35:21.274413Z",
             "kind": "model_call",
             "name": "recommendation-agent",
             "status": "completed",
             "duration_ms": null,
             "details": {
               "requests": 1,
-              "input_tokens": 2225,
-              "output_tokens": 884,
-              "total_tokens": 3109,
+              "input_tokens": 2790,
+              "output_tokens": 1363,
+              "total_tokens": 4153,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.094686Z",
+            "timestamp": "2026-07-26T19:35:21.274510Z",
             "kind": "routing",
             "name": "recommendation-agent",
             "status": "completed",
-            "duration_ms": 8386.541291838512,
+            "duration_ms": 14293.700292007998,
             "details": {
               "turn_limit": 6,
               "tool_calls": 0,
@@ -3205,7 +2607,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.096454Z",
+            "timestamp": "2026-07-26T19:35:21.277982Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "started",
@@ -3213,7 +2615,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:33:04.096838Z",
+            "timestamp": "2026-07-26T19:35:21.279304Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "started",
@@ -3221,7 +2623,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:33:04.096863Z",
+            "timestamp": "2026-07-26T19:35:21.279361Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "started",
@@ -3229,7 +2631,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:33:04.097209Z",
+            "timestamp": "2026-07-26T19:35:21.280740Z",
             "kind": "model_call",
             "name": "governance-agent",
             "status": "started",
@@ -3239,7 +2641,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:04.097311Z",
+            "timestamp": "2026-07-26T19:35:21.280969Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "started",
@@ -3247,7 +2649,7 @@
             "details": {}
           },
           {
-            "timestamp": "2026-07-25T17:33:06.151137Z",
+            "timestamp": "2026-07-26T19:35:22.955525Z",
             "kind": "agents_sdk",
             "name": "generation",
             "status": "completed",
@@ -3257,7 +2659,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:06.152005Z",
+            "timestamp": "2026-07-26T19:35:22.956083Z",
             "kind": "agents_sdk",
             "name": "turn",
             "status": "completed",
@@ -3267,7 +2669,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:06.152239Z",
+            "timestamp": "2026-07-26T19:35:22.956289Z",
             "kind": "agents_sdk",
             "name": "agent",
             "status": "completed",
@@ -3277,7 +2679,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:06.152278Z",
+            "timestamp": "2026-07-26T19:35:22.956316Z",
             "kind": "agents_sdk",
             "name": "task",
             "status": "completed",
@@ -3287,25 +2689,25 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:06.152326Z",
+            "timestamp": "2026-07-26T19:35:22.956360Z",
             "kind": "model_call",
             "name": "governance-agent",
             "status": "completed",
             "duration_ms": null,
             "details": {
               "requests": 1,
-              "input_tokens": 2494,
-              "output_tokens": 110,
-              "total_tokens": 2604,
+              "input_tokens": 3370,
+              "output_tokens": 86,
+              "total_tokens": 3456,
               "estimated_cost_gbp": 0.0
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:06.152348Z",
+            "timestamp": "2026-07-26T19:35:22.956380Z",
             "kind": "routing",
             "name": "governance-agent",
             "status": "completed",
-            "duration_ms": 2056.0351670719683,
+            "duration_ms": 1678.9083748590201,
             "details": {
               "turn_limit": 6,
               "tool_calls": 0,
@@ -3314,7 +2716,7 @@
             }
           },
           {
-            "timestamp": "2026-07-25T17:33:06.155996Z",
+            "timestamp": "2026-07-26T19:35:22.957025Z",
             "kind": "agents_sdk",
             "name": "trace",
             "status": "completed",
@@ -3325,6 +2727,18 @@
       },
       "source": "live"
     },
-    "source": "live"
+    "source": "live",
+    "elapsed_ms": null,
+    "plan_details": [
+      "Scope: North West Personal Motor Renewal.",
+      "Intent: pricing recommendation.",
+      "Question type: recommendation.",
+      "Sub-questions:",
+      "  - Produce a governed pricing recommendation from the required portfolio evidence.",
+      "Required tool calls: none.",
+      "Required filters: portfolio scope, analysis period, scenario.",
+      "Final-answer sections: Direct answer, Key evidence, Recommended action, Citations.",
+      "Evidence rule: The governed workflow determines the required sources and validates the recommendation."
+    ]
   }
 }

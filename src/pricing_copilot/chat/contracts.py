@@ -37,6 +37,19 @@ class ConversationIntent(StrEnum):
     PRICING_RECOMMENDATION = "pricing_recommendation"
 
 
+class AnalysisQuestionType(StrEnum):
+    LOOKUP = "lookup"
+    TREND = "trend"
+    RELIABILITY = "data_reliability"
+    ROOT_CAUSE = "root_cause"
+    CUSTOMER_BEHAVIOR = "customer_behavior"
+    PREVIOUS_DECISIONS = "previous_decisions"
+    GOVERNANCE_ESCALATION = "governance_escalation"
+    COUNTERFACTUAL = "counterfactual"
+    SEGMENTATION = "segmentation"
+    RECOMMENDATION = "recommendation"
+
+
 class ConversationRoute(StrEnum):
     DIRECT_ANSWER = "direct_answer"
     CLARIFY = "clarify"
@@ -81,6 +94,7 @@ class StructuredQueryPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     intent: ConversationIntent
+    analysis_type: AnalysisQuestionType = AnalysisQuestionType.LOOKUP
     sub_questions: list[str] = Field(default_factory=list, max_length=5)
     tool_calls: list[PlannedToolCall] = Field(default_factory=list)
     required_filters: list[str] = Field(default_factory=list)
@@ -182,6 +196,11 @@ class ChatContext(BaseModel):
     segment: Segment | None = None
     analysis_start_month: date | None = None
     analysis_end_month: date | None = None
+    # A clarification is part of one conversation, not a new request.  Keep the
+    # intended capability here so a terse reply to a Copilot suggestion cannot
+    # be mistaken for an unrelated greeting on the next Streamlit rerun.
+    pending_tool_name: ChatToolName | None = None
+    pending_intent: ConversationIntent | None = None
 
 
 class ChatTurn(BaseModel):
@@ -215,6 +234,7 @@ class ChatResponse(BaseModel):
     limitations: list[str] = Field(default_factory=list)
     suggested_next_steps: list[str] = Field(default_factory=list)
     workflow_result: WorkflowResult | None = None
+    recommendation_requested: bool = False
     source: ResultSource = ResultSource.LIVE
     elapsed_ms: float | None = None
     plan_details: list[str] = Field(default_factory=list)
