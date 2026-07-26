@@ -96,6 +96,11 @@ def _prototype_plan(
             tool_name=ChatToolName.DOCUMENTS,
             sources=[AnalyticsSource.MARKET_INTELLIGENCE],
         )
+    if "database fields" in lowered or "available tables" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.SCHEMA,
+        )
     sources = [
         source
         for phrase, source in (
@@ -214,6 +219,20 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
     assert "loss ratio moved" in markdown.lower()
 
 
+def test_streamlit_lists_available_tables_before_showing_catalogue_details() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("Name all available tables")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "The available portfolio data tables are" in markdown
+    assert "claims, competitors, conversion, and pricing_history" in markdown
+    assert any(expander.label == "Supporting data details" for expander in app.expander)
+
+
 def test_replay_keyword_shows_a_prominent_replay_label(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -288,7 +307,7 @@ def test_replay_of_an_unrecorded_scenario_fails_gracefully_in_the_interface(
 
 
 @requires_azure_openai
-def test_recommendation_response_shows_confidence_and_fair_value() -> None:
+def test_recommendation_response_shows_a_complete_analyst_answer() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
     app.run()
     app.chat_input[0].set_value("Analyse everything and recommend a pricing action")
@@ -296,8 +315,12 @@ def test_recommendation_response_shows_confidence_and_fair_value() -> None:
 
     assert not app.exception
     markdown = "\n".join(item.value for item in app.markdown)
-    assert "Confidence" in markdown
-    assert "Fair value" in markdown or "Fair-value" in markdown
+    assert "## Direct answer" in markdown
+    assert "## Key evidence" in markdown
+    assert "## Interpretation" in markdown
+    assert "## Recommended action" in markdown
+    assert "## Confidence and limitations" in markdown
+    assert "## Specific next investigation" in markdown
 
 
 @requires_azure_openai

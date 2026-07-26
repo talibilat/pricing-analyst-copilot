@@ -106,6 +106,17 @@ _CUSTOMER_PATTERN = re.compile(
 )
 
 
+def _format_list(values: Sequence[str]) -> str:
+    """Return a human-readable list without exposing implementation syntax."""
+    if not values:
+        return "no sources"
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        return f"{values[0]} and {values[1]}"
+    return f"{', '.join(values[:-1])}, and {values[-1]}"
+
+
 class DefaultConversationTools:
     """Adapts the existing governed capabilities to the conversation graph."""
 
@@ -546,7 +557,8 @@ class DefaultConversationTools:
         activities: list[ChatActivity] = []
         tables: list[ChatTable] = []
         evidence_ids: list[str] = []
-        for source in sources:
+        source_list = list(sources)
+        for source in source_list:
             label = _SOURCE_LABELS[source]
             self._emit(
                 ChatActivity(
@@ -587,17 +599,23 @@ class DefaultConversationTools:
                 activities,
                 listener,
             )
-        source_names = ", ".join(table.title.lower() for table in tables)
+        if source_list == ["schema_catalogue"]:
+            table_names = _format_list(
+                sorted({str(row[0]) for row in tables[0].rows if row and row[0]})
+            )
+            message = (
+                f"The available portfolio data tables are {table_names}. "
+                "Open Supporting data details to view the permitted columns and definitions."
+            )
+        else:
+            source_names = _format_list([table.title.lower() for table in tables])
+            message = f"Here is the requested data from {source_names}."
         return ChatResponse(
             intent=(
                 ChatIntent.MULTI_SOURCE_SUMMARY if len(tables) > 1 else ChatIntent.DATA_RETRIEVAL
             ),
             context=context,
-            message=(
-                f"I retrieved permitted portfolio-level information from {source_names} for the "
-                f"{context.scenario.value} scenario. The tables below retain the source fields so "
-                "you can inspect the evidence directly."
-            ),
+            message=message,
             activities=activities,
             tables=tables,
             cited_evidence_ids=evidence_ids,

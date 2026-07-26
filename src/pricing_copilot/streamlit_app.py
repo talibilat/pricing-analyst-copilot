@@ -212,8 +212,10 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             icon="🔁",
         )
     st.markdown(response.message)
-    for table in response.tables:
-        _render_table(table)
+    if response.tables:
+        with st.expander("Supporting data details", expanded=False):
+            for table in response.tables:
+                _render_table(table)
     if response.workflow_result is not None:
         _render_workflow_result(response.workflow_result)
         if can_record and _can_record_decision(response.workflow_result):

@@ -273,6 +273,8 @@ def test_chat_exposes_schema_catalogue(service: ChatService) -> None:
 
     assert response.tables[0].title == "Portfolio Data Catalogue"
     assert "incurred_loss_gbp" in [row[1] for row in response.tables[0].rows]
+    assert "claims, competitors, conversion, and pricing_history" in response.message
+    assert "scenario" not in response.message.lower()
 
 
 def test_chat_can_select_a_named_permitted_database_field(service: ChatService) -> None:
