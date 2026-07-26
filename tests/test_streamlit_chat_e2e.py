@@ -153,7 +153,7 @@ def test_streamlit_answers_a_stable_fact_without_a_business_tool() -> None:
     assert not app.dataframe
 
 
-def test_streamlit_summarises_tool_use_and_operation_size_after_completion() -> None:
+def test_streamlit_hides_internal_tool_use_and_execution_details() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     app.run()
 
@@ -161,13 +161,11 @@ def test_streamlit_summarises_tool_use_and_operation_size_after_completion() -> 
     app.run()
 
     assert not app.exception
-    assert any("Completed in" in caption.value for caption in app.caption)
-    assert any("Tools used:" in caption.value for caption in app.caption)
-    assert any(expander.label == "Plan, decisions, and tool calls" for expander in app.expander)
+    assert not any("Completed in" in caption.value for caption in app.caption)
+    assert not any("Plan, decisions, and tool calls" == expander.label for expander in app.expander)
+    assert any(expander.label == "Plan" for expander in app.expander)
     markdown = "\n".join(item.value for item in app.markdown)
-    assert "in 0.0 seconds" not in markdown
     assert "Required tool calls:" in markdown
-    assert "conversion: Needed for the requested conversion" in markdown
     assert "Evidence rule:" in markdown
 
 
@@ -237,7 +235,7 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
     assert not app.exception
     assert len(app.chat_message) == 3
     assert len(app.dataframe) == 0
-    assert any("Completed in" in caption.value for caption in app.caption)
+    assert not any("Completed in" in caption.value for caption in app.caption)
 
 
 def test_streamlit_handles_an_unavailable_segment_without_a_traceback() -> None:

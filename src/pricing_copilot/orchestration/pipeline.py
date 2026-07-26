@@ -169,6 +169,8 @@ async def _run_governed_pipeline_async(
     settings: Settings,
     orchestration: OrchestrationBundle,
     recorder: WorkflowTraceRecorder,
+    *,
+    document_query: str = RETRIEVAL_QUERY,
 ) -> WorkflowResult:
     scenario = question.scenario
     if scenario is None:  # pragma: no cover - caller already filters via IMPLEMENTED_DATA_SCENARIOS
@@ -196,8 +198,8 @@ async def _run_governed_pipeline_async(
         region=question.region,
         product=question.product,
         segment=question.segment,
-        query=RETRIEVAL_QUERY,
-        top_k=6,
+        query=document_query,
+        top_k=12,
         settings=settings,
     )
     documents, guardrail_findings = quarantine_unsafe_documents(retrieved_documents)
@@ -455,6 +457,8 @@ async def _run_and_close_client(
     settings: Settings,
     orchestration: OrchestrationBundle,
     recorder: WorkflowTraceRecorder,
+    *,
+    document_query: str = RETRIEVAL_QUERY,
 ) -> WorkflowResult:
     try:
         with trace(
@@ -465,7 +469,13 @@ async def _run_and_close_client(
         ):
             try:
                 result = await asyncio.wait_for(
-                    _run_governed_pipeline_async(question, settings, orchestration, recorder),
+                    _run_governed_pipeline_async(
+                        question,
+                        settings,
+                        orchestration,
+                        recorder,
+                        document_query=document_query,
+                    ),
                     timeout=settings.max_workflow_seconds,
                 )
             except TimeoutError:
@@ -505,6 +515,7 @@ def run_governed_portfolio_workflow(
     *,
     orchestration: OrchestrationBundle | None = None,
     event_listener: TraceEventListener | None = None,
+    document_query: str = RETRIEVAL_QUERY,
 ) -> WorkflowResult:
     from pricing_copilot.config import get_settings
 
@@ -528,8 +539,8 @@ def run_governed_portfolio_workflow(
                 region=question.region,
                 product=question.product,
                 segment=question.segment,
-                query=RETRIEVAL_QUERY,
-                top_k=6,
+                query=document_query,
+                top_k=12,
                 settings=settings,
             )
         )
@@ -560,4 +571,12 @@ def run_governed_portfolio_workflow(
         )
     )
     configure_local_agents_sdk_tracing()
-    return asyncio.run(_run_and_close_client(question, settings, active, recorder))
+    return asyncio.run(
+        _run_and_close_client(
+            question,
+            settings,
+            active,
+            recorder,
+            document_query=document_query,
+        )
+    )

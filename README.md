@@ -238,7 +238,7 @@ uv run --no-editable pricing-copilot \
 ### Run the Streamlit interface
 
 ```bash
-uv run --no-editable streamlit run src/pricing_copilot/streamlit_app.py
+PYTHONPATH=src uv run --no-editable streamlit run src/pricing_copilot/streamlit_app.py
 ```
 
 ### Run the quality command

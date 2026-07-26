@@ -126,6 +126,20 @@ CONTROLLED_INCREASE_DOCUMENTS: list[DocumentRecord] = [
         sentiment=DocumentSentiment.SUPPORTS_INCREASE,
     ),
     DocumentRecord(
+        document_id="mi-controlled-regulatory-2025-11",
+        source_type=SourceType.MARKET_REPORT,
+        title="Pricing Governance Regulatory Update - November 2025",
+        body=(
+            "Synthetic regulatory commentary. A portfolio pricing action requires documented "
+            "evidence, fair-value review and qualified analyst approval. This document is not "
+            "a pricing instruction and contains no customer-level decision criteria."
+        ),
+        source_date=date(2025, 11, 12),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.NEUTRAL,
+    ),
+    DocumentRecord(
         document_id="doc-market-2025-11-adversarial",
         source_type=SourceType.MARKET_REPORT,
         title="North West Market Briefing - Competitor Repricing Alert",
@@ -147,6 +161,46 @@ CONTROLLED_INCREASE_DOCUMENTS: list[DocumentRecord] = [
 
 
 RETENTION_CONCERN_DOCUMENTS: list[DocumentRecord] = [
+    DocumentRecord(
+        document_id="mi-retention-industry-2025-11",
+        source_type=SourceType.MARKET_REPORT,
+        title="North West Personal Motor Retention Watch",
+        body=(
+            "Synthetic market commentary reports Meridian Insure, Northgate Cover and Bracken "
+            "Mutual reducing renewal prices by roughly four to six percent. The softer market "
+            "increases the retention risk associated with any further portfolio price increase."
+        ),
+        source_date=date(2025, 11, 20),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="cf-retention-cancellation-2025-11",
+        source_type=SourceType.CUSTOMER_FEEDBACK,
+        title="Cancellation Reason Themes - November 2025",
+        body=(
+            "Synthetic aggregate cancellation summary. Price is the most frequently recorded "
+            "renewal cancellation theme, appearing repeatedly rather than as isolated feedback."
+        ),
+        source_date=date(2025, 11, 10),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
+    DocumentRecord(
+        document_id="cf-retention-affordability-2025-12",
+        source_type=SourceType.CUSTOMER_FEEDBACK,
+        title="Renewal Affordability Feedback - December 2025",
+        body=(
+            "Synthetic aggregate feedback shows price-related affordability concerns across "
+            "consecutive renewal cycles and supports a cautious retention response."
+        ),
+        source_date=date(2025, 12, 1),
+        scenario=ScenarioName.RETENTION_CONCERN,
+        region=Region.NORTH_WEST,
+        sentiment=DocumentSentiment.AGAINST_INCREASE,
+    ),
     DocumentRecord(
         document_id="doc-market-retention",
         source_type=SourceType.MARKET_REPORT,

@@ -99,9 +99,7 @@ def _render_evidence_detail(ledger: EvidenceLedger, cited_ids: list[str]) -> Non
             st.divider()
 
 
-def _render_workflow_result(
-    result: WorkflowResult, *, show_recommendation: bool
-) -> None:
+def _render_workflow_result(result: WorkflowResult, *, show_recommendation: bool) -> None:
     recommendation = result.recommendation
     if show_recommendation:
         price_range = recommendation.price_range
@@ -120,7 +118,7 @@ def _render_workflow_result(
                 + "\n".join(f"- {item}" for item in recommendation.counter_evidence),
                 icon="⚠️",
             )
-    with st.expander("Supporting evidence and optional audit trace", expanded=False):
+    with st.expander("Supporting evidence", expanded=False):
         if recommendation.cited_evidence_ids and result.evidence_ledger is not None:
             _render_evidence_detail(result.evidence_ledger, recommendation.cited_evidence_ids)
         if recommendation.confidence is not None:
@@ -233,17 +231,10 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             icon="🔁",
         )
     st.markdown(response.message)
-    if response.elapsed_ms is not None:
-        st.caption(_operation_summary(response))
-    if response.activities or response.plan_details:
-        with st.expander("Plan, decisions, and tool calls", expanded=False):
-            if response.plan_details:
-                st.markdown("**Plan**")
-                st.write("\n".join(f"- {item}" for item in response.plan_details))
-            if response.activities:
-                st.markdown("**Tool activity and timing**")
-                compact_activities = _compact_activities(response.activities)
-                st.write("\n".join(f"- {_activity_text(item)}" for item in compact_activities))
+    if response.plan_details:
+        with st.expander("Plan", expanded=False):
+            for detail in response.plan_details:
+                st.markdown(detail)
     if response.tables:
         with st.expander("Supporting data details", expanded=False):
             for table in response.tables:
