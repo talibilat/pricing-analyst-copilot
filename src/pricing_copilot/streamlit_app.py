@@ -34,6 +34,8 @@ from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
 from pricing_copilot.streamlit_theme import (
     INJECT_CSS,
     assistant_avatar_data_uri,
+    badge_html,
+    confidence_bars_html,
     portfolio_pill_text,
 )
 
@@ -106,7 +108,7 @@ def _render_workflow_result(result: WorkflowResult) -> None:
             f"({recommendation.price_range.lower_pct:g}% to "
             f"{recommendation.price_range.upper_pct:g}%)"
         )
-    st.markdown(f"**Proposed action:** {action}")
+    st.markdown(badge_html(recommendation.action.value, action), unsafe_allow_html=True)
     st.markdown("**Reasoning**")
     st.write(recommendation.rationale)
     if recommendation.counter_evidence:
@@ -126,16 +128,18 @@ def _render_workflow_result(result: WorkflowResult) -> None:
     if recommendation.confidence is not None:
         confidence = recommendation.confidence
         st.markdown("**Confidence**")
-        cols = st.columns(5)
-        labels_and_values = [
-            ("Evidence coverage", confidence.evidence_coverage),
-            ("Source freshness", confidence.source_freshness),
-            ("Specialist agreement", confidence.specialist_agreement),
-            ("Data quality", confidence.data_quality),
-            ("Conflict penalty", confidence.conflict_penalty),
-        ]
-        for column, (label, value) in zip(cols, labels_and_values, strict=True):
-            column.metric(label, f"{value * 100:.0f}%")
+        st.markdown(
+            confidence_bars_html(
+                [
+                    ("Evidence coverage", confidence.evidence_coverage),
+                    ("Source freshness", confidence.source_freshness),
+                    ("Specialist agreement", confidence.specialist_agreement),
+                    ("Data quality", confidence.data_quality),
+                    ("Conflict penalty", confidence.conflict_penalty),
+                ]
+            ),
+            unsafe_allow_html=True,
+        )
         st.caption(f"Overall confidence: {confidence.overall * 100:.0f}%")
 
     if recommendation.fair_value_status is not None:
@@ -284,11 +288,18 @@ def _render_drift_monitoring_tab() -> None:
             for alert in category_alerts:
                 if alert.investigation_required:
                     status = "🔴 investigation required"
+                    status_class = "pc-monitoring-status-error"
                 elif alert.insufficient_sample:
                     status = "🟡 insufficient sample"
+                    status_class = "pc-monitoring-status-warn"
                 else:
                     status = "🟢 normal"
-                st.markdown(f"**{alert.metric_name}** - {status}")
+                    status_class = "pc-monitoring-status-ok"
+                st.markdown(
+                    f"**{alert.metric_name}** - "
+                    f'<span class="{status_class}">{status}</span>',
+                    unsafe_allow_html=True,
+                )
                 st.caption(f"Baseline: {alert.baseline_window} | Current: {alert.current_window}")
                 st.write(alert.detail)
                 for measurement in alert.measurements:
@@ -393,7 +404,33 @@ def _submit_prompt(prompt: str) -> None:
     )
 
 
+_SUGGESTIONS = [
+    "Show claims and conversion performance",
+    "What did competitors do this period?",
+    "Analyse everything and recommend a pricing action",
+]
+
 with tab_chat:
+    clicked_suggestion: str | None = None
+    if len(st.session_state.chat_messages) == 1:
+        st.markdown(
+            """
+            <div class="pc-empty-state">
+              <div class="pc-empty-icon">P</div>
+              <div class="pc-empty-heading">What would you like to review?</div>
+              <div class="pc-empty-subtitle">Ask about claims, conversion, competitors, pricing
+              history, or request a recommendation for this portfolio.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown('<div class="pc-suggestions">', unsafe_allow_html=True)
+        chip_columns = st.columns(len(_SUGGESTIONS))
+        for column, suggestion in zip(chip_columns, _SUGGESTIONS, strict=True):
+            if column.button(suggestion, key=f"suggestion_{suggestion}"):
+                clicked_suggestion = suggestion
+        st.markdown("</div>", unsafe_allow_html=True)
+
     for message_number, message in enumerate(st.session_state.chat_messages):
         with st.chat_message(
             message["role"],
@@ -405,13 +442,14 @@ with tab_chat:
             is_latest_message = message_number == len(st.session_state.chat_messages) - 1
             _render_response(response, message_number, can_record=is_latest_message)
 
-    if prompt := st.chat_input(
+    prompt = st.chat_input(
         "Ask a portfolio-level pricing question",
         key="pricing_chat_input",
         max_chars=1_000,
         submit_mode="disable",
-    ):
-        _submit_prompt(prompt)
+    )
+    if submitted_prompt := clicked_suggestion or prompt:
+        _submit_prompt(submitted_prompt)
 
 with tab_monitoring:
     _render_drift_monitoring_tab()

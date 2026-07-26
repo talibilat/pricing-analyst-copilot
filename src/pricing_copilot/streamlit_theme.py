@@ -112,12 +112,18 @@ html, body, [data-testid="stAppViewContainer"] {
 .pc-empty-subtitle {
   font-size:14px; color:oklch(46% 0.014 85); max-width:440px; line-height:1.5;
 }
-.pc-suggestions .stButton button {
+[class*="st-key-suggestion_"] {
+  width:100% !important;
+}
+[class*="st-key-suggestion_"] [data-testid="stBaseButton-secondary"] {
   font-size:13.5px; color:oklch(30% 0.02 85); background:white;
   border:1px solid oklch(88% 0.012 85); border-radius:10px; padding:10px 16px;
-  text-align:left; box-shadow:none;
+  text-align:left; box-shadow:none; width:100%;
 }
-.pc-suggestions .stButton button:hover {
+[class*="st-key-suggestion_"] [data-testid="stBaseButton-secondary"] p {
+  color:oklch(30% 0.02 85) !important;
+}
+[class*="st-key-suggestion_"] [data-testid="stBaseButton-secondary"]:hover {
   border-color:oklch(47% 0.085 235); color:oklch(38% 0.09 235);
 }
 
@@ -162,6 +168,10 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stExpander"] {
   border:1px solid oklch(89% 0.012 85); border-radius:14px; background:white;
 }
+[data-testid="stExpander"] summary {
+  font-size:13.5px; font-weight:500; padding:12px 2px;
+}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"] { padding:4px 18px 16px; }
 
 [data-testid="stChatInput"] textarea {
   font-family:'IBM Plex Sans', sans-serif; font-size:14.5px;
@@ -171,5 +181,17 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 
 [data-testid="stMetric"] { background:transparent; }
+
+.pc-evidence-entry {
+  border-bottom:1px solid oklch(94% 0.008 85); padding-bottom:12px; margin-bottom:12px;
+}
+
+[data-testid="stTabs"] button[data-baseweb="tab"] {
+  font-family:'IBM Plex Sans', sans-serif; font-size:13.5px; font-weight:500;
+}
+
+.pc-monitoring-status-ok { color:oklch(52% 0.13 150); font-weight:600; }
+.pc-monitoring-status-warn { color:oklch(55% 0.13 70); font-weight:600; }
+.pc-monitoring-status-error { color:oklch(55% 0.18 25); font-weight:600; }
 </style>
 """

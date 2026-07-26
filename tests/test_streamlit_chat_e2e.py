@@ -240,3 +240,102 @@ def test_streamlit_app_has_no_sidebar_content() -> None:
     app.run()
     assert not app.exception
     assert len(app.sidebar) == 0
+
+
+def test_empty_state_shows_suggestion_chips_before_first_exchange() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    assert not app.exception
+    assert len(app.button) == 3
+    assert any("recommend a pricing action" in b.label for b in app.button)
+
+
+def test_clicking_a_suggestion_chip_runs_the_same_exchange_as_typing() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    claims_button = next(b for b in app.button if "claims and conversion" in b.label)
+    claims_button.click().run()
+
+    assert not app.exception
+    assert len(app.chat_message) == 3
+    assert len(app.dataframe) == 2
+
+
+def test_replayed_workflow_result_renders_the_proposed_action_badge_and_confidence_bars(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from datetime import date
+
+    from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
+    from pricing_copilot.config import Settings, get_settings
+    from pricing_copilot.contracts import (
+        AnalysisPeriod,
+        GovernanceOutcome,
+        PortfolioQuestion,
+        PriceRange,
+        Product,
+        Recommendation,
+        RecommendationAction,
+        Region,
+        ScenarioName,
+        Segment,
+        WorkflowResult,
+    )
+    from pricing_copilot.evidence.models import ConfidenceBreakdown
+    from pricing_copilot.replay.store import save_replay_artifact
+
+    replay_dir = tmp_path / "replay"
+    monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(replay_dir))
+    get_settings.cache_clear()
+    try:
+        question = PortfolioQuestion(
+            product=Product.PERSONAL_MOTOR,
+            region=Region.NORTH_WEST,
+            segment=Segment.RENEWAL,
+            analysis_period=AnalysisPeriod(
+                start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)
+            ),
+            scenario=ScenarioName.CONTROLLED_INCREASE,
+        )
+        save_replay_artifact(
+            ChatResponse(
+                intent=ChatIntent.PRICING_ANALYSIS,
+                context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+                message="Recommends a controlled increase.",
+                workflow_result=WorkflowResult(
+                    question=question,
+                    specialist_reports=[],
+                    recommendation=Recommendation(
+                        action=RecommendationAction.INCREASE,
+                        price_range=PriceRange(lower_pct=2, upper_pct=3),
+                        rationale="Loss ratio rose.",
+                        confidence=ConfidenceBreakdown(
+                            evidence_coverage=0.88,
+                            source_freshness=0.91,
+                            specialist_agreement=0.85,
+                            data_quality=0.94,
+                            conflict_penalty=0.08,
+                            overall=0.9,
+                        ),
+                    ),
+                    governance_outcome=GovernanceOutcome(approved=True),
+                    missing_evidence=[],
+                ),
+            ),
+            Settings(replay_directory=replay_dir),
+        )
+
+        app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+        app.run()
+        app.chat_input[0].set_value("Replay the controlled increase scenario")
+        app.run()
+
+        assert not app.exception
+        markdown_html = "\n".join(item.value for item in app.markdown)
+        assert "Proposed: increase" in markdown_html
+        assert "pc-conf-grid" in markdown_html
+        assert "Evidence coverage" in markdown_html
+    finally:
+        get_settings.cache_clear()

@@ -66,3 +66,9 @@ def test_badge_html_includes_label_and_detail() -> None:
     html = badge_html("Increase", "2% to 3%")
     assert "Proposed: Increase" in html
     assert "2% to 3%" in html
+
+
+def test_inject_css_styles_monitoring_alert_expanders() -> None:
+    assert '[data-testid="stExpander"]' in INJECT_CSS
+    assert "pc-conf-grid" in INJECT_CSS
+    assert "pc-monitoring-status-error" in INJECT_CSS
