@@ -182,6 +182,7 @@ class ChatResponse(BaseModel):
     workflow_result: WorkflowResult | None = None
     source: ResultSource = ResultSource.LIVE
     elapsed_ms: float | None = None
+    plan_details: list[str] = Field(default_factory=list)
 
 
 class ConversationState(BaseModel):

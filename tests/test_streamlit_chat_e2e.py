@@ -157,7 +157,10 @@ def test_streamlit_summarises_tool_use_and_operation_size_after_completion() -> 
     assert not app.exception
     assert any("Completed in" in caption.value for caption in app.caption)
     assert any("Tools used:" in caption.value for caption in app.caption)
-    assert any(expander.label == "Tools used and timing" for expander in app.expander)
+    assert any(expander.label == "Plan, decisions, and tool calls" for expander in app.expander)
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "in 0.0 seconds" not in markdown
+    assert "Decision: retrieve portfolio data" in markdown
 
 
 def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:

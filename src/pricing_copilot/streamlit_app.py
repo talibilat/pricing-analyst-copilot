@@ -216,10 +216,15 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
     st.markdown(response.message)
     if response.elapsed_ms is not None:
         st.caption(_operation_summary(response))
-    if response.activities:
-        with st.expander("Tools used and timing", expanded=False):
-            compact_activities = _compact_activities(response.activities)
-            st.write("\n".join(f"- {_activity_text(item)}" for item in compact_activities))
+    if response.activities or response.plan_details:
+        with st.expander("Plan, decisions, and tool calls", expanded=False):
+            if response.plan_details:
+                st.markdown("**Plan**")
+                st.write("\n".join(f"- {item}" for item in response.plan_details))
+            if response.activities:
+                st.markdown("**Tool activity and timing**")
+                compact_activities = _compact_activities(response.activities)
+                st.write("\n".join(f"- {_activity_text(item)}" for item in compact_activities))
     if response.tables:
         with st.expander("Supporting data details", expanded=False):
             for table in response.tables:
@@ -310,6 +315,13 @@ def _activity_text(activity: ChatActivity) -> str:
     if activity.status is ActivityStatus.WORKING:
         return f"Getting data from {tool_name}."
     if activity.status is ActivityStatus.COMPLETED:
+        if activity.source == "portfolio_analysis":
+            return (
+                "Combined claims, conversion, competitor, pricing-history, market, and "
+                "customer-feedback evidence."
+            )
+        if activity.duration_ms is None or activity.duration_ms < 100:
+            return f"Got data from {tool_name}."
         return f"Got data from {tool_name} in {duration}."
     status = activity.status.value.title()
     duration_suffix = _format_duration(activity.duration_ms, prefix=" - ")

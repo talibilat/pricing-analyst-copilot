@@ -221,6 +221,9 @@ class ConversationGraph:
                     ],
                     requires_clarification=True,
                     activities=planning_activities,
+                    plan_details=[
+                        "Decision: ask for clarification because the request could not be planned."
+                    ],
                 )
             report_planning(
                 ChatActivity(
@@ -249,7 +252,12 @@ class ConversationGraph:
                 decision,
                 active_context,
             )
-            return response.model_copy(update={"activities": planning_activities})
+            return response.model_copy(
+                update={
+                    "activities": planning_activities,
+                    "plan_details": self._plan_details(decision, active_context),
+                }
+            )
         if decision.route is ConversationRoute.CLARIFY:
             question = decision.clarification_question or "Could you clarify what you mean?"
             response = self._compose_without_tool(
@@ -259,7 +267,12 @@ class ConversationGraph:
                 active_context,
                 requires_clarification=True,
             )
-            return response.model_copy(update={"activities": planning_activities})
+            return response.model_copy(
+                update={
+                    "activities": planning_activities,
+                    "plan_details": self._plan_details(decision, active_context),
+                }
+            )
         if decision.route is ConversationRoute.REFUSE:
             response = self._compose_without_tool(
                 ChatIntent.UNSUPPORTED,
@@ -268,12 +281,18 @@ class ConversationGraph:
                 active_context,
                 refused=True,
             )
-            return response.model_copy(update={"activities": planning_activities})
+            return response.model_copy(
+                update={
+                    "activities": planning_activities,
+                    "plan_details": self._plan_details(decision, active_context),
+                }
+            )
         response = self.tools.execute(state.message, decision, active_context, on_activity)
         return response.model_copy(
             update={
                 "route": ConversationRoute.TOOL_CALL,
                 "activities": [*planning_activities, *response.activities],
+                "plan_details": self._plan_details(decision, active_context),
                 "limitations": [*response.limitations, *decision.limitations],
                 "suggested_next_steps": [
                     *response.suggested_next_steps,
@@ -281,6 +300,48 @@ class ConversationGraph:
                 ][:3],
             }
         )
+
+    @staticmethod
+    def _plan_details(
+        decision: ConversationDecision, context: ChatContext
+    ) -> list[str]:
+        tool_labels = {
+            ChatToolName.ANALYTICS: "retrieve portfolio data",
+            ChatToolName.SCHEMA: "review the available data tables",
+            ChatToolName.DOCUMENTS: "retrieve market or customer-feedback evidence",
+            ChatToolName.REPLAY: "load a recorded analysis",
+            ChatToolName.EVALUATION: "review the latest evaluation report",
+            ChatToolName.DRIFT: "review the latest monitoring report",
+            ChatToolName.RECOMMENDATION: "run the portfolio analysis workflow",
+            ChatToolName.READ_ONLY_SQL: "run a validated read-only query",
+        }
+        scope = " ".join(
+            value.replace("_", " ")
+            for value in (
+                context.region.value,
+                context.product.value,
+                context.segment.value if context.segment else "portfolio",
+            )
+        )
+        if decision.route is ConversationRoute.DIRECT_ANSWER:
+            return ["Decision: answer directly. No data tools were needed."]
+        if decision.route is ConversationRoute.CLARIFY:
+            return ["Decision: ask for the missing portfolio scope before retrieving data."]
+        if decision.route is ConversationRoute.REFUSE:
+            return ["Decision: decline the request because it is outside the supported scope."]
+        details = [
+            f"Decision: {tool_labels.get(decision.tool_name, 'complete the requested task')}.",
+            f"Scope: {scope}.",
+        ]
+        if decision.sources:
+            sources = ", ".join(source.value.replace("_", " ") for source in decision.sources)
+            details.append(f"Planned data sources: {sources}.")
+        elif decision.tool_name is ChatToolName.RECOMMENDATION:
+            details.append(
+                "Planned evidence: claims, conversion, competitors, pricing history, market "
+                "intelligence, and customer feedback."
+            )
+        return details
 
     @staticmethod
     def _compose_without_tool(
