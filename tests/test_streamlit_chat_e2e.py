@@ -160,7 +160,7 @@ def test_streamlit_summarises_tool_use_and_operation_size_after_completion() -> 
     assert any(expander.label == "Plan, decisions, and tool calls" for expander in app.expander)
     markdown = "\n".join(item.value for item in app.markdown)
     assert "in 0.0 seconds" not in markdown
-    assert "Decision: retrieve portfolio data" in markdown
+    assert "Plan: call the conversion data tool" in markdown
 
 
 def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:

@@ -308,24 +308,53 @@ def _activity_text(activity: ChatActivity) -> str:
     duration = _format_duration(activity.duration_ms)
     if activity.agent == "conversation-agent":
         if activity.status is ActivityStatus.WORKING:
-            return "Thinking..."
+            return "Thinking and processing the request."
         if activity.status is ActivityStatus.COMPLETED:
-            return f"Thought for {duration}. Created a plan and selected the required tools."
+            return (
+                f"Thought for {duration}. The plan is ready; next, call the selected tools and "
+                "agents."
+            )
     tool_name = _tool_name(activity.source, activity.label)
+    agent_name = _agent_name(activity.agent)
     if activity.status is ActivityStatus.WORKING:
-        return f"Getting data from {tool_name}."
+        if activity.source == "portfolio_analysis":
+            return "Running the portfolio analysis workflow to combine the requested evidence."
+        if activity.source == "recommendation":
+            return "Calling the recommendation agent to create a pricing recommendation."
+        if activity.source == "governance":
+            return "Calling the governance agent to review the recommendation."
+        if agent_name is not None:
+            return f"Calling the {agent_name} to retrieve data."
+        return f"Calling the {tool_name} to get the data."
     if activity.status is ActivityStatus.COMPLETED:
         if activity.source == "portfolio_analysis":
             return (
-                "Combined claims, conversion, competitor, pricing-history, market, and "
+                "Completed the portfolio analysis workflow: combined claims, conversion, "
+                "competitor, pricing-history, market, and "
                 "customer-feedback evidence."
             )
+        if activity.source == "recommendation":
+            return _completed_action(
+                "Called the recommendation agent and created a pricing recommendation", activity
+            )
+        if activity.source == "governance":
+            return _completed_action(
+                "Called the governance agent and completed the review", activity
+            )
+        if agent_name is not None:
+            return _completed_action(f"Called the {agent_name} and got the data", activity)
         if activity.duration_ms is None or activity.duration_ms < 100:
-            return f"Got data from {tool_name}."
-        return f"Got data from {tool_name} in {duration}."
+            return f"Called the {tool_name} and got the data."
+        return f"Called the {tool_name} and got the data in {duration}."
     status = activity.status.value.title()
     duration_suffix = _format_duration(activity.duration_ms, prefix=" - ")
     return f"{status}: {activity.label}{duration_suffix}"
+
+
+def _completed_action(action: str, activity: ChatActivity) -> str:
+    if activity.duration_ms is None or activity.duration_ms < 100:
+        return f"{action}."
+    return f"{action} in {_format_duration(activity.duration_ms)}."
 
 
 def _format_duration(duration_ms: float | None, *, prefix: str = "") -> str:
@@ -351,6 +380,16 @@ def _tool_name(source: str | None, fallback: str) -> str:
         "governance": "governance review",
     }
     return names.get(source or "", fallback)
+
+
+def _agent_name(agent: str | None) -> str | None:
+    names = {
+        "claims-specialist": "claims specialist agent",
+        "conversion-specialist": "conversion specialist agent",
+        "market-intelligence-specialist": "market-intelligence specialist agent",
+        "pricing-history-specialist": "pricing-history specialist agent",
+    }
+    return names.get(agent or "")
 
 
 def _activity_key(activity: ChatActivity) -> str:

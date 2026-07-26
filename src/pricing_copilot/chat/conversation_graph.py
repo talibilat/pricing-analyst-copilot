@@ -305,18 +305,8 @@ class ConversationGraph:
     def _plan_details(
         decision: ConversationDecision, context: ChatContext
     ) -> list[str]:
-        tool_labels = {
-            ChatToolName.ANALYTICS: "retrieve portfolio data",
-            ChatToolName.SCHEMA: "review the available data tables",
-            ChatToolName.DOCUMENTS: "retrieve market or customer-feedback evidence",
-            ChatToolName.REPLAY: "load a recorded analysis",
-            ChatToolName.EVALUATION: "review the latest evaluation report",
-            ChatToolName.DRIFT: "review the latest monitoring report",
-            ChatToolName.RECOMMENDATION: "run the portfolio analysis workflow",
-            ChatToolName.READ_ONLY_SQL: "run a validated read-only query",
-        }
         scope = " ".join(
-            value.replace("_", " ")
+            value.replace("_", " ").title()
             for value in (
                 context.region.value,
                 context.product.value,
@@ -324,23 +314,31 @@ class ConversationGraph:
             )
         )
         if decision.route is ConversationRoute.DIRECT_ANSWER:
-            return ["Decision: answer directly. No data tools were needed."]
+            return ["Plan: answer directly. No data tools or agents are needed."]
         if decision.route is ConversationRoute.CLARIFY:
-            return ["Decision: ask for the missing portfolio scope before retrieving data."]
+            return ["Plan: ask for the missing portfolio scope before calling any data tools."]
         if decision.route is ConversationRoute.REFUSE:
-            return ["Decision: decline the request because it is outside the supported scope."]
-        details = [
-            f"Decision: {tool_labels.get(decision.tool_name, 'complete the requested task')}.",
-            f"Scope: {scope}.",
-        ]
+            return ["Plan: decline the request because it is outside the supported scope."]
+        details = [f"Scope: {scope}."]
         if decision.sources:
             sources = ", ".join(source.value.replace("_", " ") for source in decision.sources)
-            details.append(f"Planned data sources: {sources}.")
-        elif decision.tool_name is ChatToolName.RECOMMENDATION:
-            details.append(
-                "Planned evidence: claims, conversion, competitors, pricing history, market "
-                "intelligence, and customer feedback."
+            details.extend(
+                [
+                    f"Plan: call the {sources} data tool(s) to retrieve the requested data.",
+                    "Next: get the data, then summarise the findings.",
+                ]
             )
+        elif decision.tool_name is ChatToolName.RECOMMENDATION:
+            details.extend(
+                [
+                    "Plan: retrieve claims, conversion, competitor, pricing-history, market, "
+                    "and customer-feedback evidence.",
+                    "Next: call the claims, conversion, market-intelligence, and pricing-history "
+                    "specialist agents, then call the recommendation and governance agents.",
+                ]
+            )
+        else:
+            details.append("Next: call the selected tool and present its result.")
         return details
 
     @staticmethod

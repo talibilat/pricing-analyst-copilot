@@ -66,7 +66,7 @@ def test_stable_fact_is_answered_without_a_business_tool() -> None:
 
     assert response.intent is ChatIntent.GENERAL_ANSWER
     assert response.message == "Paris is the capital of France."
-    assert response.plan_details == ["Decision: answer directly. No data tools were needed."]
+    assert response.plan_details == ["Plan: answer directly. No data tools or agents are needed."]
     assert not tools.calls
 
 
