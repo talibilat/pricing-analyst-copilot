@@ -232,6 +232,15 @@ def test_chat_preserves_scenario_in_follow_up_context(service: ChatService) -> N
     assert follow_up.context == response.context
 
 
+def test_chat_fallback_answers_a_greeting_when_no_llm_is_configured(
+    service: ChatService,
+) -> None:
+    response = service.submit("Hi hello")
+
+    assert response.intent is ChatIntent.HELP
+    assert response.message.startswith("Hello!")
+
+
 def test_chat_exposes_schema_catalogue(service: ChatService) -> None:
     response = service.submit("Which database fields are available?")
 

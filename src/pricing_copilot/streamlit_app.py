@@ -14,19 +14,32 @@ from pricing_copilot.chat.contracts import (
     ChatIntent,
     ChatResponse,
     ChatTable,
-    ConversationMessage,
+    ChatTurn,
 )
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
 from pricing_copilot.contracts import (
+    AnalysisPeriod,
     AnalystDecisionType,
     DecisionRequest,
+    PortfolioQuestion,
+    Product,
+    Region,
     ResultSource,
+    Segment,
     WorkflowResult,
 )
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
 from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
+from pricing_copilot.streamlit_scroll import AUTO_SCROLL_SCRIPT
+from pricing_copilot.streamlit_theme import (
+    INJECT_CSS,
+    assistant_avatar_data_uri,
+    badge_html,
+    confidence_bars_html,
+    portfolio_pill_text,
+)
 
 
 def _render_time_series(
@@ -97,7 +110,7 @@ def _render_workflow_result(result: WorkflowResult) -> None:
             f"({recommendation.price_range.lower_pct:g}% to "
             f"{recommendation.price_range.upper_pct:g}%)"
         )
-    st.markdown(f"**Proposed action:** {action}")
+    st.markdown(badge_html(recommendation.action.value, action), unsafe_allow_html=True)
     st.markdown("**Reasoning**")
     st.write(recommendation.rationale)
     if recommendation.counter_evidence:
@@ -117,16 +130,18 @@ def _render_workflow_result(result: WorkflowResult) -> None:
     if recommendation.confidence is not None:
         confidence = recommendation.confidence
         st.markdown("**Confidence**")
-        cols = st.columns(5)
-        labels_and_values = [
-            ("Evidence coverage", confidence.evidence_coverage),
-            ("Source freshness", confidence.source_freshness),
-            ("Specialist agreement", confidence.specialist_agreement),
-            ("Data quality", confidence.data_quality),
-            ("Conflict penalty", confidence.conflict_penalty),
-        ]
-        for column, (label, value) in zip(cols, labels_and_values, strict=True):
-            column.metric(label, f"{value * 100:.0f}%")
+        st.markdown(
+            confidence_bars_html(
+                [
+                    ("Evidence coverage", confidence.evidence_coverage),
+                    ("Source freshness", confidence.source_freshness),
+                    ("Specialist agreement", confidence.specialist_agreement),
+                    ("Data quality", confidence.data_quality),
+                    ("Conflict penalty", confidence.conflict_penalty),
+                ]
+            ),
+            unsafe_allow_html=True,
+        )
         st.caption(f"Overall confidence: {confidence.overall * 100:.0f}%")
 
     if recommendation.fair_value_status is not None:
@@ -135,7 +150,9 @@ def _render_workflow_result(result: WorkflowResult) -> None:
             FairValueStatus.REVIEW_RECOMMENDED: "Review recommended",
             FairValueStatus.CONCERN_IDENTIFIED: "Concern identified",
         }
-        st.markdown(f"**Fair value status:** {fair_value_labels[recommendation.fair_value_status]}")
+        st.markdown(
+            f"**Fair value status:** {fair_value_labels[recommendation.fair_value_status]}"
+        )
         if recommendation.fair_value_follow_up:
             st.write("\n".join(f"- {item}" for item in recommendation.fair_value_follow_up))
 
@@ -181,7 +198,9 @@ def _render_workflow_result(result: WorkflowResult) -> None:
                 else []
             ),
             {
-                competitor.competitor_name: [item.value for item in competitor.price_index.monthly]
+                competitor.competitor_name: [
+                    item.value for item in competitor.price_index.monthly
+                ]
                 for competitor in analytics.competitors.competitors
             },
             y_label="Price index",
@@ -236,14 +255,6 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             icon="🔁",
         )
     st.markdown(response.message)
-    if response.limitations:
-        st.info(
-            "**What I could not confirm**\n\n"
-            + "\n".join(f"- {item}" for item in response.limitations)
-        )
-    if response.suggested_next_steps:
-        st.markdown("**You could try**")
-        st.write("\n".join(f"- {item}" for item in response.suggested_next_steps))
     for table in response.tables:
         _render_table(table)
     if response.workflow_result is not None:
@@ -279,11 +290,18 @@ def _render_drift_monitoring_tab() -> None:
             for alert in category_alerts:
                 if alert.investigation_required:
                     status = "🔴 investigation required"
+                    status_class = "pc-monitoring-status-error"
                 elif alert.insufficient_sample:
                     status = "🟡 insufficient sample"
+                    status_class = "pc-monitoring-status-warn"
                 else:
                     status = "🟢 normal"
-                st.markdown(f"**{alert.metric_name}** - {status}")
+                    status_class = "pc-monitoring-status-ok"
+                st.markdown(
+                    f"**{alert.metric_name}** - "
+                    f'<span class="{status_class}">{status}</span>',
+                    unsafe_allow_html=True,
+                )
                 st.caption(f"Baseline: {alert.baseline_window} | Current: {alert.current_window}")
                 st.write(alert.detail)
                 for measurement in alert.measurements:
@@ -302,117 +320,166 @@ def _activity_text(activity: ChatActivity) -> str:
 st.set_page_config(
     page_title="Pricing Decision Copilot", layout="wide", initial_sidebar_state="collapsed"
 )
-st.title("Pricing Decision Copilot")
-st.caption(
-    "Chat-first, governed portfolio decision support. The copilot retrieves only permitted "
-    "portfolio-level data and never executes a pricing change."
+st.markdown(INJECT_CSS, unsafe_allow_html=True)
+
+_HEADER_PORTFOLIO = PortfolioQuestion(
+    product=Product.PERSONAL_MOTOR,
+    region=Region.NORTH_WEST,
+    segment=Segment.RENEWAL,
+    analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+)
+st.markdown(
+    f"""
+    <div class="pc-header">
+      <div class="pc-header-left">
+        <div class="pc-logo">P</div>
+        <div>
+          <div class="pc-title">Pricing Decision Copilot</div>
+          <div class="pc-subtitle">Decision support only — never executes a pricing change</div>
+        </div>
+      </div>
+      <div class="pc-portfolio-pill">{portfolio_pill_text(_HEADER_PORTFOLIO)}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 if "chat_messages" not in st.session_state:
-    welcome = (
-        "Ask me a general question, explore portfolio data, or request a governed pricing "
-        "recommendation. If your request could mean more than one thing, I will ask a focused "
-        "follow-up and suggest useful options."
-    )
     st.session_state.chat_messages = [
         {
             "role": "assistant",
-            "content": welcome,
             "response": ChatResponse(
                 intent=ChatIntent.HELP,
                 context=ChatContext(),
-                message=welcome,
+                message=(
+                    "Ask me about claims, conversion, competitors, previous pricing actions, "
+                    "market intelligence, or aggregate customer feedback. You can also ask for a "
+                    "pricing recommendation or say ‘analyse everything’."
+                ),
             ).model_dump(mode="json"),
         }
     ]
-if "chat_service" not in st.session_state:
-    st.session_state.chat_service = ChatService()
-if "chat_context" not in st.session_state:
-    st.session_state.chat_context = ChatContext()
-
-with st.sidebar:
-    st.subheader("Suggested questions")
-    st.caption("Type or paste one into the chat.")
-    st.code("What is the capital of France?")
-    st.code("What was our price last month?")
-    st.code("Should we increase the price next month?")
-    st.caption("Each run shows safe activity labels, not hidden prompts or private reasoning.")
 
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 
-with tab_chat:
-    for message_number, message in enumerate(st.session_state.chat_messages):
-        with st.chat_message(message["role"]):
-            if message["role"] == "user":
-                st.markdown(message["content"])
-            else:
-                response = ChatResponse.model_validate(message["response"])
-                is_latest_message = message_number == len(st.session_state.chat_messages) - 1
-                _render_response(response, message_number, can_record=is_latest_message)
+def _render_copilot_label() -> None:
+    st.markdown('<div class="pc-copilot-label">Copilot</div>', unsafe_allow_html=True)
 
-    if prompt := st.chat_input(
-        "Ask a question",
+
+def _submit_prompt(prompt: str) -> None:
+    active_context = ChatContext()
+    conversation_history: list[ChatTurn] = []
+    for saved_message in st.session_state.chat_messages:
+        saved_response = ChatResponse.model_validate(saved_message["response"])
+        conversation_history.append(
+            ChatTurn(role=saved_message["role"], content=saved_response.message)
+        )
+        if saved_message["role"] == "assistant":
+            active_context = saved_response.context
+
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    st.session_state.chat_messages.append(
+        {
+            "role": "user",
+            "response": ChatResponse(
+                intent=ChatIntent.HELP, context=ChatContext(), message=prompt
+            ).model_dump(mode="json"),
+        }
+    )
+    with st.chat_message("assistant", avatar=assistant_avatar_data_uri()):
+        _render_copilot_label()
+        activity_box = st.empty()
+        activity_lines: list[str] = []
+
+        def show_activity(activity: ChatActivity) -> None:
+            activity_lines.append(_activity_text(activity))
+            activity_box.markdown("  \n".join(activity_lines[-10:]))
+
+        with st.spinner("Working with governed portfolio sources..."):
+            response = ChatService().submit(
+                prompt,
+                active_context,
+                history=conversation_history,
+                on_activity=show_activity,
+            )
+        activity_box.empty()
+        if "Live analysis could not complete" in response.message:
+            retry_number = len(st.session_state.chat_messages)
+            if st.button("Try replay instead", key=f"replay_retry_{retry_number}"):
+                retry_context = ChatContext(scenario=response.context.scenario, force_replay=True)
+                response = ChatService().submit(
+                    prompt,
+                    retry_context,
+                    history=conversation_history,
+                    on_activity=show_activity,
+                )
+        if response.activities:
+            with st.expander("Activity trace", expanded=True):
+                st.write(
+                    "\n".join(f"- {_activity_text(activity)}" for activity in response.activities)
+                )
+        message_number = len(st.session_state.chat_messages)
+        _render_response(response, message_number, can_record=True)
+    st.session_state.chat_messages.append(
+        {"role": "assistant", "response": response.model_dump(mode="json")}
+    )
+
+
+_SUGGESTIONS = [
+    "Show claims and conversion performance",
+    "What did competitors do this period?",
+    "Analyse everything and recommend a pricing action",
+]
+
+with tab_chat:
+    clicked_suggestion: str | None = None
+    pending_prompt = st.session_state.pop("pending_chat_prompt", None)
+    if len(st.session_state.chat_messages) == 1 and pending_prompt is None:
+        st.markdown(
+            """
+            <div class="pc-empty-state">
+              <div class="pc-empty-icon">P</div>
+              <div class="pc-empty-heading">What would you like to review?</div>
+              <div class="pc-empty-subtitle">Ask about claims, conversion, competitors, pricing
+              history, or request a recommendation for this portfolio.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown('<div class="pc-suggestions">', unsafe_allow_html=True)
+        chip_columns = st.columns(len(_SUGGESTIONS))
+        for column, suggestion in zip(chip_columns, _SUGGESTIONS, strict=True):
+            if column.button(suggestion, key=f"suggestion_{suggestion}"):
+                clicked_suggestion = suggestion
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    for message_number, message in enumerate(st.session_state.chat_messages):
+        with st.chat_message(
+            message["role"],
+            avatar=assistant_avatar_data_uri() if message["role"] == "assistant" else None,
+        ):
+            if message["role"] == "assistant":
+                _render_copilot_label()
+            response = ChatResponse.model_validate(message["response"])
+            is_latest_message = message_number == len(st.session_state.chat_messages) - 1
+            _render_response(response, message_number, can_record=is_latest_message)
+
+    if pending_prompt is not None:
+        _submit_prompt(pending_prompt)
+
+    prompt = st.chat_input(
+        "Ask a portfolio-level pricing question",
         key="pricing_chat_input",
         max_chars=1_000,
         submit_mode="disable",
-    ):
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.chat_messages.append(
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        )
-        with st.chat_message("assistant"):
-            activity_box = st.empty()
-            activity_lines: list[str] = []
+    )
+    if submitted_prompt := clicked_suggestion or prompt:
+        st.session_state.pending_chat_prompt = submitted_prompt
+        st.rerun()
 
-            def show_activity(activity: ChatActivity) -> None:
-                activity_lines.append(_activity_text(activity))
-                activity_box.markdown("  \n".join(activity_lines[-10:]))
-
-            history = [
-                ConversationMessage(role=item["role"], content=item["content"])
-                for item in st.session_state.chat_messages[:-1]
-            ]
-            with st.spinner("Working with governed portfolio sources..."):
-                response = st.session_state.chat_service.submit(
-                    prompt,
-                    st.session_state.chat_context,
-                    history=history,
-                    on_activity=show_activity,
-                )
-            activity_box.empty()
-            if "Live analysis could not complete" in response.message:
-                message_number = len(st.session_state.chat_messages)
-                if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
-                    retry_context = ChatContext(
-                        scenario=response.context.scenario, force_replay=True
-                    )
-                    response = st.session_state.chat_service.submit(
-                        prompt,
-                        retry_context,
-                        history=history,
-                        on_activity=show_activity,
-                    )
-            st.session_state.chat_context = response.context
-            if response.activities:
-                with st.expander("Activity trace", expanded=True):
-                    st.write(
-                        "\n".join(
-                            f"- {_activity_text(activity)}" for activity in response.activities
-                        )
-                    )
-            message_number = len(st.session_state.chat_messages)
-            _render_response(response, message_number, can_record=True)
-        st.session_state.chat_messages.append(
-            {
-                "role": "assistant",
-                "content": response.message,
-                "response": response.model_dump(mode="json"),
-            }
-        )
+    if pending_prompt is not None:
+        st.html(AUTO_SCROLL_SCRIPT, unsafe_allow_javascript=True)
 
 with tab_monitoring:
     _render_drift_monitoring_tab()
