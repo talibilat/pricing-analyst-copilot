@@ -40,3 +40,9 @@ def test_streamlit_chat_layout_keeps_composer_fixed_and_separates_roles() -> Non
     assert "margin-left: auto" in SOURCE
     assert "stchatmessageavatarassistant" in SOURCE
     assert "margin-right: auto" in SOURCE
+
+
+def test_streamlit_clarification_recommendations_are_buttons() -> None:
+    assert "response.requires_clarification" in SOURCE
+    assert "selected_suggestion" in SOURCE
+    assert 'key=f"suggestion_' in SOURCE

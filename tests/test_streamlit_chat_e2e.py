@@ -157,6 +157,31 @@ def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:
     assert app.dataframe
 
 
+def test_streamlit_clarification_suggestion_is_a_one_click_chat_action() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("What was our price last month?")
+    app.run()
+
+    suggestion = next(
+        button for button in app.button if button.label == "Check the average quoted premium."
+    )
+    suggestion.click()
+    app.run()
+
+    assert not app.exception
+    assert any(
+        message.name == "user" and "average quoted premium" in message.markdown[0].value.lower()
+        for message in app.chat_message
+    )
+    assert app.dataframe
+    assert not any(
+        button.label in {"Check the approved renewal action.", "Check the average quoted premium."}
+        for button in app.button
+    )
+
+
 def test_new_streamlit_session_starts_without_previous_history() -> None:
     first = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     first.run()

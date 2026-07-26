@@ -279,7 +279,14 @@ def _render_decision_controls(result: WorkflowResult, message_number: int) -> No
                 st.success(f"Analyst decision recorded with id {recorded.record_id}.")
 
 
-def _render_response(response: ChatResponse, message_number: int, *, can_record: bool) -> None:
+def _render_response(
+    response: ChatResponse,
+    message_number: int,
+    *,
+    can_record: bool,
+    can_recommend: bool = False,
+) -> str | None:
+    selected_suggestion: str | None = None
     if response.source is ResultSource.REPLAY:
         st.warning(
             "REPLAY MODE - this is a cached, previously validated run, not a live analysis.",
@@ -291,15 +298,26 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             "**What I could not confirm**\n\n"
             + "\n".join(f"- {item}" for item in response.limitations)
         )
-    if response.suggested_next_steps:
-        st.markdown("**You could try**")
-        st.write("\n".join(f"- {item}" for item in response.suggested_next_steps))
+    if can_recommend and response.requires_clarification and response.suggested_next_steps:
+        suggestion_box = st.empty()
+        with suggestion_box.container():
+            st.caption("Choose a quick reply, or type your own message below.")
+            for suggestion_number, suggestion in enumerate(response.suggested_next_steps[:3]):
+                if st.button(
+                    suggestion,
+                    key=f"suggestion_{message_number}_{suggestion_number}",
+                    width="stretch",
+                ):
+                    selected_suggestion = suggestion
+        if selected_suggestion is not None:
+            suggestion_box.empty()
     for table in response.tables:
         _render_table(table)
     if response.workflow_result is not None:
         _render_workflow_result(response.workflow_result)
         if can_record:
             _render_decision_controls(response.workflow_result, message_number)
+    return selected_suggestion
 
 
 def _render_drift_monitoring_tab() -> None:
@@ -392,6 +410,7 @@ with st.sidebar:
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 
 with tab_chat:
+    recommended_prompt: str | None = None
     chat_history = st.container(
         height=420,
         border=False,
@@ -406,14 +425,23 @@ with tab_chat:
                 else:
                     response = ChatResponse.model_validate(message["response"])
                     is_latest_message = message_number == len(st.session_state.chat_messages) - 1
-                    _render_response(response, message_number, can_record=is_latest_message)
+                    selected_suggestion = _render_response(
+                        response,
+                        message_number,
+                        can_record=is_latest_message,
+                        can_recommend=is_latest_message,
+                    )
+                    if selected_suggestion is not None:
+                        recommended_prompt = selected_suggestion
 
-    if prompt := st.chat_input(
+    typed_prompt = st.chat_input(
         "Ask a question",
         key="pricing_chat_input",
         max_chars=1_000,
         submit_mode="disable",
-    ):
+    )
+    prompt = recommended_prompt or typed_prompt
+    if prompt:
         with chat_history:
             with st.chat_message("user"):
                 st.markdown(prompt)
@@ -464,7 +492,12 @@ with tab_chat:
                             )
                         )
                 message_number = len(st.session_state.chat_messages)
-                _render_response(response, message_number, can_record=True)
+                _render_response(
+                    response,
+                    message_number,
+                    can_record=True,
+                    can_recommend=True,
+                )
             st.session_state.chat_messages.append(
                 {
                     "role": "assistant",

@@ -81,7 +81,14 @@ class ConversationDecision(BaseModel):
     start_month: date | None = None
     end_month: date | None = None
     limitations: list[str] = Field(default_factory=list)
-    suggested_next_steps: list[str] = Field(default_factory=list, max_length=3)
+    suggested_next_steps: list[str] = Field(
+        default_factory=list,
+        max_length=3,
+        description=(
+            "For clarify routes, two or three literal user replies that each make a concrete "
+            "choice and can be submitted unchanged."
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_route_payload(self) -> ConversationDecision:
