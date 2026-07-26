@@ -15,6 +15,12 @@ from pricing_copilot.chat.contracts import (
     ChatResponse,
     ChatTable,
 )
+from pricing_copilot.chat.orchestrator import (
+    ChatOrchestrationPlan,
+    ChatOrchestrator,
+    ChatToolName,
+    build_default_chat_orchestrator,
+)
 from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
@@ -85,14 +91,29 @@ _CUSTOMER_PATTERN = re.compile(
     r"\b(?:date of birth|email address|phone number|postcode)\b",
     re.IGNORECASE,
 )
+_ORCHESTRATED_DATA_SOURCES: dict[ChatToolName, str] = {
+    ChatToolName.QUERY_CLAIMS: "claims",
+    ChatToolName.QUERY_CONVERSION: "conversion",
+    ChatToolName.QUERY_COMPETITORS: "competitors",
+    ChatToolName.QUERY_PRICING_HISTORY: "pricing_history",
+    ChatToolName.SEARCH_MARKET_INTELLIGENCE: "market_intelligence",
+    ChatToolName.SEARCH_CUSTOMER_FEEDBACK: "customer_feedback",
+    ChatToolName.INSPECT_SCHEMA_CATALOGUE: "schema_catalogue",
+}
 
 
 class ChatService:
     """Routes natural language only to an allowlisted read-only data surface."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        *,
+        orchestrator: ChatOrchestrator | None = None,
+    ) -> None:
         self.settings = settings or get_settings()
         self.database = PersistentAnalyticsDatabase(self.settings.analytics_database_path)
+        self.orchestrator = orchestrator or build_default_chat_orchestrator(self.settings)
 
     def submit(
         self,
@@ -110,6 +131,23 @@ class ChatService:
                 context=active_context,
                 refused=True,
             )
+
+        if active_context.force_replay:
+            return self._run_replay(active_context, on_activity)
+
+        if self.orchestrator is not None:
+            try:
+                plan = self.orchestrator.plan_request(normalized, active_context)
+            except Exception:
+                # The deterministic router is a transparent availability fallback.
+                # It retains the same allowlists and never expands data access.
+                pass
+            else:
+                return self._execute_orchestration_plan(
+                    plan,
+                    normalized,
+                    on_activity,
+                )
 
         active_context = ChatContext(
             scenario=self._scenario_for(normalized, active_context.scenario),
@@ -151,6 +189,88 @@ class ChatService:
                 requires_clarification=True,
             )
         return self._retrieve_sources(sources, normalized, active_context, on_activity)
+
+    def _execute_orchestration_plan(
+        self,
+        plan: ChatOrchestrationPlan,
+        message: str,
+        listener: ActivityListener | None,
+    ) -> ChatResponse:
+        context = ChatContext(scenario=plan.scenario)
+        routing_activity = ChatActivity(
+            status=ActivityStatus.COMPLETED,
+            label="LLM orchestrator selected governed tools",
+            purpose=(
+                "Selecting only registered read-only data sources and governed workflows."
+            ),
+            agent="chat-orchestrator",
+        )
+        if listener is not None:
+            listener(routing_activity)
+
+        if not plan.tool_calls:
+            response = ChatResponse(
+                intent=ChatIntent.DATA_RETRIEVAL,
+                context=context,
+                message=plan.clarification_message or "Which portfolio source should I check?",
+                requires_clarification=True,
+            )
+            return response.model_copy(update={"activities": [routing_activity]})
+
+        selected_tool = plan.tool_calls[0].tool
+        if selected_tool is ChatToolName.RUN_GOVERNED_PRICING_ANALYSIS:
+            response = self._run_pricing_analysis(message, context, listener)
+        elif selected_tool is ChatToolName.LOAD_REPLAY:
+            response = self._run_replay(context, listener)
+        elif selected_tool is ChatToolName.LOAD_EVALUATION:
+            response = self._report_evaluation(context, listener)
+        elif selected_tool is ChatToolName.LOAD_DRIFT:
+            response = self._report_drift(context, listener)
+        elif selected_tool is ChatToolName.RESPOND_HELP:
+            response = ChatResponse(
+                intent=ChatIntent.HELP,
+                context=context,
+                message=(
+                    "Ask about claims, conversion, competitors, previous pricing actions, "
+                    "market intelligence, aggregate customer feedback, or request a governed "
+                    "pricing recommendation."
+                ),
+            )
+        else:
+            sources: list[str] = []
+            requested_fields: dict[str, list[str] | None] = {}
+            for call in plan.tool_calls:
+                source = _ORCHESTRATED_DATA_SOURCES.get(call.tool)
+                if source is None:
+                    continue
+                if source in SOURCE_TABLES:
+                    invalid_columns = [
+                        column for column in call.columns if column not in SOURCE_TABLES[source]
+                    ]
+                    if invalid_columns:
+                        return ChatResponse(
+                            intent=ChatIntent.DATA_RETRIEVAL,
+                            context=context,
+                            message=(
+                                "The orchestrator selected a field outside the approved schema. "
+                                "Please ask for the data catalogue or choose a permitted field."
+                            ),
+                            activities=[routing_activity],
+                            requires_clarification=True,
+                        )
+                    requested_fields[source] = call.columns or None
+                sources.append(source)
+            response = self._retrieve_sources(
+                sources,
+                message,
+                context,
+                listener,
+                requested_fields_by_source=requested_fields,
+            )
+
+        return response.model_copy(
+            update={"activities": [routing_activity, *response.activities]}
+        )
 
     def _refusal_reason(self, message: str) -> str | None:
         if _SQL_PATTERN.search(message):
@@ -431,6 +551,8 @@ class ChatService:
         message: str,
         context: ChatContext,
         listener: ActivityListener | None,
+        *,
+        requested_fields_by_source: dict[str, list[str] | None] | None = None,
     ) -> ChatResponse:
         activities: list[ChatActivity] = []
         tables: list[ChatTable] = []
@@ -456,10 +578,16 @@ class ChatService:
                 table, document_ids = self._retrieve_documents(source, context.scenario)
                 evidence_ids.extend(document_ids)
             else:
+                planned_fields = (
+                    requested_fields_by_source.get(source)
+                    if requested_fields_by_source is not None
+                    and source in requested_fields_by_source
+                    else self._requested_fields(source, message)
+                )
                 table = self._query_table(
                     source,
                     context.scenario,
-                    requested_fields=self._requested_fields(source, message),
+                    requested_fields=planned_fields,
                 )
             tables.append(table)
             self._emit(

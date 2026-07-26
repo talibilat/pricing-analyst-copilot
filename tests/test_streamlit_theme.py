@@ -72,3 +72,15 @@ def test_inject_css_styles_monitoring_alert_expanders() -> None:
     assert '[data-testid="stExpander"]' in INJECT_CSS
     assert "pc-conf-grid" in INJECT_CSS
     assert "pc-monitoring-status-error" in INJECT_CSS
+
+
+def test_chat_theme_right_aligns_user_messages_with_accessible_contrast() -> None:
+    assert ':has([data-testid="stChatMessageAvatarUser"])' in INJECT_CSS
+    assert "margin-left:auto" in INJECT_CSS
+    assert "--pc-on-accent" in INJECT_CSS
+
+
+def test_chat_theme_sets_explicit_assistant_and_activity_text_colors() -> None:
+    assert ':has(img[alt="assistant avatar"])' in INJECT_CSS
+    assert '[data-testid="stExpanderDetails"]' in INJECT_CSS
+    assert "--pc-text" in INJECT_CSS

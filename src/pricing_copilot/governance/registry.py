@@ -24,6 +24,15 @@ class AgentRegistration(BaseModel):
 
 
 APPROVED_AGENT_REGISTRY: dict[str, AgentRegistration] = {
+    "chat-orchestrator": AgentRegistration(
+        name="chat-orchestrator",
+        owner="Pricing Decision Copilot",
+        version="v1",
+        risk_tier=RiskTier.HIGH,
+        permitted_tools=(),
+        output_contract="ChatOrchestrationPlan",
+        evaluation_suite="tests/test_chat_orchestrator.py",
+    ),
     "portfolio-supervisor": AgentRegistration(
         name="portfolio-supervisor",
         owner="Pricing Decision Copilot",

@@ -74,10 +74,19 @@ INJECT_CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+:root {
+  --pc-text: oklch(22% 0.015 85);
+  --pc-text-muted: oklch(46% 0.014 85);
+  --pc-surface: oklch(99% 0.006 85);
+  --pc-surface-subtle: oklch(96% 0.006 85);
+  --pc-accent: oklch(47% 0.085 235);
+  --pc-on-accent: oklch(99% 0.002 85);
+}
+
 html, body, [data-testid="stAppViewContainer"] {
   background: oklch(98% 0.012 85);
   font-family: 'IBM Plex Sans', sans-serif;
-  color: oklch(22% 0.015 85);
+  color: var(--pc-text);
 }
 [data-testid="stHeader"] { background: transparent; }
 
@@ -127,10 +136,34 @@ html, body, [data-testid="stAppViewContainer"] {
   border-color:oklch(47% 0.085 235); color:oklch(38% 0.09 235);
 }
 
-[data-testid="stChatMessage"] { gap:9px; }
+[data-testid="stChatMessage"] { gap:9px; color:var(--pc-text); }
 [data-testid="stChatMessageAvatarUser"],
 [data-testid="stChatMessageAvatarAssistant"] {
   border-radius:6px;
+}
+
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+  width:fit-content; max-width:min(72%, 760px); margin-left:auto;
+  padding:10px 14px; border-radius:14px 14px 4px 14px;
+  background:var(--pc-accent); color:var(--pc-on-accent);
+  flex-direction:row-reverse;
+}
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"])
+[data-testid="stChatMessageAvatarUser"] {
+  display:none;
+}
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"])
+[data-testid="stMarkdownContainer"],
+[data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"])
+[data-testid="stMarkdownContainer"] p {
+  color:var(--pc-on-accent) !important;
+}
+
+[data-testid="stChatMessage"]:has(img[alt="assistant avatar"])
+[data-testid="stMarkdownContainer"],
+[data-testid="stChatMessage"]:has(img[alt="assistant avatar"])
+[data-testid="stMarkdownContainer"] :is(p, li, strong, em) {
+  color:var(--pc-text) !important;
 }
 
 .pc-copilot-label {
@@ -171,10 +204,21 @@ html, body, [data-testid="stAppViewContainer"] {
 [data-testid="stExpander"] summary {
   font-size:13.5px; font-weight:500; padding:12px 2px;
 }
-[data-testid="stExpander"] [data-testid="stExpanderDetails"] { padding:4px 18px 16px; }
+[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+  padding:4px 18px 16px; background:var(--pc-surface); color:var(--pc-text);
+}
+[data-testid="stExpanderDetails"] [data-testid="stMarkdownContainer"],
+[data-testid="stExpanderDetails"] [data-testid="stMarkdownContainer"] :is(p, li, strong, em) {
+  color:var(--pc-text) !important;
+}
 
 [data-testid="stChatInput"] textarea {
   font-family:'IBM Plex Sans', sans-serif; font-size:14.5px;
+  color:var(--pc-on-accent) !important;
+  caret-color:var(--pc-on-accent);
+}
+[data-testid="stChatInput"] textarea::placeholder {
+  color:oklch(78% 0.01 235) !important;
 }
 [data-testid="stChatInput"] {
   border-radius:16px !important; border:1px solid oklch(87% 0.012 85) !important;
