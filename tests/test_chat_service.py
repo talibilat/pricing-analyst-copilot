@@ -176,8 +176,10 @@ def _record_controlled_increase_replay(service: ChatService) -> None:
 def test_chat_retrieves_multiple_permitted_sources_with_activity(service: ChatService) -> None:
     response = service.submit("Show claims and conversion performance")
 
-    assert response.intent is ChatIntent.MULTI_SOURCE_SUMMARY
-    assert [table.title for table in response.tables] == ["Claims", "Conversion"]
+    assert response.intent is ChatIntent.PRICING_ANALYSIS
+    assert "## Direct answer" in response.message
+    assert "## Key evidence" in response.message
+    assert not response.tables
     labels = [activity.label for activity in response.activities]
     assert CLAIMS_LABEL in labels
     assert CONVERSION_LABEL in labels
@@ -197,7 +199,8 @@ def test_chat_uses_required_safe_activity_labels(
 ) -> None:
     response = service.submit(message)
 
-    assert response.tables
+    assert response.intent is ChatIntent.PRICING_ANALYSIS
+    assert "## Key evidence" in response.message
     assert label in [activity.label for activity in response.activities]
 
 
@@ -228,8 +231,10 @@ def test_chat_preserves_scenario_in_follow_up_context(service: ChatService) -> N
     response = service.submit("Show claims for the retention concern scenario")
     follow_up = service.submit("Show conversion", response.context)
 
-    assert response.context == ChatContext(scenario=ScenarioName.RETENTION_CONCERN)
-    assert follow_up.context == response.context
+    assert response.context.scenario is ScenarioName.RETENTION_CONCERN
+    assert response.context.analysis_start_month == date(2025, 1, 1)
+    assert follow_up.context.scenario is ScenarioName.RETENTION_CONCERN
+    assert follow_up.context.analysis_start_month == response.context.analysis_start_month
 
 
 def test_chat_fallback_answers_a_greeting_when_no_llm_is_configured(
@@ -290,7 +295,7 @@ def test_force_replay_context_flag_bypasses_keyword_matching(service: ChatServic
     assert response.source is ResultSource.REPLAY
 
 
-def test_chat_reports_a_live_failure_and_offers_an_explicit_replay_choice(
+def test_chat_uses_deterministic_analytics_when_live_agent_credentials_are_unavailable(
     service: ChatService,
 ) -> None:
     with patch(
@@ -300,8 +305,67 @@ def test_chat_reports_a_live_failure_and_offers_an_explicit_replay_choice(
         response = service.submit("Recommend a pricing action")
 
     assert not response.refused
-    assert "replay" in response.message.lower()
-    assert response.workflow_result is None
+    assert "direct answer" in response.message.lower()
+    assert response.workflow_result is not None
+
+
+def test_twelve_month_renewal_portfolio_review_answers_with_evidence_and_action(
+    service: ChatService,
+) -> None:
+    response = service.submit("Review the renewal portfolio for the last 12 months")
+
+    assert response.context.segment is Segment.RENEWAL
+    assert response.context.analysis_start_month == date(2025, 1, 1)
+    assert "## Direct answer" in response.message
+    assert "loss ratio moved" in response.message.lower()
+    assert "## Recommended action" in response.message
+    assert "## Specific next investigation" in response.message
+
+
+def test_segment_deterioration_question_identifies_the_observed_segment(
+    service: ChatService,
+) -> None:
+    response = service.submit("Which segment is driving loss-ratio deterioration?")
+
+    assert "renewal is the observed segment" in response.message.lower()
+    assert "which segment should i check" not in response.message.lower()
+    assert "loss ratio moved" in response.message.lower()
+
+
+def test_competitor_question_answers_the_competitor_question_before_the_recommendation(
+    service: ChatService,
+) -> None:
+    response = service.submit("What did competitors do?")
+
+    direct_answer = response.message.split("## Key evidence", maxsplit=1)[0].lower()
+    assert "competitor price indices increased" in direct_answer
+    assert "controlled 2% to 3%" not in direct_answer
+
+
+def test_claims_cost_and_conversion_question_produces_a_specific_pricing_conclusion(
+    service: ChatService,
+) -> None:
+    response = service.submit(
+        "Claims costs are rising while conversion improves. What pricing decision should we make?"
+    )
+
+    assert "recommend a controlled 2% to 3% price increase" in response.message.lower()
+    assert "average claim severity moved" in response.message.lower()
+    assert "quote-to-sale conversion moved" in response.message.lower()
+    assert "repair-cost" in response.message.lower()
+
+
+def test_partial_or_conflicting_evidence_returns_a_qualified_answer_not_a_dead_end(
+    service: ChatService,
+) -> None:
+    response = service.submit(
+        "Review the renewal portfolio for the last 12 months in the conflicting evidence scenario"
+    )
+
+    assert response.workflow_result is not None
+    assert response.workflow_result.analytics is not None
+    assert "## Confidence and limitations" in response.message
+    assert "market evidence" in response.message.lower()
 
 
 def test_evaluation_intent_reports_the_latest_stored_benchmark(service: ChatService) -> None:

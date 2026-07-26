@@ -9,7 +9,7 @@ from pricing_copilot.analytics.calculators import (
     calculate_conversion_metrics,
     summarize_pricing_history,
 )
-from pricing_copilot.contracts import Product, Region, Segment
+from pricing_copilot.contracts import AnalysisPeriod, Product, Region, Segment
 from pricing_copilot.data.records import (
     ClaimsMonthlyRecord,
     CompetitorMonthlyRecord,
@@ -75,10 +75,27 @@ def test_claims_metrics_rejects_zero_claim_count() -> None:
         calculate_claims_metrics(records)
 
 
-def test_claims_metrics_rejects_incomplete_periods() -> None:
-    records = _claims_records(_periods())[:23]
-    with pytest.raises(MetricCalculationError, match="expected 24"):
-        calculate_claims_metrics(records)
+def test_claims_metrics_uses_the_requested_twelve_month_window_not_a_fixed_24_month_gate() -> None:
+    metrics = calculate_claims_metrics(
+        _claims_records(_periods()),
+        AnalysisPeriod(start_month=date(2025, 1, 1), end_month=date(2025, 12, 1)),
+    )
+
+    assert metrics.loss_ratio.expected_periods == 12
+    assert metrics.loss_ratio.observed_periods == 12
+    assert metrics.loss_ratio.is_complete
+    assert metrics.loss_ratio.baseline == pytest.approx(0.20)
+
+
+def test_claims_metrics_returns_a_qualified_partial_window() -> None:
+    metrics = calculate_claims_metrics(
+        _claims_records(_periods())[:20],
+        AnalysisPeriod(start_month=date(2025, 1, 1), end_month=date(2025, 12, 1)),
+    )
+
+    assert metrics.loss_ratio.expected_periods == 12
+    assert metrics.loss_ratio.observed_periods == 8
+    assert not metrics.loss_ratio.is_complete
 
 
 def test_claims_metrics_rejects_negative_incurred_loss() -> None:

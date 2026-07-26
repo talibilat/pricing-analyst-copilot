@@ -196,7 +196,14 @@ class ConversationGraph:
                 )
         state = state.model_copy(update={"decision": decision})
         active_context = context.model_copy(
-            update={"scenario": decision.scenario or context.scenario}
+            update={
+                "scenario": decision.scenario or context.scenario,
+                "product": decision.product or context.product,
+                "region": decision.region or context.region,
+                "segment": decision.segment or context.segment,
+                "analysis_start_month": decision.start_month or context.analysis_start_month,
+                "analysis_end_month": decision.end_month or context.analysis_end_month,
+            }
         )
         if decision.route is ConversationRoute.DIRECT_ANSWER:
             return self._compose_without_tool(

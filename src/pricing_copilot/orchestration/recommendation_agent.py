@@ -5,7 +5,12 @@ from typing import Protocol
 
 from agents import Agent, OpenAIChatCompletionsModel
 
-from pricing_copilot.contracts import PriceRange, RecommendationAction, SpecialistReport
+from pricing_copilot.contracts import (
+    PortfolioQuestion,
+    PriceRange,
+    RecommendationAction,
+    SpecialistReport,
+)
 from pricing_copilot.evidence.models import EvidenceLedger, EvidenceLedgerEntry
 from pricing_copilot.orchestration.runtime import AgentRuntime
 from pricing_copilot.recommendation.contracts import RecommendationDraft
@@ -30,6 +35,10 @@ RECOMMENDATION_AGENT_SYSTEM_PROMPT = (
     "uniformly one-sided just because the headline metric supports your action. "
     "Only repeat numerical figures that are literally present in the evidence ledger. Do not "
     "calculate or infer a new percentage from a specialist summary. "
+    "Answer the analyst's stated question directly. Synthesize claims, conversion, market "
+    "intelligence, and pricing-history reports into one conclusion rather than listing sources. "
+    "Make each investigation area specific about the metric, population or period, and reason "
+    "for follow-up. "
     "Respond with a single JSON object matching this shape: "
     '{"action": "increase|decrease|hold|investigate", '
     '"price_range": {"lower_pct": number, "upper_pct": number} or null, '
@@ -42,6 +51,7 @@ class RecommendationAgentRunner(Protocol):
     async def synthesize(
         self,
         *,
+        question: PortfolioQuestion | None = None,
         specialist_reports: list[SpecialistReport],
         ledger: EvidenceLedger,
         max_movement_pct: float,
@@ -60,6 +70,7 @@ class FakeRecommendationAgentRunner:
     async def synthesize(
         self,
         *,
+        question: PortfolioQuestion | None = None,
         specialist_reports: list[SpecialistReport],
         ledger: EvidenceLedger,
         max_movement_pct: float,
@@ -120,6 +131,7 @@ def _movement_pct(entry: EvidenceLedgerEntry | None) -> float:
 
 
 def _build_prompt(
+    question: PortfolioQuestion,
     specialist_reports: list[SpecialistReport],
     ledger: EvidenceLedger,
     max_movement_pct: float,
@@ -137,6 +149,7 @@ def _build_prompt(
         for e in ledger.entries
     ]
     lines = [
+        f"ANALYST QUESTION AND SCOPE: {question.model_dump_json()}",
         f"POLICY: the proposed price_range must stay within +/-{max_movement_pct:g}%.",
         "SPECIALIST REPORTS:",
         json.dumps(
@@ -177,19 +190,20 @@ class AgentsSdkRecommendationAgentRunner:
     async def synthesize(
         self,
         *,
+        question: PortfolioQuestion | None = None,
         specialist_reports: list[SpecialistReport],
         ledger: EvidenceLedger,
         max_movement_pct: float,
         revision_feedback: str | None = None,
     ) -> RecommendationDraft:
-        prompt = _build_prompt(specialist_reports, ledger, max_movement_pct, revision_feedback)
+        if question is None:
+            raise ValueError("Recommendation synthesis requires the resolved portfolio question.")
+        prompt = _build_prompt(
+            question, specialist_reports, ledger, max_movement_pct, revision_feedback
+        )
         if self._runtime is None:
             raise RuntimeError("Recommendation agent requires a configured bounded runtime.")
-        output = await self._runtime.run(
-            self._agent, prompt, output_contract="RecommendationDraft"
-        )
+        output = await self._runtime.run(self._agent, prompt, output_contract="RecommendationDraft")
         if not isinstance(output, RecommendationDraft):
-            raise TypeError(
-                f"Recommendation agent returned unexpected output type: {type(output)}"
-            )
+            raise TypeError(f"Recommendation agent returned unexpected output type: {type(output)}")
         return output

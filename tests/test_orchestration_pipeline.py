@@ -87,15 +87,16 @@ def test_governed_retention_concern_holds() -> None:
     )
 
 
-def test_governed_conflicting_evidence_investigates_without_calling_any_agent() -> None:
-    def _factory_that_must_not_be_called(**_kwargs: Any) -> dict[EvidenceDomain, SpecialistAgent]:
-        raise AssertionError("Specialist agents must not be invoked when the gate short-circuits.")
-
+def test_governed_conflicting_evidence_returns_a_qualified_investigate_conclusion() -> None:
     result = run_governed_portfolio_workflow(
         _question(ScenarioName.CONFLICTING_EVIDENCE),
-        orchestration=_bundle(specialist_factory=_factory_that_must_not_be_called),
+        orchestration=_bundle(),
     )
     assert result.recommendation.action is RecommendationAction.INVESTIGATE
+    assert result.analytics is not None
+    assert result.evidence_ledger is not None
+    assert result.missing_evidence
+    assert result.specialist_reports[0].domain is EvidenceDomain.MARKET_INTELLIGENCE
 
 
 def test_governance_rejection_triggers_exactly_one_bounded_revision_then_succeeds() -> None:

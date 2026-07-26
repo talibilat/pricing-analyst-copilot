@@ -14,7 +14,7 @@ from pricing_copilot.chat.contracts import (
     ChatIntent,
     ChatResponse,
     ChatTable,
-    ChatTurn,
+    ConversationMessage,
 )
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
@@ -98,68 +98,26 @@ def _render_evidence_detail(ledger: EvidenceLedger, cited_ids: list[str]) -> Non
 
 def _render_workflow_result(result: WorkflowResult) -> None:
     recommendation = result.recommendation
-    st.caption(
-        "System recommendation - policy-approved for qualified analyst review where shown. "
-        "This is not a claim of regulatory compliance."
-    )
-    if recommendation.price_range is None:
-        action = recommendation.action.value
-    else:
-        action = (
-            f"{recommendation.action.value} "
-            f"({recommendation.price_range.lower_pct:g}% to "
-            f"{recommendation.price_range.upper_pct:g}%)"
-        )
-    st.markdown(badge_html(recommendation.action.value, action), unsafe_allow_html=True)
-    st.markdown("**Reasoning**")
-    st.write(recommendation.rationale)
-    if recommendation.counter_evidence:
-        st.warning(
-            "**Counter-evidence**\n\n"
-            + "\n".join(f"- {item}" for item in recommendation.counter_evidence),
-            icon="⚖️",
-        )
-    if recommendation.investigation_areas:
-        st.markdown("**Areas to investigate**")
-        st.write("\n".join(f"- {item}" for item in recommendation.investigation_areas))
-    if recommendation.cited_evidence_ids:
-        st.caption("Citations: " + ", ".join(recommendation.cited_evidence_ids))
-    if recommendation.cited_evidence_ids and result.evidence_ledger is not None:
-        _render_evidence_detail(result.evidence_ledger, recommendation.cited_evidence_ids)
-
-    if recommendation.confidence is not None:
-        confidence = recommendation.confidence
-        st.markdown("**Confidence**")
-        st.markdown(
-            confidence_bars_html(
-                [
-                    ("Evidence coverage", confidence.evidence_coverage),
-                    ("Source freshness", confidence.source_freshness),
-                    ("Specialist agreement", confidence.specialist_agreement),
-                    ("Data quality", confidence.data_quality),
-                    ("Conflict penalty", confidence.conflict_penalty),
-                ]
-            ),
-            unsafe_allow_html=True,
-        )
-        st.caption(f"Overall confidence: {confidence.overall * 100:.0f}%")
-
-    if recommendation.fair_value_status is not None:
-        fair_value_labels = {
-            FairValueStatus.NO_CONCERN: "No concern",
-            FairValueStatus.REVIEW_RECOMMENDED: "Review recommended",
-            FairValueStatus.CONCERN_IDENTIFIED: "Concern identified",
-        }
-        st.markdown(
-            f"**Fair value status:** {fair_value_labels[recommendation.fair_value_status]}"
-        )
-        if recommendation.fair_value_follow_up:
-            st.write("\n".join(f"- {item}" for item in recommendation.fair_value_follow_up))
-
-    analytics = result.analytics
-    if analytics is None:
-        return
-    with st.expander("Supporting charts", expanded=False):
+    with st.expander("Supporting evidence and optional audit trace", expanded=False):
+        if recommendation.cited_evidence_ids and result.evidence_ledger is not None:
+            _render_evidence_detail(result.evidence_ledger, recommendation.cited_evidence_ids)
+        if recommendation.confidence is not None:
+            confidence = recommendation.confidence
+            st.markdown(
+                confidence_bars_html(
+                    [
+                        ("Evidence coverage", confidence.evidence_coverage),
+                        ("Source freshness", confidence.source_freshness),
+                        ("Specialist agreement", confidence.specialist_agreement),
+                        ("Data quality", confidence.data_quality),
+                        ("Conflict penalty", confidence.conflict_penalty),
+                    ]
+                ),
+                unsafe_allow_html=True,
+            )
+        analytics = result.analytics
+        if analytics is None:
+            return
         st.caption("Claims performance")
         _render_time_series(
             [item.period for item in analytics.claims.loss_ratio.monthly],
@@ -259,8 +217,16 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
         _render_table(table)
     if response.workflow_result is not None:
         _render_workflow_result(response.workflow_result)
-        if can_record:
+        if can_record and _can_record_decision(response.workflow_result):
             _render_decision_controls(response.workflow_result, message_number)
+
+
+def _can_record_decision(result: WorkflowResult) -> bool:
+    return result.analytics is not None and result.recommendation.action.value in {
+        "increase",
+        "decrease",
+        "hold",
+    }
 
 
 def _render_drift_monitoring_tab() -> None:
@@ -368,11 +334,11 @@ def _render_copilot_label() -> None:
 
 def _submit_prompt(prompt: str) -> None:
     active_context = ChatContext()
-    conversation_history: list[ChatTurn] = []
+    conversation_history: list[ConversationMessage] = []
     for saved_message in st.session_state.chat_messages:
         saved_response = ChatResponse.model_validate(saved_message["response"])
         conversation_history.append(
-            ChatTurn(role=saved_message["role"], content=saved_response.message)
+            ConversationMessage(role=saved_message["role"], content=saved_response.message)
         )
         if saved_message["role"] == "assistant":
             active_context = saved_response.context
@@ -415,7 +381,7 @@ def _submit_prompt(prompt: str) -> None:
                     on_activity=show_activity,
                 )
         if response.activities:
-            with st.expander("Activity trace", expanded=True):
+            with st.expander("Optional audit trace", expanded=False):
                 st.write(
                     "\n".join(f"- {_activity_text(activity)}" for activity in response.activities)
                 )

@@ -6,8 +6,9 @@ from pricing_copilot.analytics.calculators import (
     calculate_conversion_metrics,
     summarize_pricing_history,
 )
-from pricing_copilot.analytics.contracts import PortfolioAnalytics
+from pricing_copilot.analytics.contracts import PortfolioAnalytics, WindowMetric
 from pricing_copilot.contracts import (
+    AnalysisPeriod,
     EvidenceDomain,
     GovernanceOutcome,
     MissingEvidence,
@@ -137,6 +138,37 @@ def data_quality_investigation_result(question: PortfolioQuestion, reason: str) 
     )
 
 
+def analytics_completeness_limitations(analytics: PortfolioAnalytics) -> list[MissingEvidence]:
+    """Describe partial current windows without discarding the comparable evidence that exists."""
+    checks: tuple[tuple[EvidenceDomain, str, WindowMetric], ...] = (
+        (EvidenceDomain.CLAIMS, "claims", analytics.claims.loss_ratio),
+        (EvidenceDomain.CONVERSION, "conversion", analytics.conversion.quote_to_sale_conversion),
+        (
+            EvidenceDomain.MARKET_INTELLIGENCE,
+            "competitor pricing",
+            analytics.competitors.competitors[0].price_index,
+        )
+        if analytics.competitors.competitors
+        else (
+            EvidenceDomain.MARKET_INTELLIGENCE,
+            "competitor pricing",
+            WindowMetric(current=0, movement_pct=None, monthly=[]),
+        ),
+    )
+    return [
+        MissingEvidence(
+            domain=domain,
+            reason=(
+                f"{label}: {metric.observed_periods} of {metric.expected_periods} requested "
+                "monthly periods are available; the conclusion uses the observed contiguous "
+                "period only."
+            ),
+        )
+        for domain, label, metric in checks
+        if not metric.is_complete
+    ]
+
+
 def build_analytics(
     question: PortfolioQuestion, repository: PortfolioDataRepository
 ) -> PortfolioAnalytics:
@@ -146,9 +178,20 @@ def build_analytics(
     pricing_history_records = repository.fetch_pricing_history(
         question.product, question.region, question.segment
     )
+    requested_period: AnalysisPeriod | None = question.analysis_period
+    # The public workflow historically received scenario questions whose dates were placeholders
+    # outside the generated data range.  Preserve that compatibility while applying an explicit
+    # period whenever it overlaps the available portfolio evidence.
+    if requested_period is not None and not any(
+        requested_period.start_month <= record.period <= requested_period.end_month
+        for record in claims_records
+    ):
+        requested_period = None
     return PortfolioAnalytics(
-        claims=calculate_claims_metrics(claims_records),
-        conversion=calculate_conversion_metrics(conversion_records, question.segment),
-        competitors=calculate_competitor_metrics(competitor_records),
+        claims=calculate_claims_metrics(claims_records, requested_period),
+        conversion=calculate_conversion_metrics(
+            conversion_records, question.segment, requested_period
+        ),
+        competitors=calculate_competitor_metrics(competitor_records, requested_period),
         pricing_history=summarize_pricing_history(pricing_history_records),
     )

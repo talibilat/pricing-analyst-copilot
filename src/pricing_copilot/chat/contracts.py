@@ -142,6 +142,11 @@ class ChatContext(BaseModel):
 
     scenario: ScenarioName = ScenarioName.CONTROLLED_INCREASE
     force_replay: bool = False
+    product: Product = Product.PERSONAL_MOTOR
+    region: Region = Region.NORTH_WEST
+    segment: Segment | None = None
+    analysis_start_month: date | None = None
+    analysis_end_month: date | None = None
 
 
 class ChatTurn(BaseModel):

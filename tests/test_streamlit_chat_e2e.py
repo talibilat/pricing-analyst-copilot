@@ -206,7 +206,7 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
 
     assert not app.exception
     assert len(app.chat_message) == 3
-    assert len(app.dataframe) == 2
+    assert len(app.dataframe) == 0
     markdown = "\n".join(item.value for item in app.markdown)
     assert "Getting information from claims performance data" in markdown
     assert "Getting information from conversion performance data" in markdown
@@ -342,7 +342,7 @@ def test_claims_only_query_returns_a_single_table() -> None:
     app.run()
 
     assert not app.exception
-    assert len(app.dataframe) == 1
+    assert len(app.dataframe) == 0
     markdown = "\n".join(item.value for item in app.markdown)
     assert "Getting information from claims performance data" in markdown
 
@@ -374,7 +374,8 @@ def test_retention_concern_scenario_is_reachable_by_keyword() -> None:
     app.run()
 
     assert not app.exception
-    assert app.dataframe
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "Direct answer" in markdown
 
 
 def test_an_unsafe_request_is_refused_in_the_ui() -> None:

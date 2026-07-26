@@ -18,9 +18,12 @@ from pricing_copilot.config import (
 from pricing_copilot.contracts import (
     EvidenceDomain,
     GovernanceOutcome,
+    MissingEvidence,
     PortfolioQuestion,
     Recommendation,
+    RecommendationAction,
     Region,
+    SpecialistReport,
     WorkflowResult,
 )
 from pricing_copilot.data.generation import DEFAULT_SCENARIO_SEED, DEFAULT_SCENARIO_VERSION
@@ -65,6 +68,7 @@ from pricing_copilot.versions import GOVERNED_RECOMMENDATION_VERSION
 from pricing_copilot.workflow_common import (
     IMPLEMENTED_DATA_SCENARIOS,
     RETRIEVAL_QUERY,
+    analytics_completeness_limitations,
     build_analytics,
     data_quality_investigation_result,
     missing_evidence_workflow_result,
@@ -206,8 +210,67 @@ async def _run_governed_pipeline_async(
         analysis_period_end=analytics.claims.period_end,
         max_evidence_age_days=settings.policy.max_evidence_age_days,
     )
+    material_limitations = [
+        MissingEvidence(domain=EvidenceDomain.MARKET_INTELLIGENCE, reason=issue)
+        for issue in material_issues
+    ]
     if material_issues:
-        return data_quality_investigation_result(question, "; ".join(material_issues))
+        for issue in material_issues:
+            recorder.event(
+                TraceEventKind.GUARDRAIL,
+                "evidence_policy",
+                "degraded",
+                details={"reason": issue},
+            )
+        ledger = build_evidence_ledger(
+            analytics=analytics,
+            documents=documents,
+            region=question.region,
+            retrieved_at=datetime.now(UTC),
+        )
+        completeness_limitations = analytics_completeness_limitations(analytics)
+        recommendation = Recommendation(
+            action=RecommendationAction.INVESTIGATE,
+            rationale=(
+                "Claims, conversion, and market evidence were reviewed, but stale or "
+                "conflicting market evidence means no price movement is supported yet."
+            ),
+            conditions=["Refresh and reconcile market evidence before proposing a price change."],
+            investigation_areas=[
+                "Resolve the conflicting market reports and compare the refreshed view with the "
+                "observed claim severity, loss-ratio, and conversion movements."
+            ],
+            cited_evidence_ids=sorted(ledger.ids()),
+            confidence=calculate_confidence(
+                ledger=ledger,
+                documents=documents,
+                analytics=analytics,
+                action=RecommendationAction.INVESTIGATE,
+                analysis_period_end=analytics.claims.period_end,
+                drift_penalty=0.4,
+            ),
+        )
+        specialist_reports = [
+            SpecialistReport(
+                domain=EvidenceDomain.MARKET_INTELLIGENCE,
+                status="error",
+                evidence_ids=sorted(ledger.ids()),
+                summary="Market evidence requires reconciliation before a pricing movement.",
+                missing_evidence=material_limitations,
+            )
+        ]
+        return WorkflowResult(
+            question=question,
+            specialist_reports=specialist_reports,
+            recommendation=recommendation,
+            governance_outcome=GovernanceOutcome(
+                approved=True,
+                reasons=["A qualified investigate conclusion proposes no pricing movement."],
+            ),
+            missing_evidence=[*completeness_limitations, *material_limitations],
+            analytics=analytics,
+            evidence_ledger=ledger,
+        )
 
     specialist_agents = orchestration.specialist_agents_factory(
         analytics=analytics, documents=documents, region=question.region
@@ -236,6 +299,7 @@ async def _run_governed_pipeline_async(
         region=question.region,
         retrieved_at=datetime.now(UTC),
     )
+    completeness_limitations = analytics_completeness_limitations(analytics)
     policy_issues = validate_pre_synthesis_policy(
         specialist_reports=specialist_reports,
         ledger=ledger,
@@ -263,7 +327,10 @@ async def _run_governed_pipeline_async(
     max_movement_pct = settings.policy.max_price_movement_pct
 
     draft = await orchestration.recommendation_agent.synthesize(
-        specialist_reports=specialist_reports, ledger=ledger, max_movement_pct=max_movement_pct
+        question=question,
+        specialist_reports=specialist_reports,
+        ledger=ledger,
+        max_movement_pct=max_movement_pct,
     )
     validated, error = _validate(draft, ledger, documents, settings)
 
@@ -271,6 +338,7 @@ async def _run_governed_pipeline_async(
     if validated is None:
         revision_used = True
         draft = await orchestration.recommendation_agent.synthesize(
+            question=question,
             specialist_reports=specialist_reports,
             ledger=ledger,
             max_movement_pct=max_movement_pct,
@@ -294,6 +362,7 @@ async def _run_governed_pipeline_async(
                 f"was already used: {review.feedback}",
             )
         draft = await orchestration.recommendation_agent.synthesize(
+            question=question,
             specialist_reports=specialist_reports,
             ledger=ledger,
             max_movement_pct=max_movement_pct,
@@ -314,12 +383,31 @@ async def _run_governed_pipeline_async(
                 f"Governance agent rejected the revised recommendation: {review.feedback}",
             )
 
+    if material_limitations:
+        validated = validated.model_copy(
+            update={
+                "action": RecommendationAction.INVESTIGATE,
+                "price_range": None,
+                "rationale": (
+                    "Claims, conversion, and market evidence were reviewed, but stale or "
+                    "conflicting market evidence means no price movement is supported yet."
+                ),
+                "conditions": [
+                    "Refresh and reconcile the market evidence before proposing a pricing change."
+                ],
+                "investigation_areas": [
+                    "Resolve the conflicting market reports and compare the refreshed view with "
+                    "the observed claim severity, loss-ratio, and conversion movements."
+                ],
+            }
+        )
     confidence = calculate_confidence(
         ledger=ledger,
         documents=documents,
         analytics=analytics,
         action=validated.action,
         analysis_period_end=analytics.claims.period_end,
+        drift_penalty=0.4 if material_limitations else 0.2 if completeness_limitations else 0.0,
     )
     fair_value_status, fair_value_follow_up = calculate_fair_value_status(
         action=validated.action,
@@ -352,7 +440,7 @@ async def _run_governed_pipeline_async(
         specialist_reports=specialist_reports,
         recommendation=recommendation,
         governance_outcome=governance_outcome,
-        missing_evidence=[],
+        missing_evidence=[*completeness_limitations, *material_limitations],
         analytics=analytics,
         evidence_ledger=ledger,
     )

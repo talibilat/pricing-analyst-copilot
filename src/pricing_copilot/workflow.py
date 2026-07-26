@@ -9,8 +9,10 @@ from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     EvidenceDomain,
     GovernanceOutcome,
+    MissingEvidence,
     PortfolioQuestion,
     Recommendation,
+    RecommendationAction,
     SpecialistReport,
     WorkflowResult,
 )
@@ -31,6 +33,7 @@ from pricing_copilot.replay.pipeline import run_replay_portfolio_workflow
 from pricing_copilot.workflow_common import (
     IMPLEMENTED_DATA_SCENARIOS,
     RETRIEVAL_QUERY,
+    analytics_completeness_limitations,
     build_analytics,
     data_quality_investigation_result,
     missing_evidence_workflow_result,
@@ -113,14 +116,6 @@ def _evidence_backed_workflow_result(
         scenario=scenario, region=question.region, query=RETRIEVAL_QUERY, top_k=6
     )
 
-    material_issues = detect_material_evidence_issues(
-        retrieved_documents,
-        analysis_period_end=analytics.claims.period_end,
-        max_evidence_age_days=settings.policy.max_evidence_age_days,
-    )
-    if material_issues:
-        return data_quality_investigation_result(question, "; ".join(material_issues))
-
     retrieved_at = datetime.now(UTC)
     ledger = build_evidence_ledger(
         analytics=analytics,
@@ -128,6 +123,53 @@ def _evidence_backed_workflow_result(
         region=question.region,
         retrieved_at=retrieved_at,
     )
+    completeness_limitations = analytics_completeness_limitations(analytics)
+    material_issues = detect_material_evidence_issues(
+        retrieved_documents,
+        analysis_period_end=analytics.claims.period_end,
+        max_evidence_age_days=settings.policy.max_evidence_age_days,
+    )
+    if material_issues:
+        limitations = [
+            *completeness_limitations,
+            *(
+                MissingEvidence(domain=EvidenceDomain.MARKET_INTELLIGENCE, reason=issue)
+                for issue in material_issues
+            ),
+        ]
+        recommendation = Recommendation(
+            action=RecommendationAction.INVESTIGATE,
+            rationale=(
+                "The available claims and conversion evidence is informative, but conflicting "
+                "or stale market evidence prevents a supported pricing movement."
+            ),
+            investigation_areas=[
+                "Refresh the dated market evidence and reconcile the conflicting market reports "
+                "against the claims severity and conversion movements before recommending a "
+                "price change."
+            ],
+            cited_evidence_ids=sorted(ledger.ids()),
+            confidence=calculate_confidence(
+                ledger=ledger,
+                documents=retrieved_documents,
+                analytics=analytics,
+                action=RecommendationAction.INVESTIGATE,
+                analysis_period_end=analytics.claims.period_end,
+                drift_penalty=0.4,
+            ),
+        )
+        return WorkflowResult(
+            question=question,
+            specialist_reports=_specialist_reports(question, analytics, len(retrieved_documents)),
+            recommendation=recommendation,
+            governance_outcome=GovernanceOutcome(
+                approved=True,
+                reasons=["A qualified investigate conclusion proposes no pricing movement."],
+            ),
+            missing_evidence=limitations,
+            analytics=analytics,
+            evidence_ledger=ledger,
+        )
 
     active_synthesizer = synthesizer or get_default_synthesizer(settings)
     draft = active_synthesizer.synthesize(
@@ -149,6 +191,7 @@ def _evidence_backed_workflow_result(
         analytics=analytics,
         action=validated.action,
         analysis_period_end=analytics.claims.period_end,
+        drift_penalty=0.2 if completeness_limitations else 0.0,
     )
     fair_value_status, fair_value_follow_up = calculate_fair_value_status(
         action=validated.action,
@@ -182,7 +225,7 @@ def _evidence_backed_workflow_result(
         specialist_reports=_specialist_reports(question, analytics, len(retrieved_documents)),
         recommendation=recommendation,
         governance_outcome=governance_outcome,
-        missing_evidence=[],
+        missing_evidence=completeness_limitations,
         analytics=analytics,
         evidence_ledger=ledger,
     )

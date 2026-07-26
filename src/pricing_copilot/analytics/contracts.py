@@ -11,10 +11,16 @@ class MonthlyValue(BaseModel):
 
 
 class WindowMetric(BaseModel):
-    baseline: float
+    baseline: float | None = None
     current: float
     movement_pct: float | None
     monthly: list[MonthlyValue]
+    observed_periods: int | None = None
+    expected_periods: int | None = None
+
+    @property
+    def is_complete(self) -> bool:
+        return self.expected_periods is None or self.observed_periods == self.expected_periods
 
 
 class ClaimsMetrics(BaseModel):

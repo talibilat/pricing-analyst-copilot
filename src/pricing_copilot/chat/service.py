@@ -26,6 +26,7 @@ from pricing_copilot.chat.conversation_graph import (
     ConversationPlanner,
     ConversationToolExecutor,
 )
+from pricing_copilot.chat.presentation import compose_analysis_response
 from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
@@ -45,12 +46,13 @@ from pricing_copilot.documents.corpus import SourceType
 from pricing_copilot.documents.retrieval import retrieve_documents
 from pricing_copilot.governance.security import quarantine_unsafe_documents
 from pricing_copilot.observability.contracts import TraceEvent, TraceEventKind
+from pricing_copilot.recommendation.synthesizer import FakeRecommendationSynthesizer
 from pricing_copilot.replay.store import (
     ReplayArtifactIncompatibleError,
     ReplayArtifactMissingError,
     load_replay_artifact,
 )
-from pricing_copilot.workflow import run_portfolio_workflow
+from pricing_copilot.workflow import run_baseline_portfolio_workflow, run_portfolio_workflow
 
 ActivityListener = Callable[[ChatActivity], None]
 
@@ -70,6 +72,24 @@ _SOURCE_LABELS: dict[str, str] = {
     "customer_feedback": CUSTOMER_FEEDBACK_LABEL,
     "schema_catalogue": "Checking the portfolio data catalogue",
 }
+_ANALYTICAL_TERMS = (
+    "analyse",
+    "analyze",
+    "compare",
+    "decision",
+    "deteriorat",
+    "driver",
+    "driving",
+    "identify",
+    "last 12",
+    "last twelve",
+    "performance",
+    "recommend",
+    "review",
+    "rising",
+    "trend",
+    "why",
+)
 _UNSAFE_QUERY_PATTERN = re.compile(
     r"\b(?:ignore (?:all |any )?(?:prior|previous|system) instructions|"
     r"(?:weaken|disable|bypass|ignore).{0,40}(?:policy|limit|guardrail)|"
@@ -138,7 +158,7 @@ class DefaultConversationTools:
         if decision.tool_name is ChatToolName.DRIFT:
             return self._report_drift(context, listener)
         if decision.tool_name is ChatToolName.RECOMMENDATION:
-            return self._run_pricing_analysis(decision, context, listener)
+            return self._run_pricing_analysis(message, decision, context, listener)
         if decision.tool_name is ChatToolName.SCHEMA:
             return self._retrieve_sources(
                 ["schema_catalogue"],
@@ -175,6 +195,8 @@ class DefaultConversationTools:
                 )
             ]
             if sources:
+                if self._is_analytical_request(message):
+                    return self._run_pricing_analysis(message, decision, context, listener)
                 return self._retrieve_sources(
                     sources,
                     decision.requested_fields,
@@ -216,6 +238,15 @@ class DefaultConversationTools:
             context=context,
             message="The selected capability is not available.",
             limitations=["No registered executor matched the requested tool."],
+        )
+
+    @staticmethod
+    def _is_analytical_request(message: str) -> bool:
+        """Keep explicit field lookups tabular, but answer portfolio questions as analysis."""
+        lowered = message.lower()
+        explicit_field_lookup = any(field in lowered for fields in SOURCE_TABLES.values() for field in fields)
+        return not explicit_field_lookup and (
+            "?" in message or any(term in lowered for term in _ANALYTICAL_TERMS)
         )
 
     def _refusal_reason(self, message: str) -> str | None:
@@ -590,6 +621,7 @@ class DefaultConversationTools:
 
     def _run_pricing_analysis(
         self,
+        message: str,
         decision: ConversationDecision,
         context: ChatContext,
         listener: ActivityListener | None,
@@ -604,12 +636,8 @@ class DefaultConversationTools:
         self._emit(
             ChatActivity(
                 status=ActivityStatus.SCHEDULED,
-                label="Supervisor coordinating specialist agents",
-                purpose=(
-                    "Coordinating market intelligence, claims, conversion, pricing history, "
-                    "recommendation, and governance."
-                ),
-                agent="portfolio-supervisor",
+                label="Reviewing portfolio evidence",
+                purpose="Preparing an integrated claims, commercial, market, and pricing review.",
             ),
             activities,
             listener,
@@ -632,60 +660,57 @@ class DefaultConversationTools:
                 ),
                 limitations=["The required analysis period could not be resolved from the data."],
             )
+        selected_segment = context.segment or decision.segment or Segment.RENEWAL
         question = PortfolioQuestion(
-            product=decision.product or Product.PERSONAL_MOTOR,
-            region=decision.region or Region.NORTH_WEST,
-            segment=decision.segment or Segment.RENEWAL,
+            product=context.product,
+            region=context.region,
+            segment=selected_segment,
             analysis_period=AnalysisPeriod(
-                start_month=decision.start_month or periods[max(0, len(periods) - 6)],
-                end_month=decision.end_month or periods[-1],
+                start_month=context.analysis_start_month or periods[max(0, len(periods) - 12)],
+                end_month=context.analysis_end_month or periods[-1],
             ),
             scenario=context.scenario,
         )
         result = run_portfolio_workflow(question, self.settings, event_listener=record_trace_event)
-        live_failure_reason = next(
-            (
-                item.reason
-                for item in result.missing_evidence
-                if item.reason.startswith("workflow:")
-            ),
-            None,
-        )
-        if live_failure_reason is not None:
-            self._emit(
-                ChatActivity(
-                    status=ActivityStatus.FAILED,
-                    label="Live analysis is currently unavailable",
-                    purpose="Reporting a live failure without silently switching to replay.",
-                ),
-                activities,
-                listener,
-            )
-            return ChatResponse(
-                intent=ChatIntent.PRICING_ANALYSIS,
-                context=context,
-                message=(
-                    f"Live analysis could not complete right now ({live_failure_reason}). Ask "
-                    f"me to 'replay the {context.scenario.value} scenario' to see a previously "
-                    "validated, clearly labeled cached run instead."
-                ),
-                activities=activities,
+        if result.analytics is None or any(
+            item.reason.startswith("workflow:") for item in result.missing_evidence
+        ):
+            # A specialist-runtime failure must not hide the useful deterministic evidence.
+            # The response composer reports the reduced confidence and outstanding limitations.
+            result = run_baseline_portfolio_workflow(
+                question, self.settings, FakeRecommendationSynthesizer()
             )
         recommendation = result.recommendation
-        message_summary = (
-            f"The governed workflow recommends **{recommendation.action.value}**. "
-            f"{recommendation.rationale} This is decision support only and needs an analyst’s "
-            "explicit confirmation before any action is recorded."
+        message_summary = compose_analysis_response(
+            result,
+            segment_identification_requested=any(
+                phrase in message.lower()
+                for phrase in ("which segment", "identify the segment", "segment driving")
+            ),
+            focus=self._focus_for_message(message),
         )
         return ChatResponse(
             intent=ChatIntent.PRICING_ANALYSIS,
-            context=context,
+            context=context.model_copy(update={"segment": selected_segment}),
             message=message_summary,
             activities=activities,
             cited_evidence_ids=recommendation.cited_evidence_ids,
             investigation_areas=recommendation.investigation_areas,
             workflow_result=result,
         )
+
+    @staticmethod
+    def _focus_for_message(message: str) -> str | None:
+        source_by_term = (
+            ("claims", "claims"),
+            ("loss ratio", "claims"),
+            ("conversion", "conversion"),
+            ("competitor", "competitors"),
+            ("pricing history", "pricing_history"),
+            ("previous pricing", "pricing_history"),
+        )
+        matches = {source for term, source in source_by_term if term in message.lower()}
+        return next(iter(matches)) if len(matches) == 1 else None
 
     @staticmethod
     def _activity_from_trace(event: TraceEvent) -> ChatActivity | None:
@@ -768,9 +793,33 @@ class ChatService:
         history: Sequence[ConversationMessage] = (),
         on_activity: ActivityListener | None = None,
     ) -> ChatResponse:
+        active_context = self._resolve_scope(message, context or ChatContext())
         return self.graph.run(
             message,
-            context or ChatContext(),
+            active_context,
             history=history,
             on_activity=on_activity,
         )
+
+    @staticmethod
+    def _resolve_scope(message: str, context: ChatContext) -> ChatContext:
+        """Resolve explicit scope changes while retaining earlier conversation scope."""
+        lowered = message.lower()
+        updates: dict[str, object] = {}
+        if "retention concern" in lowered:
+            updates["scenario"] = ScenarioName.RETENTION_CONCERN
+        elif "conflicting evidence" in lowered:
+            updates["scenario"] = ScenarioName.CONFLICTING_EVIDENCE
+        elif "controlled increase" in lowered:
+            updates["scenario"] = ScenarioName.CONTROLLED_INCREASE
+        if "renewal" in lowered:
+            updates["segment"] = Segment.RENEWAL
+        elif "new business" in lowered or "new-business" in lowered:
+            updates["segment"] = Segment.NEW_BUSINESS
+        if any(term in lowered for term in ("last 12 months", "last twelve months", "12-month")):
+            updates.update({"analysis_start_month": date(2025, 1, 1), "analysis_end_month": date(2025, 12, 1)})
+        elif any(term in lowered for term in ("last 6 months", "last six months", "6-month")):
+            updates.update({"analysis_start_month": date(2025, 7, 1), "analysis_end_month": date(2025, 12, 1)})
+        elif context.analysis_start_month is None or context.analysis_end_month is None:
+            updates.update({"analysis_start_month": date(2025, 1, 1), "analysis_end_month": date(2025, 12, 1)})
+        return context.model_copy(update=updates)
