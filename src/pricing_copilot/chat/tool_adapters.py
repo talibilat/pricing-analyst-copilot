@@ -24,6 +24,7 @@ from pricing_copilot.contracts import (
     PortfolioQuestion,
     Region,
     ScenarioName,
+    WorkflowResult,
 )
 from pricing_copilot.data.persistent import PersistentAnalyticsDatabase
 from pricing_copilot.documents.retrieval import retrieve_documents
@@ -271,14 +272,12 @@ class ChatToolFacade:
     # Internals                                                           #
     # ------------------------------------------------------------------ #
     @staticmethod
-    def _collect_citations(result: object) -> list[str]:
+    def _collect_citations(result: WorkflowResult) -> list[str]:
         """Deduplicated union of the recommendation's and every specialist's evidence IDs."""
         seen: dict[str, None] = {}
-        recommendation = getattr(result, "recommendation", None)
-        if recommendation is not None:
-            for evidence_id in recommendation.cited_evidence_ids:
-                seen.setdefault(evidence_id, None)
-        for report in getattr(result, "specialist_reports", []):
+        for evidence_id in result.recommendation.cited_evidence_ids:
+            seen.setdefault(evidence_id, None)
+        for report in result.specialist_reports:
             for evidence_id in report.evidence_ids:
                 seen.setdefault(evidence_id, None)
         return list(seen)
