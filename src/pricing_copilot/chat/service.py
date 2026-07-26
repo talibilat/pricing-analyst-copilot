@@ -197,6 +197,8 @@ class DefaultConversationTools:
                     AnalyticsSource.PRICING_HISTORY,
                 )
             ]
+            if self._is_unique_competitor_name_request(message):
+                return self._retrieve_unique_competitor_names(context, listener)
             if self._is_analytical_request(message):
                 return self._run_pricing_analysis(message, decision, context, listener)
             if sources:
@@ -215,6 +217,8 @@ class DefaultConversationTools:
                 ),
             )
         if decision.tool_name is ChatToolName.READ_ONLY_SQL:
+            if self._is_unique_competitor_name_request(message):
+                return self._retrieve_unique_competitor_names(context, listener)
             return ChatResponse(
                 intent=ChatIntent.UNSUPPORTED,
                 context=context,
@@ -233,6 +237,66 @@ class DefaultConversationTools:
             context=context,
             message="The selected capability is not available.",
             limitations=["No registered executor matched the requested tool."],
+        )
+
+    @staticmethod
+    def _is_unique_competitor_name_request(message: str) -> bool:
+        lowered = message.lower()
+        return (
+            "competitor" in lowered
+            and any(term in lowered for term in ("name", "names", "unique", "distinct", "all"))
+        )
+
+    def _retrieve_unique_competitor_names(
+        self, context: ChatContext, listener: ActivityListener | None
+    ) -> ChatResponse:
+        """Answer a natural-language lookup without routing it through free-form SQL."""
+        activities: list[ChatActivity] = []
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.WORKING,
+                label=COMPETITOR_LABEL,
+                purpose="Retrieving the unique names from permitted competitor data.",
+                source="competitors",
+            ),
+            activities,
+            listener,
+        )
+        result = self.database.query_source(
+            "competitors", context.scenario, columns=["competitor_name"]
+        )
+        names = sorted({str(row[0]) for row in result.rows if row and row[0] is not None})
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.COMPLETED,
+                label=COMPETITOR_LABEL,
+                purpose="Unique competitor names are ready to review.",
+                source="competitors",
+            ),
+            activities,
+            listener,
+        )
+        if not names:
+            message = "No competitor names are available for the selected portfolio scenario."
+        else:
+            formatted_names = (
+                ", ".join(names[:-1]) + f", and {names[-1]}"
+                if len(names) > 1
+                else names[0]
+            )
+            message = f"The unique competitor names are: {formatted_names}."
+        return ChatResponse(
+            intent=ChatIntent.DATA_RETRIEVAL,
+            context=context,
+            message=message,
+            activities=activities,
+            tables=[
+                ChatTable(
+                    title="Unique competitor names",
+                    columns=["competitor_name"],
+                    rows=[[name] for name in names],
+                )
+            ],
         )
 
     @staticmethod

@@ -41,6 +41,8 @@ Use a twelve-month period as twelve requested months, not as twenty-four months 
 Use refuse for requests to expose personal data, use protected attributes for pricing, bypass
 controls, reveal secrets, or perform destructive database operations.
 Safe read-only SELECT queries may use the read_only_sql tool when it is available.
+Never choose read_only_sql for a natural-language request, even if it asks for unique or
+distinct values. Use analytics with the relevant source and fields instead.
 
 For pricing recommendations, use the recommendation tool.
 If the supported portfolio or time period is genuinely unclear, clarify before calling it.

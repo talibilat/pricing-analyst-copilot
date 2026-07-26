@@ -227,6 +227,28 @@ def test_read_only_sql_is_not_rejected_by_the_conversation_router(service: ChatS
     assert "not connected" in response.message
 
 
+def test_unique_competitor_names_bypass_an_incorrect_sql_route(
+    service: ChatService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        service.graph.planner,
+        "plan",
+        lambda *_args: ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.READ_ONLY_SQL,
+            sql="SELECT DISTINCT competitor_name FROM competitors",
+        ),
+    )
+
+    response = service.submit("Name all unique competitors")
+
+    assert response.intent is ChatIntent.DATA_RETRIEVAL
+    assert "not connected" not in response.message
+    assert "Meridian Insure" in response.message
+    assert response.tables[0].columns == ["competitor_name"]
+    assert len(response.tables[0].rows) == 3
+
+
 def test_chat_preserves_scenario_in_follow_up_context(service: ChatService) -> None:
     response = service.submit("Show claims for the retention concern scenario")
     follow_up = service.submit("Show conversion", response.context)
