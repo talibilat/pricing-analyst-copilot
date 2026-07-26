@@ -88,6 +88,7 @@ html, body, [data-testid="stAppViewContainer"] {
   font-family: 'IBM Plex Sans', sans-serif;
   color: var(--pc-text);
 }
+[data-testid="stMainBlockContainer"] { padding-bottom: 6.5rem; }
 [data-testid="stHeader"] { background: transparent; }
 
 .pc-header {
@@ -134,6 +135,15 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 [class*="st-key-suggestion_"] [data-testid="stBaseButton-secondary"]:hover {
   border-color:oklch(47% 0.085 235); color:oklch(38% 0.09 235);
+}
+[class*="st-key-chat_suggestion_"] [data-testid="stBaseButton-secondary"] {
+  background:var(--pc-accent); border-color:var(--pc-accent); color:var(--pc-on-accent);
+}
+[class*="st-key-chat_suggestion_"] [data-testid="stBaseButton-secondary"] p {
+  color:var(--pc-on-accent) !important;
+}
+[class*="st-key-chat_suggestion_"] [data-testid="stBaseButton-secondary"]:hover {
+  background:oklch(40% 0.085 235); border-color:oklch(40% 0.085 235);
 }
 
 [data-testid="stChatMessage"] { gap:9px; color:var(--pc-text); }
@@ -222,6 +232,7 @@ html, body, [data-testid="stAppViewContainer"] {
 }
 [data-testid="stChatInput"] {
   border-radius:16px !important; border:1px solid oklch(87% 0.012 85) !important;
+  background:oklch(26% 0.015 270);
 }
 [data-testid="stChatInput"] > div {
   border-color:oklch(72% 0.025 235) !important;
@@ -239,6 +250,11 @@ html, body, [data-testid="stAppViewContainer"] {
 
 [data-testid="stTabs"] button[data-baseweb="tab"] {
   font-family:'IBM Plex Sans', sans-serif; font-size:13.5px; font-weight:500;
+  color:var(--pc-text) !important;
+}
+[data-testid="stTabs"] button[data-baseweb="tab"] p,
+[data-testid="stTabs"] button[data-baseweb="tab"] span {
+  color:var(--pc-text) !important;
 }
 
 .pc-monitoring-status-ok { color:oklch(52% 0.13 150); font-weight:600; }

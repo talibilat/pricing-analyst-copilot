@@ -449,19 +449,21 @@ with tab_chat:
             if is_latest_message and pending_prompt is None:
                 _render_clarification_suggestions(response, message_number)
 
-    if pending_prompt is not None:
-        _submit_prompt(pending_prompt)
-        st.rerun()
-    else:
-        prompt = st.chat_input(
-            "Ask a portfolio-level pricing question",
-            key="pricing_chat_input",
-            max_chars=1_000,
-            submit_mode="disable",
-        )
-        if submitted_prompt := clicked_suggestion or prompt:
-            _submit_prompt(submitted_prompt)
-            st.html(AUTO_SCROLL_SCRIPT, unsafe_allow_javascript=True)
+    submitted_prompt = pending_prompt
+    if submitted_prompt is None:
+        with st.bottom:
+            prompt = st.chat_input(
+                "Ask a portfolio-level pricing question",
+                key="pricing_chat_input",
+                max_chars=1_000,
+                submit_mode="disable",
+            )
+        submitted_prompt = clicked_suggestion or prompt
+    if submitted_prompt:
+        _submit_prompt(submitted_prompt)
+        st.html(AUTO_SCROLL_SCRIPT, unsafe_allow_javascript=True)
+        if pending_prompt is not None:
+            st.rerun()
 
 with tab_monitoring:
     _render_drift_monitoring_tab()

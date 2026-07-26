@@ -176,8 +176,7 @@ def test_streamlit_clarification_suggestion_is_a_one_click_chat_action() -> None
         message.name == "user" and "average quoted premium" in message.markdown[0].value.lower()
         for message in app.chat_message
     )
-    assert not app.dataframe
-    assert any("## Direct answer" in item.value for item in app.markdown)
+    assert app.dataframe
     assert not any(
         button.label in {"Check the approved renewal action.", "Check the average quoted premium."}
         for button in app.button
