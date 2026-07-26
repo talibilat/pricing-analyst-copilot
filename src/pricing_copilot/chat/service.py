@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from time import monotonic
 
+from pricing_copilot.catalog import SUPPORTED_PORTFOLIOS, UnsupportedPortfolioError
 from pricing_copilot.chat.contracts import (
     ActivityStatus,
     AnalyticsSource,
@@ -31,6 +32,7 @@ from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
     AnalysisPeriod,
     PortfolioQuestion,
+    Product,
     Region,
     ResultSource,
     ScenarioName,
@@ -115,6 +117,13 @@ def _format_list(values: Sequence[str]) -> str:
     if len(values) == 2:
         return f"{values[0]} and {values[1]}"
     return f"{', '.join(values[:-1])}, and {values[-1]}"
+
+
+def _portfolio_label(product: Product, region: Region, segment: Segment) -> str:
+    return " ".join(
+        value.replace("_", " ")
+        for value in (region.value, product.value, segment.value)
+    )
 
 
 class DefaultConversationTools:
@@ -761,6 +770,8 @@ class DefaultConversationTools:
                 limitations=["The required analysis period could not be resolved from the data."],
             )
         selected_segment = context.segment or decision.segment or Segment.RENEWAL
+        if (context.product, context.region, selected_segment) not in SUPPORTED_PORTFOLIOS:
+            return self._unsupported_portfolio_response(context, selected_segment)
         question = PortfolioQuestion(
             product=context.product,
             region=context.region,
@@ -771,22 +782,28 @@ class DefaultConversationTools:
             ),
             scenario=context.scenario,
         )
-        if decision.tool_name is ChatToolName.RECOMMENDATION:
-            result = run_portfolio_workflow(
-                question, self.settings, event_listener=record_trace_event
-            )
-        else:
-            result = run_baseline_portfolio_workflow(
-                question, self.settings, FakeRecommendationSynthesizer()
-            )
+        try:
+            if decision.tool_name is ChatToolName.RECOMMENDATION:
+                result = run_portfolio_workflow(
+                    question, self.settings, event_listener=record_trace_event
+                )
+            else:
+                result = run_baseline_portfolio_workflow(
+                    question, self.settings, FakeRecommendationSynthesizer()
+                )
+        except UnsupportedPortfolioError:
+            return self._unsupported_portfolio_response(context, selected_segment)
         if result.analytics is None or any(
             item.reason.startswith("workflow:") for item in result.missing_evidence
         ):
             # A specialist-runtime failure must not hide the useful deterministic evidence.
             # The response composer reports the reduced confidence and outstanding limitations.
-            result = run_baseline_portfolio_workflow(
-                question, self.settings, FakeRecommendationSynthesizer()
-            )
+            try:
+                result = run_baseline_portfolio_workflow(
+                    question, self.settings, FakeRecommendationSynthesizer()
+                )
+            except UnsupportedPortfolioError:
+                return self._unsupported_portfolio_response(context, selected_segment)
         recommendation = result.recommendation
         message_summary = compose_analysis_response(
             result,
@@ -804,6 +821,32 @@ class DefaultConversationTools:
             cited_evidence_ids=recommendation.cited_evidence_ids,
             investigation_areas=recommendation.investigation_areas,
             workflow_result=result,
+        )
+
+    @staticmethod
+    def _unsupported_portfolio_response(
+        context: ChatContext, segment: Segment
+    ) -> ChatResponse:
+        supported_scopes = _format_list(
+            sorted(
+                _portfolio_label(product, region, supported_segment)
+                for product, region, supported_segment in SUPPORTED_PORTFOLIOS
+            )
+        )
+        requested_scope = _portfolio_label(context.product, context.region, segment)
+        return ChatResponse(
+            intent=ChatIntent.UNSUPPORTED,
+            context=context.model_copy(update={"segment": segment}),
+            message=(
+                f"I do not have data for {requested_scope}. "
+                f"This workspace currently supports {supported_scopes}. "
+                "Choose the supported segment to continue, or add data for the requested segment."
+            ),
+            limitations=["The requested portfolio segment is not available in this workspace."],
+            suggested_next_steps=[
+                "Show claims and conversion performance for renewal.",
+            ],
+            requires_clarification=True,
         )
 
     @staticmethod

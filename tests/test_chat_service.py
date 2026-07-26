@@ -259,6 +259,18 @@ def test_chat_preserves_scenario_in_follow_up_context(service: ChatService) -> N
     assert follow_up.context.analysis_start_month == response.context.analysis_start_month
 
 
+def test_chat_returns_a_clear_response_for_an_unavailable_segment(service: ChatService) -> None:
+    response = service.submit("Show claims and conversion performance for new business.")
+
+    assert response.intent is ChatIntent.UNSUPPORTED
+    assert response.context.segment is Segment.NEW_BUSINESS
+    assert "do not have data" in response.message
+    assert "UnsupportedPortfolioError" not in response.message
+    assert response.suggested_next_steps == [
+        "Show claims and conversion performance for renewal.",
+    ]
+
+
 def test_chat_fallback_answers_a_greeting_when_no_llm_is_configured(
     service: ChatService,
 ) -> None:

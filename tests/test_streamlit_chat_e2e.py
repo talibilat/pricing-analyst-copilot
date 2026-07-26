@@ -219,6 +219,23 @@ def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
     assert "loss ratio moved" in markdown.lower()
 
 
+def test_streamlit_handles_an_unavailable_segment_without_a_traceback() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("Show claims and conversion performance for new business.")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "I do not have data" in markdown
+    assert "UnsupportedPortfolioError" not in markdown
+    assert any(
+        button.label == "Show claims and conversion performance for renewal."
+        for button in app.button
+    )
+
+
 def test_streamlit_lists_available_tables_before_showing_catalogue_details() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     app.run()
