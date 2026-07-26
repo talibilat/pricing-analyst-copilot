@@ -18,11 +18,17 @@ from pricing_copilot.chat.contracts import (
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
 from pricing_copilot.contracts import (
+    AnalysisPeriod,
     AnalystDecisionType,
     DecisionRequest,
+    PortfolioQuestion,
+    Product,
+    Region,
     ResultSource,
+    Segment,
     WorkflowResult,
 )
+from pricing_copilot.streamlit_theme import INJECT_CSS, portfolio_pill_text
 from pricing_copilot.decisions.service import get_decision_store, record_analyst_decision
 from pricing_copilot.drift.contracts import DriftAlertCategory
 from pricing_copilot.evidence.models import EvidenceLedger, FairValueStatus
@@ -297,10 +303,28 @@ def _activity_text(activity: ChatActivity) -> str:
 st.set_page_config(
     page_title="Pricing Decision Copilot", layout="wide", initial_sidebar_state="collapsed"
 )
-st.title("Pricing Decision Copilot")
-st.caption(
-    "Chat-first, governed portfolio decision support. The copilot retrieves only permitted "
-    "portfolio-level data and never executes a pricing change."
+st.markdown(INJECT_CSS, unsafe_allow_html=True)
+
+_HEADER_PORTFOLIO = PortfolioQuestion(
+    product=Product.PERSONAL_MOTOR,
+    region=Region.NORTH_WEST,
+    segment=Segment.RENEWAL,
+    analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+)
+st.markdown(
+    f"""
+    <div class="pc-header">
+      <div class="pc-header-left">
+        <div class="pc-logo">P</div>
+        <div>
+          <div class="pc-title">Pricing Decision Copilot</div>
+          <div class="pc-subtitle">Decision support only — never executes a pricing change</div>
+        </div>
+      </div>
+      <div class="pc-portfolio-pill">{portfolio_pill_text(_HEADER_PORTFOLIO)}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 if "chat_messages" not in st.session_state:
@@ -318,14 +342,6 @@ if "chat_messages" not in st.session_state:
             ).model_dump(mode="json"),
         }
     ]
-
-with st.sidebar:
-    st.subheader("Suggested questions")
-    st.caption("Type or paste one into the chat.")
-    st.code("Show claims and conversion performance")
-    st.code("What did competitors do in the retention concern scenario?")
-    st.code("Analyse everything and recommend a pricing action")
-    st.caption("Each run shows safe activity labels, not hidden prompts or private reasoning.")
 
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 

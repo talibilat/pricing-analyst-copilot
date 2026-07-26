@@ -233,3 +233,10 @@ def test_monitoring_tab_shows_an_honest_message_with_no_drift_report_recorded(
         assert "no drift monitoring run" in info_messages.lower()
     finally:
         get_settings.cache_clear()
+
+
+def test_streamlit_app_has_no_sidebar_content() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+    assert not app.exception
+    assert len(app.sidebar) == 0
