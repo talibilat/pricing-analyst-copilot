@@ -21,6 +21,14 @@ from pricing_copilot.data.records import ScenarioDataset
 
 ANALYTICS_DATABASE_VERSION: Final = "synthetic-portfolio-duckdb-v2"
 
+# Maximum number of rows a validated free-form SQL query may return to the caller.
+FREEFORM_ROW_LIMIT: Final = 200
+
+# Column name that carries scenario partitioning. It is never queryable by callers:
+# scenario scoping is applied by the query layer via shadowing temp views, so this
+# column must never appear in a free-form SELECT.
+_SCENARIO_COLUMN: Final = "scenario"
+
 SOURCE_TABLES: Final[dict[str, tuple[str, ...]]] = {
     "claims": (
         "period",
@@ -119,6 +127,30 @@ class ReadOnlyQueryPlan:
     source: str
     columns: tuple[str, ...]
     scenario: ScenarioName
+
+
+@dataclass(frozen=True)
+class FreeformSqlRequest:
+    """A raw free-form SQL string plus the scenario it must be scoped to.
+
+    The ``sql`` is untrusted model/user text. It is validated against the parsed
+    AST before execution; ``scenario`` comes from the closed ``ScenarioName`` enum
+    and is applied by the query layer, never trusted from the SQL text itself.
+    """
+
+    sql: str
+    scenario: ScenarioName
+
+
+@dataclass(frozen=True)
+class FreeformSqlResult:
+    """The capped, scenario-scoped result of a validated free-form SELECT."""
+
+    sql: str
+    columns: tuple[str, ...]
+    rows: list[tuple[object, ...]]
+    scenario: ScenarioName
+    database_version: str
 
 
 def _dataset_checksum(dataset: ScenarioDataset) -> str:
@@ -284,6 +316,142 @@ def build_analytics_database(
     return path
 
 
+def _iter_ast_nodes(obj: object) -> Iterable[dict[str, Any]]:
+    """Yield every dict node in a parsed json_serialize_sql tree, depth-first."""
+    if isinstance(obj, dict):
+        yield obj
+        for value in obj.values():
+            yield from _iter_ast_nodes(value)
+    elif isinstance(obj, list):
+        for value in obj:
+            yield from _iter_ast_nodes(value)
+
+
+def _serialize_sql_ast(sql: str) -> dict[str, Any]:
+    """Return DuckDB's parsed AST for ``sql`` using its built-in serializer.
+
+    This uses the same parser that would execute the query, so there is no
+    dialect-mismatch risk. Runs on a throwaway in-memory connection - it never
+    touches the analytics artifact and executes nothing from ``sql``.
+    """
+    connection = duckdb.connect()
+    try:
+        serialized = connection.execute("SELECT json_serialize_sql(?)", [sql]).fetchone()
+    finally:
+        connection.close()
+    if serialized is None or serialized[0] is None:
+        raise ValueError("Free-form SQL rejected: the statement could not be parsed.")
+    parsed = json.loads(serialized[0])
+    if not isinstance(parsed, dict):
+        raise ValueError("Free-form SQL rejected: the statement could not be parsed.")
+    return parsed
+
+
+def validate_freeform_sql(sql: str) -> frozenset[str]:
+    """Validate ``sql`` as a single read-only SELECT over allowlisted tables.
+
+    Raises ``ValueError`` naming the first violation found. Nothing is executed:
+    validation is a pure inspection of the parsed AST. Returns the set of base
+    tables the query references (all guaranteed to be in ``SOURCE_TABLES``).
+
+    Controls enforced (default-deny):
+    - the text must parse as exactly one statement whose root is ``SELECT_NODE``
+      (blocks mutations, DDL, PRAGMA/ATTACH/COPY/EXPORT/SET/LOAD and stacked
+      statements, which the serializer either rejects outright or returns as
+      more than one statement);
+    - every ``BASE_TABLE`` must be unqualified (empty schema and catalog) and
+      name one of the four allowlisted tables, unless it names a CTE defined in
+      the query;
+    - ``TABLE_FUNCTION`` sources (read_csv/read_parquet/generate_series/...) are
+      rejected outright;
+    - the ``scenario`` column is never selectable, and every other column
+      reference must resolve to an allowlisted field or an alias/CTE the query
+      itself introduces.
+    """
+    parsed = _serialize_sql_ast(sql)
+    if parsed.get("error"):
+        detail = parsed.get("error_message", "only read-only SELECT statements are permitted")
+        raise ValueError(f"Free-form SQL rejected: {detail}")
+
+    statements = parsed.get("statements")
+    if not isinstance(statements, list) or len(statements) != 1:
+        found = len(statements) if isinstance(statements, list) else 0
+        raise ValueError(
+            "Free-form SQL rejected: exactly one SELECT statement is permitted, "
+            f"found {found}."
+        )
+
+    root = statements[0].get("node", {}) if isinstance(statements[0], dict) else {}
+    if not isinstance(root, dict) or root.get("type") != "SELECT_NODE":
+        node_type = root.get("type") if isinstance(root, dict) else None
+        raise ValueError(
+            f"Free-form SQL rejected: only SELECT statements are permitted, found {node_type!r}."
+        )
+
+    nodes = list(_iter_ast_nodes(parsed))
+
+    cte_names: set[str] = set()
+    known_aliases: set[str] = set()
+    for node in nodes:
+        cte_map = node.get("cte_map")
+        if isinstance(cte_map, dict):
+            for entry in cte_map.get("map", []):
+                key = entry.get("key") if isinstance(entry, dict) else None
+                if isinstance(key, str) and key:
+                    cte_names.add(key)
+        alias = node.get("alias")
+        if isinstance(alias, str) and alias:
+            known_aliases.add(alias)
+
+    referenced_tables: set[str] = set()
+    for node in nodes:
+        node_type = node.get("type")
+        if node_type == "TABLE_FUNCTION":
+            raise ValueError(
+                "Free-form SQL rejected: table functions and external file access "
+                "(e.g. read_csv, read_parquet, generate_series) are not permitted."
+            )
+        if node_type != "BASE_TABLE":
+            continue
+        table_name = node.get("table_name", "") or ""
+        schema_name = node.get("schema_name", "") or ""
+        catalog_name = node.get("catalog_name", "") or ""
+        if schema_name or catalog_name:
+            qualifier = ".".join(part for part in (catalog_name, schema_name) if part)
+            raise ValueError(
+                "Free-form SQL rejected: schema- or catalog-qualified access is not "
+                f"permitted ({qualifier}.{table_name})."
+            )
+        if table_name in cte_names:
+            continue
+        if table_name not in SOURCE_TABLES:
+            raise ValueError(
+                f"Free-form SQL rejected: table {table_name!r} is not in the allowlist."
+            )
+        referenced_tables.add(table_name)
+
+    allowed_columns = {column for table in referenced_tables for column in SOURCE_TABLES[table]}
+    valid_identifiers = allowed_columns | known_aliases | cte_names
+    for node in nodes:
+        if node.get("class") != "COLUMN_REF":
+            continue
+        column_names = node.get("column_names") or []
+        if not column_names:
+            continue
+        last_segment = column_names[-1]
+        if last_segment == _SCENARIO_COLUMN:
+            raise ValueError(
+                "Free-form SQL rejected: the scenario column is not selectable; "
+                "scenario scoping is applied automatically."
+            )
+        if last_segment not in valid_identifiers:
+            raise ValueError(
+                f"Free-form SQL rejected: column {last_segment!r} is not an allowlisted field."
+            )
+
+    return frozenset(referenced_tables)
+
+
 class PersistentAnalyticsDatabase:
     """Safe reader for the versioned synthetic DuckDB analytical artifact."""
 
@@ -352,6 +520,53 @@ class PersistentAnalyticsDatabase:
         self, source: str, scenario: ScenarioName, *, columns: Iterable[str] | None = None
     ) -> QueryResult:
         return self.execute_plan(self.plan_query(source, scenario, columns=columns))
+
+    def run_freeform_sql(self, request: FreeformSqlRequest) -> FreeformSqlResult:
+        """Validate and execute a free-form SELECT, scoped to ``request.scenario``.
+
+        The SQL is validated against its parsed AST first (see
+        ``validate_freeform_sql``); nothing runs until validation passes. Scenario
+        scoping is enforced by the query layer - not by trusting any WHERE clause
+        the caller wrote - by creating scenario-scoped temp views that shadow the
+        four base tables on the read-only connection before the validated SQL
+        runs. The result is capped to ``FREEFORM_ROW_LIMIT`` rows.
+        """
+        validate_freeform_sql(request.sql)
+        self.ensure()
+        connection = duckdb.connect(str(self.path), read_only=True)
+        try:
+            catalog_row = connection.execute("SELECT current_catalog()").fetchone()
+            if catalog_row is None:
+                raise ValueError("Free-form SQL rejected: analytics catalogue is unavailable.")
+            catalog = catalog_row[0]
+            for table, table_columns in SOURCE_TABLES.items():
+                # Every reference is from the fixed allowlist; scenario.value comes
+                # from the closed ScenarioName enum (never caller text) and DDL cannot
+                # be parameterized, so it is inlined. The source is qualified with the
+                # live catalog name to avoid recursive self-reference by the shadowing
+                # temp view. The projection omits the scenario column entirely.
+                projection = ", ".join(table_columns)
+                connection.execute(
+                    f"CREATE TEMP VIEW {table} AS SELECT {projection} "  # nosec B608
+                    f'FROM "{catalog}".main.{table} '
+                    f"WHERE {_SCENARIO_COLUMN} = '{request.scenario.value}'"
+                )
+            cursor = connection.execute(request.sql)
+            columns = tuple(descriptor[0] for descriptor in cursor.description)
+            rows = cursor.fetchall()
+        finally:
+            connection.close()
+        return FreeformSqlResult(
+            sql=request.sql,
+            columns=columns,
+            rows=rows[:FREEFORM_ROW_LIMIT],
+            scenario=request.scenario,
+            database_version=ANALYTICS_DATABASE_VERSION,
+        )
+
+    def execute_freeform_sql(self, sql: str, scenario: ScenarioName) -> FreeformSqlResult:
+        """Convenience wrapper: validate and run ``sql`` scoped to ``scenario``."""
+        return self.run_freeform_sql(FreeformSqlRequest(sql=sql, scenario=scenario))
 
     def schema_catalogue(self) -> dict[str, Any]:
         self.ensure()
