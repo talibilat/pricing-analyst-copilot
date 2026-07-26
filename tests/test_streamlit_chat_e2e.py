@@ -1,7 +1,173 @@
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
 from streamlit.testing.v1 import AppTest
+
+from pricing_copilot.chat.contracts import (
+    AnalyticsSource,
+    ChatToolName,
+    ConversationDecision,
+    ConversationMessage,
+    ConversationRoute,
+)
+from pricing_copilot.config import get_azure_openai_settings, get_settings
+from pricing_copilot.contracts import ScenarioName
+
+_azure_settings = get_azure_openai_settings()
+requires_azure_openai = pytest.mark.skipif(
+    not (_azure_settings.api_key and _azure_settings.endpoint),
+    reason="Azure OpenAI credentials are required for a live recommendation.",
+)
+
+
+def _prototype_plan(
+    self: object,
+    message: str,
+    history: Sequence[ConversationMessage],
+    available_tools: dict[str, str],
+) -> ConversationDecision:
+    lowered = message.lower()
+    if "capital of france" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.DIRECT_ANSWER,
+            response="Paris is the capital of France.",
+        )
+    if "what was our price" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.CLARIFY,
+            clarification_question=(
+                "When you say price, do you mean the last approved renewal action "
+                "or the average quoted premium?"
+            ),
+            suggested_next_steps=[
+                "Check the approved renewal action.",
+                "Check the average quoted premium.",
+            ],
+        )
+    if "average quoted premium" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.ANALYTICS,
+            sources=[AnalyticsSource.CONVERSION],
+            requested_fields=["period", "average_quoted_premium_gbp"],
+        )
+    if any(
+        phrase in lowered for phrase in ("ignore prior instructions", "customer_id", "drop table")
+    ):
+        return ConversationDecision(
+            route=ConversationRoute.REFUSE,
+            response="I cannot bypass controls or execute destructive database operations.",
+        )
+    if lowered.lstrip().startswith(("select ", "with ")):
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.READ_ONLY_SQL,
+            sql=message,
+        )
+    if "replay" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.REPLAY,
+            scenario=(
+                ScenarioName.RETENTION_CONCERN
+                if "retention" in lowered
+                else ScenarioName.CONTROLLED_INCREASE
+            ),
+        )
+    if "evaluation" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.EVALUATION,
+        )
+    if "drift" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.DRIFT,
+        )
+    if "recommend" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.RECOMMENDATION,
+        )
+    if "market intelligence" in lowered:
+        return ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.DOCUMENTS,
+            sources=[AnalyticsSource.MARKET_INTELLIGENCE],
+        )
+    sources = [
+        source
+        for phrase, source in (
+            ("claims", AnalyticsSource.CLAIMS),
+            ("conversion", AnalyticsSource.CONVERSION),
+            ("competitor", AnalyticsSource.COMPETITORS),
+            ("pricing", AnalyticsSource.PRICING_HISTORY),
+        )
+        if phrase in lowered
+    ]
+    return ConversationDecision(
+        route=ConversationRoute.TOOL_CALL,
+        tool_name=ChatToolName.ANALYTICS,
+        sources=sources,
+        scenario=(ScenarioName.RETENTION_CONCERN if "retention concern" in lowered else None),
+    )
+
+
+@pytest.fixture(autouse=True)
+def configure_offline_conversation_planner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterator[None]:
+    get_settings.cache_clear()
+    get_azure_openai_settings.cache_clear()
+    monkeypatch.setattr(
+        "pricing_copilot.chat.conversation_graph.AgentsSdkConversationPlanner.plan",
+        _prototype_plan,
+    )
+    yield
+    get_settings.cache_clear()
+    get_azure_openai_settings.cache_clear()
+
+
+def test_streamlit_answers_a_stable_fact_without_a_business_tool() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("What is the capital of France?")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "Paris is the capital of France" in markdown
+    assert not app.dataframe
+
+
+def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("What was our price last month?")
+    app.run()
+    app.chat_input[0].set_value("Show the average quoted premium")
+    app.run()
+
+    assert not app.exception
+    markdown = "\n".join(item.value for item in app.markdown)
+    assert "last approved renewal action" in markdown
+    assert app.dataframe
+
+
+def test_new_streamlit_session_starts_without_previous_history() -> None:
+    first = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    first.run()
+    first.chat_input[0].set_value("What is the capital of France?")
+    first.run()
+    assert len(first.chat_message) == 3
+
+    refreshed = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    refreshed.run()
+
+    assert len(refreshed.chat_message) == 1
 
 
 def test_streamlit_chat_runs_a_safe_multi_source_query() -> None:
@@ -94,6 +260,7 @@ def test_replay_of_an_unrecorded_scenario_fails_gracefully_in_the_interface(
     assert "not available" in markdown.lower() or "not" in markdown.lower()
 
 
+@requires_azure_openai
 def test_recommendation_response_shows_confidence_and_fair_value() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
     app.run()
@@ -106,6 +273,7 @@ def test_recommendation_response_shows_confidence_and_fair_value() -> None:
     assert "Fair value" in markdown or "Fair-value" in markdown
 
 
+@requires_azure_openai
 def test_recommendation_response_shows_expandable_evidence_detail() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
     app.run()
@@ -118,6 +286,7 @@ def test_recommendation_response_shows_expandable_evidence_detail() -> None:
     assert any("Evidence detail" in label for label in expander_labels)
 
 
+@requires_azure_openai
 def test_supporting_charts_include_severity_and_competitor_movement() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
     app.run()
@@ -186,14 +355,15 @@ def test_retention_concern_scenario_is_reachable_by_keyword() -> None:
 def test_an_unsafe_request_is_refused_in_the_ui() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     app.run()
-    app.chat_input[0].set_value("SELECT * FROM claims")
+    app.chat_input[0].set_value("DROP TABLE claims")
     app.run()
 
     assert not app.exception
     markdown = "\n".join(item.value for item in app.markdown)
-    assert "cannot accept raw sql" in markdown.lower()
+    assert "cannot bypass controls" in markdown.lower()
 
 
+@requires_azure_openai
 def test_analyst_can_record_an_approval_decision_from_the_chat_ui() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=30)
     app.run()

@@ -74,7 +74,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    model_name: str = "gpt-4.1-mini"
+    model_name: str = "gpt-5.4"
     request_timeout_seconds: float = Field(default=30.0, gt=0.0)
     max_workflow_seconds: float = Field(default=90.0, gt=0.0)
     tool_timeout_seconds: float = Field(default=5.0, gt=0.0)

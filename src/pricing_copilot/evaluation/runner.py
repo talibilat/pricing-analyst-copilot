@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from time import monotonic
 
-from pricing_copilot.chat.contracts import ChatContext
+from pricing_copilot.chat.contracts import ChatContext, ConversationMessage
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import Settings
 from pricing_copilot.evaluation.contracts import (
@@ -76,7 +76,14 @@ def _run_chat_case(case: GoldenCase) -> CaseResult:
             failures.append(
                 "expected the opening turn to ask for clarification before the follow-up"
             )
-        response = service.submit(case.follow_up_chat_message, context)
+        response = service.submit(
+            case.follow_up_chat_message,
+            response.context,
+            history=[
+                ConversationMessage(role="user", content=case.chat_message),
+                ConversationMessage(role="assistant", content=response.message),
+            ],
+        )
 
     if case.expected_intent is not None and response.intent != case.expected_intent:
         failures.append(f"intent: expected {case.expected_intent}, got {response.intent}")

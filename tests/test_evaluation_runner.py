@@ -29,10 +29,37 @@ def test_deterministic_only_case_set_scores_without_any_model_call(
 def test_multi_turn_chat_case_resolves_after_a_clarifying_follow_up(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    from pricing_copilot.chat.contracts import (
+        AnalyticsSource,
+        ChatToolName,
+        ConversationDecision,
+        ConversationRoute,
+    )
     from pricing_copilot.evaluation import golden_set
+
+    def plan(
+        _planner: object,
+        message: str,
+        _history: object,
+        _tools: object,
+    ) -> ConversationDecision:
+        if "claims" in message.lower():
+            return ConversationDecision(
+                route=ConversationRoute.TOOL_CALL,
+                tool_name=ChatToolName.ANALYTICS,
+                sources=[AnalyticsSource.CLAIMS],
+            )
+        return ConversationDecision(
+            route=ConversationRoute.CLARIFY,
+            clarification_question="Would you like to review claims, conversion, or competitors?",
+        )
 
     multi_turn_case = next(c for c in golden_set.GOLDEN_CASES if c.case_id == "GC-18")
     monkeypatch.setattr("pricing_copilot.evaluation.runner.GOLDEN_CASES", [multi_turn_case])
+    monkeypatch.setattr(
+        "pricing_copilot.chat.conversation_graph.AgentsSdkConversationPlanner.plan",
+        plan,
+    )
 
     report = run_benchmark(get_settings(), include_baseline=False)
 

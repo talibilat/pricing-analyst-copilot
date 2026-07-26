@@ -24,6 +24,15 @@ class AgentRegistration(BaseModel):
 
 
 APPROVED_AGENT_REGISTRY: dict[str, AgentRegistration] = {
+    "conversation-agent": AgentRegistration(
+        name="conversation-agent",
+        owner="Pricing Decision Copilot",
+        version="v1",
+        risk_tier=RiskTier.HIGH,
+        permitted_tools=(),
+        output_contract="ConversationDecision",
+        evaluation_suite="tests/test_conversation_graph.py",
+    ),
     "portfolio-supervisor": AgentRegistration(
         name="portfolio-supervisor",
         owner="Pricing Decision Copilot",

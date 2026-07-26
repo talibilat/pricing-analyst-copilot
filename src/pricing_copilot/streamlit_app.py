@@ -14,6 +14,7 @@ from pricing_copilot.chat.contracts import (
     ChatIntent,
     ChatResponse,
     ChatTable,
+    ConversationMessage,
 )
 from pricing_copilot.chat.service import ChatService
 from pricing_copilot.config import get_settings
@@ -134,9 +135,7 @@ def _render_workflow_result(result: WorkflowResult) -> None:
             FairValueStatus.REVIEW_RECOMMENDED: "Review recommended",
             FairValueStatus.CONCERN_IDENTIFIED: "Concern identified",
         }
-        st.markdown(
-            f"**Fair value status:** {fair_value_labels[recommendation.fair_value_status]}"
-        )
+        st.markdown(f"**Fair value status:** {fair_value_labels[recommendation.fair_value_status]}")
         if recommendation.fair_value_follow_up:
             st.write("\n".join(f"- {item}" for item in recommendation.fair_value_follow_up))
 
@@ -182,9 +181,7 @@ def _render_workflow_result(result: WorkflowResult) -> None:
                 else []
             ),
             {
-                competitor.competitor_name: [
-                    item.value for item in competitor.price_index.monthly
-                ]
+                competitor.competitor_name: [item.value for item in competitor.price_index.monthly]
                 for competitor in analytics.competitors.competitors
             },
             y_label="Price index",
@@ -239,6 +236,14 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             icon="🔁",
         )
     st.markdown(response.message)
+    if response.limitations:
+        st.info(
+            "**What I could not confirm**\n\n"
+            + "\n".join(f"- {item}" for item in response.limitations)
+        )
+    if response.suggested_next_steps:
+        st.markdown("**You could try**")
+        st.write("\n".join(f"- {item}" for item in response.suggested_next_steps))
     for table in response.tables:
         _render_table(table)
     if response.workflow_result is not None:
@@ -304,27 +309,33 @@ st.caption(
 )
 
 if "chat_messages" not in st.session_state:
+    welcome = (
+        "Ask me a general question, explore portfolio data, or request a governed pricing "
+        "recommendation. If your request could mean more than one thing, I will ask a focused "
+        "follow-up and suggest useful options."
+    )
     st.session_state.chat_messages = [
         {
             "role": "assistant",
+            "content": welcome,
             "response": ChatResponse(
                 intent=ChatIntent.HELP,
                 context=ChatContext(),
-                message=(
-                    "Ask me about claims, conversion, competitors, previous pricing actions, "
-                    "market intelligence, or aggregate customer feedback. You can also ask for a "
-                    "pricing recommendation or say ‘analyse everything’."
-                ),
+                message=welcome,
             ).model_dump(mode="json"),
         }
     ]
+if "chat_service" not in st.session_state:
+    st.session_state.chat_service = ChatService()
+if "chat_context" not in st.session_state:
+    st.session_state.chat_context = ChatContext()
 
 with st.sidebar:
     st.subheader("Suggested questions")
     st.caption("Type or paste one into the chat.")
-    st.code("Show claims and conversion performance")
-    st.code("What did competitors do in the retention concern scenario?")
-    st.code("Analyse everything and recommend a pricing action")
+    st.code("What is the capital of France?")
+    st.code("What was our price last month?")
+    st.code("Should we increase the price next month?")
     st.caption("Each run shows safe activity labels, not hidden prompts or private reasoning.")
 
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
@@ -332,12 +343,15 @@ tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 with tab_chat:
     for message_number, message in enumerate(st.session_state.chat_messages):
         with st.chat_message(message["role"]):
-            response = ChatResponse.model_validate(message["response"])
-            is_latest_message = message_number == len(st.session_state.chat_messages) - 1
-            _render_response(response, message_number, can_record=is_latest_message)
+            if message["role"] == "user":
+                st.markdown(message["content"])
+            else:
+                response = ChatResponse.model_validate(message["response"])
+                is_latest_message = message_number == len(st.session_state.chat_messages) - 1
+                _render_response(response, message_number, can_record=is_latest_message)
 
     if prompt := st.chat_input(
-        "Ask a portfolio-level pricing question",
+        "Ask a question",
         key="pricing_chat_input",
         max_chars=1_000,
         submit_mode="disable",
@@ -347,9 +361,7 @@ with tab_chat:
         st.session_state.chat_messages.append(
             {
                 "role": "user",
-                "response": ChatResponse(
-                    intent=ChatIntent.HELP, context=ChatContext(), message=prompt
-                ).model_dump(mode="json"),
+                "content": prompt,
             }
         )
         with st.chat_message("assistant"):
@@ -360,8 +372,17 @@ with tab_chat:
                 activity_lines.append(_activity_text(activity))
                 activity_box.markdown("  \n".join(activity_lines[-10:]))
 
+            history = [
+                ConversationMessage(role=item["role"], content=item["content"])
+                for item in st.session_state.chat_messages[:-1]
+            ]
             with st.spinner("Working with governed portfolio sources..."):
-                response = ChatService().submit(prompt, on_activity=show_activity)
+                response = st.session_state.chat_service.submit(
+                    prompt,
+                    st.session_state.chat_context,
+                    history=history,
+                    on_activity=show_activity,
+                )
             activity_box.empty()
             if "Live analysis could not complete" in response.message:
                 message_number = len(st.session_state.chat_messages)
@@ -369,9 +390,13 @@ with tab_chat:
                     retry_context = ChatContext(
                         scenario=response.context.scenario, force_replay=True
                     )
-                    response = ChatService().submit(
-                        prompt, retry_context, on_activity=show_activity
+                    response = st.session_state.chat_service.submit(
+                        prompt,
+                        retry_context,
+                        history=history,
+                        on_activity=show_activity,
                     )
+            st.session_state.chat_context = response.context
             if response.activities:
                 with st.expander("Activity trace", expanded=True):
                     st.write(
@@ -382,7 +407,11 @@ with tab_chat:
             message_number = len(st.session_state.chat_messages)
             _render_response(response, message_number, can_record=True)
         st.session_state.chat_messages.append(
-            {"role": "assistant", "response": response.model_dump(mode="json")}
+            {
+                "role": "assistant",
+                "content": response.message,
+                "response": response.model_dump(mode="json"),
+            }
         )
 
 with tab_monitoring:

@@ -5,6 +5,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pricing_copilot.api import app
+from pricing_copilot.chat.contracts import (
+    AnalyticsSource,
+    ChatToolName,
+    ConversationDecision,
+    ConversationRoute,
+)
 from pricing_copilot.contracts import EvidenceDomain
 from pricing_copilot.decisions.store import DecisionStore
 from pricing_copilot.orchestration.contracts import SpecialistFindings
@@ -44,7 +50,17 @@ def test_health_check() -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_chat_endpoint_returns_permitted_source_data() -> None:
+def test_chat_endpoint_returns_permitted_source_data(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "pricing_copilot.chat.conversation_graph.AgentsSdkConversationPlanner.plan",
+        lambda *_args: ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.ANALYTICS,
+            sources=[AnalyticsSource.CLAIMS, AnalyticsSource.CONVERSION],
+        ),
+    )
     response = client.post("/chat", json={"message": "Show claims and conversion performance"})
 
     assert response.status_code == 200
@@ -52,11 +68,22 @@ def test_chat_endpoint_returns_permitted_source_data() -> None:
     assert [table["title"] for table in response.json()["tables"]] == ["Claims", "Conversion"]
 
 
-def test_chat_endpoint_refuses_raw_sql() -> None:
+def test_chat_endpoint_reports_when_safe_sql_is_not_connected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "pricing_copilot.chat.conversation_graph.AgentsSdkConversationPlanner.plan",
+        lambda *_args: ConversationDecision(
+            route=ConversationRoute.TOOL_CALL,
+            tool_name=ChatToolName.READ_ONLY_SQL,
+            sql="SELECT * FROM claims",
+        ),
+    )
     response = client.post("/chat", json={"message": "SELECT * FROM claims"})
 
     assert response.status_code == 200
-    assert response.json()["refused"]
+    assert not response.json()["refused"]
+    assert "not connected" in response.json()["message"]
 
 
 def test_workflow_endpoint_returns_investigate_for_supported_portfolio() -> None:
