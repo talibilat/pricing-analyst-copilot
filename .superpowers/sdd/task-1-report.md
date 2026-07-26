@@ -170,3 +170,56 @@ back; `_assert_rejected_without_execution` helper):
 - `SELECT *` is allowed and produces no `COLUMN_REF` to validate; it is safe
   because the temp views project only allowlisted columns, so `*` cannot expand
   to `scenario` or any non-catalogue field.
+
+---
+
+## Fix report: row cap pushed into the engine (reachable OOM/DoS)
+
+### What changed
+
+`src/pricing_copilot/data/persistent.py` - `run_freeform_sql`:
+The validated user SQL is no longer executed directly and then sliced in Python.
+It is now wrapped as a subquery under an outer LIMIT that DuckDB executes:
+
+```
+SELECT * FROM (<request.sql>) AS _freeform_result LIMIT 200
+```
+
+DuckDB applies LIMIT pushdown at plan time, so an enormous intermediate result (e.g. an implicit cross join over the allowlisted `claims` table) is never fully materialized.
+The Python-side `rows[:FREEFORM_ROW_LIMIT]` slice was kept as harmless defense-in-depth.
+The wrap is safe to compose because `validate_freeform_sql` guarantees a single validated SELECT with no trailing semicolon.
+
+`tests/test_persistent_data.py`:
+Added `test_freeform_cap_prevents_full_materialization_of_huge_cross_join` (a 6-way implicit cross join, ~24**6 ≈ 1.9e8 rows if materialized) proving the cap runs inside the engine.
+
+### Verification (exact commands and output)
+
+Baseline before change: `uv run pytest tests/test_persistent_data.py -q` -> `36 passed`.
+
+The 4 numbered checks:
+
+1. `test_freeform_row_cap_holds_with_explicit_limit_and_order` (caller's `LIMIT 5` must still win, not become 200):
+   `uv run pytest ...::test_freeform_row_cap_holds_with_explicit_limit_and_order` -> **PASSED**.
+   Confirmed empirically that `SELECT * FROM (SELECT period FROM claims ORDER BY period LIMIT 5) LIMIT 200` returns exactly 5 rows - the innermost LIMIT wins.
+
+2. `test_freeform_allows_aggregate_alias_and_ordering` (user `ORDER BY total_loss DESC` order must survive wrapping):
+   `uv run pytest ...::test_freeform_allows_aggregate_alias_and_ordering` -> **PASSED**.
+   Confirmed empirically: DuckDB preserves the inner `ORDER BY` through `SELECT * FROM (... ORDER BY total_loss DESC) LIMIT 200`; the returned rows are still descending.
+
+3. `test_freeform_caps_result_rows_at_two_hundred` (24x24 cross join still returns exactly 200):
+   `uv run pytest ...::test_freeform_caps_result_rows_at_two_hundred` -> **PASSED** (exactly 200 rows).
+
+4. Prevents full materialization for a large cross join:
+   Added `test_freeform_cap_prevents_full_materialization_of_huge_cross_join` -> **PASSED**.
+   Direct timing on the same 6-way cross join the reviewer flagged as an OOM vector returned exactly 200 rows in **0.021s** on a fresh DB. Materializing ~1.9e8 tuples before slicing would take many seconds and gigabytes; completing in 21ms is the observable proof that LIMIT pushdown short-circuits the plan. Engine-internal plan behavior can't be inspected from outside the public method, so the row-count-plus-timing correctness test is the practical proof (as the reviewer anticipated).
+
+Full suite / lint / types after change:
+- `uv run pytest tests/test_persistent_data.py -q` -> **37 passed** (36 preserved + 1 new).
+- `uv run ruff check src/pricing_copilot/data/persistent.py tests/test_persistent_data.py` -> **All checks passed!**
+- `uv run mypy src/pricing_copilot/data/persistent.py` -> **Success: no issues found in 1 source file**.
+
+### Minor findings disposition
+
+1. **Over-permissive alias check** (column allowlist accepts any alias introduced anywhere as valid everywhere): **left as-is**. The reviewer confirmed it is not a security hole (the shadowing scenario-scoped temp views are the real guarantee and the `scenario` column is rejected unconditionally). A proper tightening requires per-scope alias tracking in the AST validator - non-trivial and not low-risk, so out of scope per the instruction.
+
+2. **Suppression-comment style inconsistency** (`# nosec B608` in src vs `# noqa: S608` in the test file): confirmed ruff's lint `select` in `pyproject.toml` is `["E", "F", "I", "UP", "B"]` - `S`/`S608` is **not** enabled, so ruff enforces S608 on neither `src/` nor `tests/`; both comments are inert. Aligned the single test-file occurrence to `# nosec B608` to match the file convention used in `persistent.py`. Purely cosmetic; no behavior change.

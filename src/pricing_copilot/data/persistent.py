@@ -551,7 +551,17 @@ class PersistentAnalyticsDatabase:
                     f'FROM "{catalog}".main.{table} '
                     f"WHERE {_SCENARIO_COLUMN} = '{request.scenario.value}'"
                 )
-            cursor = connection.execute(request.sql)
+            # Push the row cap into the SQL DuckDB actually executes, wrapping the
+            # validated query as a subquery under an outer LIMIT. DuckDB applies
+            # LIMIT pushdown at plan time, so an enormous intermediate result (for
+            # example an implicit cross join over the allowlisted table) is never
+            # fully materialized. request.sql is a single validated SELECT with no
+            # trailing semicolon (see validate_freeform_sql), so it composes as a
+            # subquery; a caller's own inner LIMIT still wins over this outer cap.
+            cursor = connection.execute(
+                f"SELECT * FROM ({request.sql}) AS _freeform_result "  # nosec B608
+                f"LIMIT {FREEFORM_ROW_LIMIT}"
+            )
             columns = tuple(descriptor[0] for descriptor in cursor.description)
             rows = cursor.fetchall()
         finally:

@@ -24,7 +24,7 @@ def _row_count(path: Path, table: str, scenario: ScenarioName) -> int:
     connection = duckdb.connect(str(path), read_only=True)
     try:
         result = connection.execute(
-            f"SELECT COUNT(*) FROM {table} WHERE scenario = ?",  # noqa: S608 - fixed allowlist name
+            f"SELECT COUNT(*) FROM {table} WHERE scenario = ?",  # nosec B608 - fixed allowlist name
             [scenario.value],
         ).fetchone()
     finally:
@@ -338,6 +338,23 @@ def test_freeform_caps_result_rows_at_two_hundred(
     # must trim the returned rows to exactly 200 even though more match.
     result = database.execute_freeform_sql(
         "SELECT c1.period FROM claims AS c1 CROSS JOIN claims AS c2",
+        ScenarioName.CONTROLLED_INCREASE,
+    )
+    assert len(result.rows) == FREEFORM_ROW_LIMIT == 200
+
+
+def test_freeform_cap_prevents_full_materialization_of_huge_cross_join(
+    database: PersistentAnalyticsDatabase,
+) -> None:
+    # A six-way implicit cross join over the 24-row scenario slice would
+    # materialize ~24**6 (about 1.9e8) rows if the cap were applied only after
+    # fetchall(). The fix pushes LIMIT into the SQL DuckDB executes, so the
+    # engine short-circuits and this returns 200 rows near-instantly instead of
+    # OOMing the process. Correctness (exactly 200 rows) is the observable proof
+    # that the cap runs inside the engine rather than in the Python layer.
+    result = database.execute_freeform_sql(
+        "SELECT c1.period FROM claims c1, claims c2, claims c3, "
+        "claims c4, claims c5, claims c6",
         ScenarioName.CONTROLLED_INCREASE,
     )
     assert len(result.rows) == FREEFORM_ROW_LIMIT == 200
