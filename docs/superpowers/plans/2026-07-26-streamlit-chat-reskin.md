@@ -16,7 +16,43 @@
 - These exact substrings (case-insensitive) must remain in `streamlit_app.py`: `"system recommendation"`, `"analyst decision"` (or `"analyst review"`), `"policy-approved for qualified analyst review"`, `"not a claim of regulatory compliance"`, `"st.chat_message"`, `"st.chat_input"`, `"st.spinner"`, `"activity trace"`. The phrase `"price updated"` (and its banned siblings in `tests/test_streamlit_copy.py`) must never appear.
 - No changes to `ChatService`, `chat/contracts.py`, `decisions/`, `drift/`, `evidence/`, or any contract/model — presentation layer only.
 - Use `oklch()` color values directly in CSS (matches the source design exactly; no hex conversion).
-- Run `pytest tests/test_streamlit_chat_e2e.py tests/test_streamlit_copy.py -v` after every task; both files must stay green throughout.
+- Run `pytest tests/test_streamlit_chat_e2e.py tests/test_streamlit_copy.py -v` after every task; both files must stay green throughout, **except** the six pre-existing failures below, which are unrelated to this task and must not be "fixed" as part of it.
+
+### Known pre-existing failures (confirmed before any implementation started)
+
+Running the full suite (`pytest -q`) on a clean checkout of this branch — before any task in
+this plan touches code — already shows 10 failures, none caused by this plan:
+
+- **No real Azure OpenAI credentials are available in this environment** (`.env` has
+  `AZURE_OPENAI_API_KEY=` / `AZURE_OPENAI_ENDPOINT=` present but empty). Every test that drives
+  the *live* recommendation workflow (prompts like "Analyse everything and recommend a pricing
+  action") fails with `Live analysis could not complete... Azure OpenAI credentials are not
+  configured`, even in total isolation. Affected: `tests/test_streamlit_chat_e2e.py::test_recommendation_response_shows_confidence_and_fair_value`,
+  `::test_recommendation_response_shows_expandable_evidence_detail`,
+  `::test_supporting_charts_include_severity_and_competitor_movement`,
+  `::test_counter_evidence_uses_a_prominent_warning_block`,
+  `::test_analyst_can_record_an_approval_decision_from_the_chat_ui`,
+  `tests/test_workflow.py::test_conflicting_evidence_scenario_forces_investigate_without_calling_the_model`,
+  `tests/test_api.py::test_workflow_endpoint_replay_query_param_serves_a_recorded_artifact`,
+  `tests/test_cli.py::test_cli_replay_flag_serves_a_recorded_artifact`,
+  `tests/test_recommendation_live.py::test_replay_of_the_committed_artifact_matches_expectations_without_credentials`.
+  **Do not build a new test on the live "Analyse everything" path** — it cannot pass here. Use
+  the replay-artifact pattern (`save_replay_artifact` + `PRICING_COPILOT_REPLAY_DIRECTORY`
+  monkeypatch, as `test_replay_keyword_shows_a_prominent_replay_label` already does) for any new
+  test that needs a populated `WorkflowResult`.
+- **`get_settings()` is `@lru_cache`d** (`src/pricing_copilot/config.py:97`), so
+  `tests/test_streamlit_chat_e2e.py::test_replay_keyword_shows_a_prominent_replay_label` passes
+  in isolation (`pytest tests/test_streamlit_chat_e2e.py::test_replay_keyword_shows_a_prominent_replay_label`)
+  but fails when run after other tests in the same file that already called `get_settings()`
+  before its `monkeypatch.setenv(...)` took effect — a pre-existing test-isolation bug, not
+  something introduced by or fixable within this plan. When a task's verification step says "run
+  the file," a failure *only* in that one test, with the pass-in-isolation result unchanged, is
+  this known issue — not a regression. Report it; do not attempt to fix `get_settings()` caching
+  as part of this plan.
+
+Because of the above, **treat "stay green" per-task as: the specific test(s) the task added or
+touched pass, both in isolation and as part of the full file** — not that the full-file run has
+zero failures overall.
 
 ---
 
@@ -362,7 +398,13 @@ Delete the `with st.sidebar:` block (lines 322-328) entirely — there is nothin
 - [ ] **Step 2: Run the existing tests**
 
 Run: `pytest tests/test_streamlit_chat_e2e.py tests/test_streamlit_copy.py -v`
-Expected: PASS (still, unchanged) — `"policy-approved for qualified analyst review"`, `"not a claim of regulatory compliance"`, `"system recommendation"`, and `"analyst decision"` are all untouched elsewhere in the file, and `"Decision support only"` is preserved verbatim in the new header markup.
+Expected: same pass/fail split as the pre-task baseline (see Global Constraints' "Known
+pre-existing failures" — 6 pre-existing failures in `test_streamlit_chat_e2e.py`, everything else
+green) — `"policy-approved for qualified analyst review"`, `"not a claim of regulatory
+compliance"`, `"system recommendation"`, and `"analyst decision"` are all untouched elsewhere in
+the file, and `"Decision support only"` is preserved verbatim in the new header markup. If any
+test that was passing before this step now fails, that is a regression from this step; stop and
+fix it before continuing.
 
 - [ ] **Step 3: Write and run a new sidebar-removed assertion**
 
@@ -473,8 +515,13 @@ Note: this task deliberately renders the "Copilot" label for every historical as
 
 - [ ] **Step 2: Run the existing e2e test to confirm the refactor is behavior-preserving**
 
-Run: `pytest tests/test_streamlit_chat_e2e.py -v`
-Expected: PASS — `test_streamlit_chat_runs_a_safe_multi_source_query` and `test_replay_keyword_shows_a_prominent_replay_label` both still pass with identical assertions, since `_submit_prompt` produces the same message sequence as the inline code it replaced.
+Run: `pytest tests/test_streamlit_chat_e2e.py::test_streamlit_chat_runs_a_safe_multi_source_query tests/test_streamlit_chat_e2e.py::test_replay_keyword_shows_a_prominent_replay_label -v`
+Expected: PASS — both still pass with identical assertions when run together in isolation from
+the rest of the file, since `_submit_prompt` produces the same message sequence as the inline
+code it replaced. (Running the *whole* file may still show
+`test_replay_keyword_shows_a_prominent_replay_label` fail due to the pre-existing
+`get_settings()` cache-pollution issue noted in Global Constraints — that is not caused by this
+refactor; this command isolates the two tests this task actually touches.)
 
 - [ ] **Step 3: Commit**
 
@@ -589,7 +636,11 @@ There is exactly one `with tab_chat:` block in the file — this listing shows i
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/test_streamlit_chat_e2e.py -v`
-Expected: PASS (all tests, including the two new ones and the pre-existing `len(app.chat_message) == 3` / `len(app.dataframe) == 2` assertions)
+Expected: same pass/fail split as the pre-task baseline plus the two new tests passing (see
+Global Constraints — 6 pre-existing failures unrelated to this task; everything else, including
+the pre-existing `len(app.chat_message) == 3` / `len(app.dataframe) == 2` assertions, stays
+green). If a test that was passing before this task now fails, that is a regression; fix it
+before continuing.
 
 - [ ] **Step 5: Commit**
 
@@ -611,25 +662,89 @@ git commit -m "feat: add the empty-state hero with suggestion chips"
 
 - [ ] **Step 1: Write the failing test**
 
+The live "Analyse everything and recommend a pricing action" path cannot pass in this
+environment (see Global Constraints — no Azure OpenAI credentials are configured). Use the same
+deterministic replay-artifact pattern as the existing
+`test_replay_keyword_shows_a_prominent_replay_label` test instead: seed a `WorkflowResult` with
+`confidence` populated, save it as a replay artifact, then trigger it with a "replay" prompt.
+
 Add to `tests/test_streamlit_chat_e2e.py`:
 
 ```python
-def test_workflow_result_renders_a_proposed_action_badge() -> None:
+def test_workflow_result_renders_a_proposed_action_badge(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from datetime import date
+
+    from pricing_copilot.chat.contracts import ChatContext, ChatIntent, ChatResponse
+    from pricing_copilot.config import Settings
+    from pricing_copilot.contracts import (
+        AnalysisPeriod,
+        GovernanceOutcome,
+        PortfolioQuestion,
+        Product,
+        Recommendation,
+        RecommendationAction,
+        Region,
+        ScenarioName,
+        Segment,
+        WorkflowResult,
+    )
+    from pricing_copilot.evidence.models import ConfidenceBreakdown
+    from pricing_copilot.replay.store import save_replay_artifact
+
+    replay_dir = tmp_path / "replay"
+    monkeypatch.setenv("PRICING_COPILOT_REPLAY_DIRECTORY", str(replay_dir))
+    question = PortfolioQuestion(
+        product=Product.PERSONAL_MOTOR,
+        region=Region.NORTH_WEST,
+        segment=Segment.RENEWAL,
+        analysis_period=AnalysisPeriod(start_month=date(2025, 7, 1), end_month=date(2025, 12, 1)),
+        scenario=ScenarioName.CONTROLLED_INCREASE,
+    )
+    save_replay_artifact(
+        ChatResponse(
+            intent=ChatIntent.PRICING_ANALYSIS,
+            context=ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+            message="Recommends increase.",
+            workflow_result=WorkflowResult(
+                question=question,
+                specialist_reports=[],
+                recommendation=Recommendation(
+                    action=RecommendationAction.INCREASE,
+                    rationale="Loss ratio rose.",
+                    confidence=ConfidenceBreakdown(
+                        evidence_coverage=0.88,
+                        source_freshness=0.93,
+                        specialist_agreement=0.86,
+                        data_quality=0.91,
+                        conflict_penalty=0.95,
+                        overall=0.89,
+                    ),
+                ),
+                governance_outcome=GovernanceOutcome(approved=True),
+                missing_evidence=[],
+            ),
+        ),
+        Settings(replay_directory=replay_dir),
+    )
+
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     app.run()
-    app.chat_input[0].set_value("Analyse everything and recommend a pricing action")
+    app.chat_input[0].set_value("Replay the controlled increase scenario")
     app.run()
 
     assert not app.exception
     markdown_html = "\n".join(item.value for item in app.markdown)
     assert "pc-badge-action" in markdown_html
     assert "Proposed:" in markdown_html
+    assert "pc-conf-grid" in markdown_html
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_streamlit_chat_e2e.py::test_workflow_result_renders_a_proposed_action_badge -v`
-Expected: FAIL — no `pc-badge-action` markup exists yet.
+Expected: FAIL — no `pc-badge-action` / `pc-conf-grid` markup exists yet.
 
 - [ ] **Step 3: Wire the badge and confidence bars into `_render_workflow_result`**
 
@@ -664,8 +779,13 @@ Add the import: `from pricing_copilot.streamlit_theme import badge_html, confide
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `pytest tests/test_streamlit_chat_e2e.py tests/test_streamlit_copy.py -v`
-Expected: PASS (all tests — the copy test still finds `"system recommendation"` and the policy phrases, which live in the untouched `st.caption` call three lines above line 99).
+Run: `pytest tests/test_streamlit_chat_e2e.py::test_workflow_result_renders_a_proposed_action_badge tests/test_streamlit_copy.py -v`
+Expected: PASS (both — the copy test still finds `"system recommendation"` and the policy
+phrases, which live in the untouched `st.caption` call three lines above line 99). Then run
+`pytest tests/test_streamlit_chat_e2e.py -v` for the full file: per the Global Constraints'
+"Known pre-existing failures" note, `test_replay_keyword_shows_a_prominent_replay_label` may fail
+here due to the pre-existing `get_settings()` cache-pollution issue even though it (and this new
+test) pass individually — that is not a regression from this task.
 
 - [ ] **Step 5: Commit**
 
@@ -725,7 +845,9 @@ Append to the `INJECT_CSS` string in `src/pricing_copilot/streamlit_theme.py`, j
 - [ ] **Step 3: Run the full theme and app test suites**
 
 Run: `pytest tests/test_streamlit_theme.py tests/test_streamlit_chat_e2e.py tests/test_streamlit_copy.py -v`
-Expected: PASS (all tests)
+Expected: `test_streamlit_theme.py` and `test_streamlit_copy.py` fully green; `test_streamlit_chat_e2e.py`
+at the same pass/fail split as the pre-task baseline (6 pre-existing failures, see Global
+Constraints) since this task adds no new Python call sites in `streamlit_app.py`.
 
 - [ ] **Step 4: Commit**
 
@@ -744,7 +866,12 @@ git commit -m "style: extend theme CSS to cover expanders, tabs, and monitoring 
 - [ ] **Step 1: Run the full test suite**
 
 Run: `pytest -v`
-Expected: PASS — every test, not just the Streamlit ones (Task 5/6 changes are presentation-only and shouldn't affect `chat/service.py`, `decisions/`, `drift/`, or any other module's tests).
+Expected: the same 10 pre-existing failures listed in Global Constraints (missing Azure OpenAI
+credentials, plus the one `get_settings()` cache-pollution test) and nothing else — every other
+test, not just the Streamlit ones, passes (Task 5/6 changes are presentation-only and shouldn't
+affect `chat/service.py`, `decisions/`, `drift/`, or any other module's tests). If the failure
+count or set differs from the 10 named in Global Constraints, that is a regression introduced by
+this plan; investigate and fix before declaring the task done.
 
 - [ ] **Step 2: Launch the app and verify visually**
 
