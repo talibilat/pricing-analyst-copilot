@@ -35,10 +35,10 @@ def portfolio_pill_text(question: PortfolioQuestion) -> str:
 
 def assistant_avatar_data_uri() -> str:
     svg = (
-        '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44">'
-        '<rect width="44" height="44" rx="12" fill="oklch(47% 0.085 235)"/>'
-        '<text x="22" y="29" font-family="IBM Plex Sans, sans-serif" '
-        'font-size="19" font-weight="600" fill="white" '
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22">'
+        '<rect width="22" height="22" rx="6" fill="oklch(47% 0.085 235)"/>'
+        '<text x="11" y="15" font-family="IBM Plex Sans, sans-serif" '
+        'font-size="11" font-weight="600" fill="white" '
         'text-anchor="middle">P</text></svg>'
     )
     encoded = base64.b64encode(svg.encode("utf-8")).decode("ascii")

@@ -1,3 +1,4 @@
+import base64
 from datetime import date
 
 from pricing_copilot.contracts import (
@@ -40,6 +41,18 @@ def test_portfolio_pill_text_formats_region_product_segment_and_dates() -> None:
 def test_assistant_avatar_data_uri_is_an_svg_data_uri() -> None:
     uri = assistant_avatar_data_uri()
     assert uri.startswith("data:image/svg+xml;base64,")
+
+
+def test_assistant_avatar_data_uri_has_correct_dimensions() -> None:
+    uri = assistant_avatar_data_uri()
+    # Extract base64 payload
+    b64_payload = uri.replace("data:image/svg+xml;base64,", "")
+    svg_bytes = base64.b64decode(b64_payload)
+    svg_text = svg_bytes.decode("utf-8")
+    # Verify dimensions are 22x22
+    assert 'width="22"' in svg_text
+    assert 'height="22"' in svg_text
+    assert 'rx="6"' in svg_text
 
 
 def test_confidence_bars_html_renders_one_bar_per_item() -> None:
