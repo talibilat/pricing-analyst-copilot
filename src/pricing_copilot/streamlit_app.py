@@ -35,6 +35,11 @@ CHAT_LAYOUT_CSS = """
     padding-bottom: 7rem;
 }
 
+/* Give the conversation its own responsive scrolling viewport. */
+.st-key-chat_history {
+    padding-bottom: 1rem;
+}
+
 /* Keep the composer available at the bottom of the viewport, including inside a tab. */
 .st-key-pricing_chat_input {
     position: fixed;
@@ -387,14 +392,21 @@ with st.sidebar:
 tab_chat, tab_monitoring = st.tabs(["Chat", "Monitoring"])
 
 with tab_chat:
-    for message_number, message in enumerate(st.session_state.chat_messages):
-        with st.chat_message(message["role"]):
-            if message["role"] == "user":
-                st.markdown(message["content"])
-            else:
-                response = ChatResponse.model_validate(message["response"])
-                is_latest_message = message_number == len(st.session_state.chat_messages) - 1
-                _render_response(response, message_number, can_record=is_latest_message)
+    chat_history = st.container(
+        height=420,
+        border=False,
+        key="chat_history",
+        autoscroll=True,
+    )
+    with chat_history:
+        for message_number, message in enumerate(st.session_state.chat_messages):
+            with st.chat_message(message["role"]):
+                if message["role"] == "user":
+                    st.markdown(message["content"])
+                else:
+                    response = ChatResponse.model_validate(message["response"])
+                    is_latest_message = message_number == len(st.session_state.chat_messages) - 1
+                    _render_response(response, message_number, can_record=is_latest_message)
 
     if prompt := st.chat_input(
         "Ask a question",
@@ -402,63 +414,64 @@ with tab_chat:
         max_chars=1_000,
         submit_mode="disable",
     ):
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.chat_messages.append(
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        )
-        with st.chat_message("assistant"):
-            activity_box = st.empty()
-            activity_lines: list[str] = []
+        with chat_history:
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            st.session_state.chat_messages.append(
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            )
+            with st.chat_message("assistant"):
+                activity_box = st.empty()
+                activity_lines: list[str] = []
 
-            def show_activity(activity: ChatActivity) -> None:
-                activity_lines.append(_activity_text(activity))
-                activity_box.markdown("  \n".join(activity_lines[-10:]))
+                def show_activity(activity: ChatActivity) -> None:
+                    activity_lines.append(_activity_text(activity))
+                    activity_box.markdown("  \n".join(activity_lines[-10:]))
 
-            history = [
-                ConversationMessage(role=item["role"], content=item["content"])
-                for item in st.session_state.chat_messages[:-1]
-            ]
-            with st.spinner("Working with governed portfolio sources..."):
-                response = st.session_state.chat_service.submit(
-                    prompt,
-                    st.session_state.chat_context,
-                    history=history,
-                    on_activity=show_activity,
-                )
-            activity_box.empty()
-            if "Live analysis could not complete" in response.message:
-                message_number = len(st.session_state.chat_messages)
-                if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
-                    retry_context = ChatContext(
-                        scenario=response.context.scenario, force_replay=True
-                    )
+                history = [
+                    ConversationMessage(role=item["role"], content=item["content"])
+                    for item in st.session_state.chat_messages[:-1]
+                ]
+                with st.spinner("Working with governed portfolio sources..."):
                     response = st.session_state.chat_service.submit(
                         prompt,
-                        retry_context,
+                        st.session_state.chat_context,
                         history=history,
                         on_activity=show_activity,
                     )
-            st.session_state.chat_context = response.context
-            if response.activities:
-                with st.expander("Activity trace", expanded=True):
-                    st.write(
-                        "\n".join(
-                            f"- {_activity_text(activity)}" for activity in response.activities
+                activity_box.empty()
+                if "Live analysis could not complete" in response.message:
+                    message_number = len(st.session_state.chat_messages)
+                    if st.button("Try replay instead", key=f"replay_retry_{message_number}"):
+                        retry_context = ChatContext(
+                            scenario=response.context.scenario, force_replay=True
                         )
-                    )
-            message_number = len(st.session_state.chat_messages)
-            _render_response(response, message_number, can_record=True)
-        st.session_state.chat_messages.append(
-            {
-                "role": "assistant",
-                "content": response.message,
-                "response": response.model_dump(mode="json"),
-            }
-        )
+                        response = st.session_state.chat_service.submit(
+                            prompt,
+                            retry_context,
+                            history=history,
+                            on_activity=show_activity,
+                        )
+                st.session_state.chat_context = response.context
+                if response.activities:
+                    with st.expander("Activity trace", expanded=True):
+                        st.write(
+                            "\n".join(
+                                f"- {_activity_text(activity)}" for activity in response.activities
+                            )
+                        )
+                message_number = len(st.session_state.chat_messages)
+                _render_response(response, message_number, can_record=True)
+            st.session_state.chat_messages.append(
+                {
+                    "role": "assistant",
+                    "content": response.message,
+                    "response": response.model_dump(mode="json"),
+                }
+            )
 
 with tab_monitoring:
     _render_drift_monitoring_tab()

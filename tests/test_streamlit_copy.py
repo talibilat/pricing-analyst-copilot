@@ -34,6 +34,8 @@ def test_streamlit_app_is_chat_first_with_activity_feedback() -> None:
 
 def test_streamlit_chat_layout_keeps_composer_fixed_and_separates_roles() -> None:
     assert "position: fixed" in SOURCE
+    assert 'key="chat_history"' in SOURCE
+    assert "autoscroll=true" in SOURCE
     assert "stchatmessageavataruser" in SOURCE
     assert "margin-left: auto" in SOURCE
     assert "stchatmessageavatarassistant" in SOURCE
