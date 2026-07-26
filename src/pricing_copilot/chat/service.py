@@ -724,33 +724,6 @@ class DefaultConversationTools:
             if activity is not None:
                 self._emit(activity, activities, listener)
 
-        self._emit(
-            ChatActivity(
-                status=ActivityStatus.SCHEDULED,
-                label="Reviewing portfolio evidence",
-                purpose="Preparing an integrated claims, commercial, market, and pricing review.",
-            ),
-            activities,
-            listener,
-        )
-        for label, source in (
-            (CLAIMS_LABEL, "claims"),
-            (CONVERSION_LABEL, "conversion"),
-            (COMPETITOR_LABEL, "competitors"),
-            (PRICING_HISTORY_LABEL, "pricing_history"),
-            (MARKET_INTELLIGENCE_LABEL, "market_intelligence"),
-            (CUSTOMER_FEEDBACK_LABEL, "customer_feedback"),
-        ):
-            self._emit(
-                ChatActivity(
-                    status=ActivityStatus.WORKING,
-                    label=label,
-                    purpose="Comparing the requested portfolio period with its prior window.",
-                    source=source,
-                ),
-                activities,
-                listener,
-            )
         claims_periods = self.database.query_source(
             "claims",
             context.scenario,
@@ -782,6 +755,17 @@ class DefaultConversationTools:
             ),
             scenario=context.scenario,
         )
+        workflow_started = monotonic()
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.WORKING,
+                label="Portfolio analysis workflow",
+                purpose="Combining the requested portfolio evidence into an analyst answer.",
+                source="portfolio_analysis",
+            ),
+            activities,
+            listener,
+        )
         try:
             if decision.tool_name is ChatToolName.RECOMMENDATION:
                 result = run_portfolio_workflow(
@@ -793,6 +777,17 @@ class DefaultConversationTools:
                 )
         except UnsupportedPortfolioError:
             return self._unsupported_portfolio_response(context, selected_segment)
+        self._emit(
+            ChatActivity(
+                status=ActivityStatus.COMPLETED,
+                label="Portfolio analysis workflow",
+                purpose="Combined the requested portfolio evidence into an analyst answer.",
+                source="portfolio_analysis",
+                duration_ms=(monotonic() - workflow_started) * 1_000,
+            ),
+            activities,
+            listener,
+        )
         if result.analytics is None or any(
             item.reason.startswith("workflow:") for item in result.missing_evidence
         ):
@@ -873,6 +868,15 @@ class DefaultConversationTools:
             "governance-agent": "Checking recommendation governance",
             "portfolio-supervisor": "Supervisor coordinating specialist agents",
         }
+        source_by_name = {
+            "claims-specialist": "claims",
+            "conversion-specialist": "conversion",
+            "market-intelligence-specialist": "market_intelligence",
+            "pricing-history-specialist": "pricing_history",
+            "recommendation-agent": "recommendation",
+            "governance-agent": "governance",
+            "portfolio-supervisor": "portfolio_analysis",
+        }
         allowed_kinds = {
             TraceEventKind.ROUTING,
             TraceEventKind.TOOL_CALL,
@@ -897,6 +901,24 @@ class DefaultConversationTools:
                 label = MARKET_INTELLIGENCE_LABEL
         if label is None:
             return None
+        source = source_by_name.get(event.name)
+        if source is None and event.kind is TraceEventKind.TOOL_CALL:
+            name = event.name.lower()
+            source = next(
+                (
+                    candidate
+                    for term, candidate in (
+                        ("claim", "claims"),
+                        ("conversion", "conversion"),
+                        ("competitor", "competitors"),
+                        ("pricing", "pricing_history"),
+                        ("document", "market_intelligence"),
+                        ("market", "market_intelligence"),
+                    )
+                    if term in name
+                ),
+                None,
+            )
         status = {
             "started": ActivityStatus.WORKING,
             "scheduled": ActivityStatus.SCHEDULED,
@@ -913,6 +935,7 @@ class DefaultConversationTools:
                 "chain-of-thought."
             ),
             agent=event.name if "agent" in event.name or "specialist" in event.name else None,
+            source=source,
             trace_id=None,
             duration_ms=event.duration_ms,
         )

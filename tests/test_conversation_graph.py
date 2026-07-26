@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 
 from pricing_copilot.chat.contracts import (
+    ActivityStatus,
     ChatContext,
     ChatIntent,
     ChatResponse,
@@ -66,6 +67,29 @@ def test_stable_fact_is_answered_without_a_business_tool() -> None:
     assert response.intent is ChatIntent.GENERAL_ANSWER
     assert response.message == "Paris is the capital of France."
     assert not tools.calls
+
+
+def test_conversation_planning_reports_thinking_then_a_timed_plan() -> None:
+    planner = RecordingPlanner(
+        ConversationDecision(
+            route=ConversationRoute.DIRECT_ANSWER,
+            response="Paris is the capital of France.",
+        )
+    )
+    activities = []
+
+    response = ConversationGraph(planner, RecordingTools()).run(
+        "What is the capital of France?",
+        ChatContext(),
+        on_activity=activities.append,
+    )
+
+    assert [activity.status for activity in activities] == [
+        ActivityStatus.WORKING,
+        ActivityStatus.COMPLETED,
+    ]
+    assert response.activities == activities
+    assert activities[-1].duration_ms is not None
 
 
 def test_ambiguity_uses_history_and_returns_a_personalized_question() -> None:

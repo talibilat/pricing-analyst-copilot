@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date
+from time import monotonic
 
 import altair as alt
 import pandas as pd
@@ -213,6 +214,12 @@ def _render_response(response: ChatResponse, message_number: int, *, can_record:
             icon="🔁",
         )
     st.markdown(response.message)
+    if response.elapsed_ms is not None:
+        st.caption(_operation_summary(response))
+    if response.activities:
+        with st.expander("Tools used and timing", expanded=False):
+            compact_activities = _compact_activities(response.activities)
+            st.write("\n".join(f"- {_activity_text(item)}" for item in compact_activities))
     if response.tables:
         with st.expander("Supporting data details", expanded=False):
             for table in response.tables:
@@ -293,11 +300,78 @@ def _render_drift_monitoring_tab() -> None:
 
 
 def _activity_text(activity: ChatActivity) -> str:
-    duration = f" - {activity.duration_ms:g} ms" if activity.duration_ms is not None else ""
-    status = (
-        "Thinking" if activity.status is ActivityStatus.WORKING else activity.status.value.title()
+    duration = _format_duration(activity.duration_ms)
+    if activity.agent == "conversation-agent":
+        if activity.status is ActivityStatus.WORKING:
+            return "Thinking..."
+        if activity.status is ActivityStatus.COMPLETED:
+            return f"Thought for {duration}. Created a plan and selected the required tools."
+    tool_name = _tool_name(activity.source, activity.label)
+    if activity.status is ActivityStatus.WORKING:
+        return f"Getting data from {tool_name}."
+    if activity.status is ActivityStatus.COMPLETED:
+        return f"Got data from {tool_name} in {duration}."
+    status = activity.status.value.title()
+    duration_suffix = _format_duration(activity.duration_ms, prefix=" - ")
+    return f"{status}: {activity.label}{duration_suffix}"
+
+
+def _format_duration(duration_ms: float | None, *, prefix: str = "") -> str:
+    if duration_ms is None:
+        return "a moment" if not prefix else ""
+    return f"{prefix}{duration_ms / 1_000:.1f} seconds"
+
+
+def _tool_name(source: str | None, fallback: str) -> str:
+    names = {
+        "claims": "claims data tool",
+        "conversion": "conversion data tool",
+        "competitors": "competitor data tool",
+        "pricing_history": "pricing history tool",
+        "market_intelligence": "market intelligence tool",
+        "customer_feedback": "customer feedback tool",
+        "schema_catalogue": "data catalogue tool",
+        "evaluation": "evaluation report tool",
+        "drift": "monitoring tool",
+        "replay": "replay tool",
+        "portfolio_analysis": "portfolio analysis workflow",
+        "recommendation": "recommendation workflow",
+        "governance": "governance review",
+    }
+    return names.get(source or "", fallback)
+
+
+def _activity_key(activity: ChatActivity) -> str:
+    return activity.source or activity.agent or activity.label
+
+
+def _compact_activities(activities: Sequence[ChatActivity]) -> list[ChatActivity]:
+    latest_by_key: dict[str, ChatActivity] = {}
+    order: list[str] = []
+    for activity in activities:
+        key = _activity_key(activity)
+        if key not in latest_by_key:
+            order.append(key)
+        latest_by_key[key] = activity
+    return [latest_by_key[key] for key in order]
+
+
+def _operation_summary(response: ChatResponse) -> str:
+    activity_count = len(_compact_activities(response.activities))
+    tools = list(
+        dict.fromkeys(
+            _tool_name(activity.source, activity.label)
+            for activity in _compact_activities(response.activities)
+            if activity.source is not None
+        )
     )
-    return f"{status}: {activity.label}{duration}"
+    elapsed = _format_duration(response.elapsed_ms)
+    if not tools:
+        return f"Completed in {elapsed}. Operation size: {activity_count} step(s), no data tools."
+    return (
+        f"Completed in {elapsed}. Operation size: {activity_count} step(s), "
+        f"{len(tools)} tool(s). Tools used: {', '.join(tools)}."
+    )
 
 
 st.set_page_config(
@@ -373,34 +447,42 @@ def _submit_prompt(prompt: str) -> None:
     with st.chat_message("assistant", avatar=assistant_avatar_data_uri()):
         _render_copilot_label()
         activity_box = st.empty()
-        activity_lines: list[str] = []
+        activity_states: dict[str, ChatActivity] = {}
+        activity_order: list[str] = []
 
         def show_activity(activity: ChatActivity) -> None:
-            activity_lines.append(_activity_text(activity))
-            activity_box.markdown("  \n".join(activity_lines[-10:]))
-
-        with st.spinner("Thinking..."):
-            response = ChatService().submit(
-                prompt,
-                active_context,
-                history=conversation_history,
-                on_activity=show_activity,
+            key = _activity_key(activity)
+            if key not in activity_states:
+                activity_order.append(key)
+            activity_states[key] = activity
+            activity_box.markdown(
+                "  \n".join(_activity_text(activity_states[key]) for key in activity_order)
             )
+
+        request_started = monotonic()
+        response = ChatService().submit(
+            prompt,
+            active_context,
+            history=conversation_history,
+            on_activity=show_activity,
+        )
+        response = response.model_copy(
+            update={"elapsed_ms": (monotonic() - request_started) * 1_000}
+        )
         activity_box.empty()
         if "Live analysis could not complete" in response.message:
             retry_number = len(st.session_state.chat_messages)
             if st.button("Try replay instead", key=f"replay_retry_{retry_number}"):
                 retry_context = ChatContext(scenario=response.context.scenario, force_replay=True)
+                request_started = monotonic()
                 response = ChatService().submit(
                     prompt,
                     retry_context,
                     history=conversation_history,
                     on_activity=show_activity,
                 )
-        if response.activities:
-            with st.expander("Optional audit trace", expanded=False):
-                st.write(
-                    "\n".join(f"- {_activity_text(activity)}" for activity in response.activities)
+                response = response.model_copy(
+                    update={"elapsed_ms": (monotonic() - request_started) * 1_000}
                 )
         message_number = len(st.session_state.chat_messages)
         _render_response(response, message_number, can_record=True)

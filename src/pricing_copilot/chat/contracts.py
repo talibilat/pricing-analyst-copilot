@@ -181,6 +181,7 @@ class ChatResponse(BaseModel):
     suggested_next_steps: list[str] = Field(default_factory=list)
     workflow_result: WorkflowResult | None = None
     source: ResultSource = ResultSource.LIVE
+    elapsed_ms: float | None = None
 
 
 class ConversationState(BaseModel):

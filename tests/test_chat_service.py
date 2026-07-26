@@ -16,12 +16,6 @@ from pricing_copilot.chat.contracts import (
     ConversationRoute,
 )
 from pricing_copilot.chat.service import (
-    CLAIMS_LABEL,
-    COMPETITOR_LABEL,
-    CONVERSION_LABEL,
-    CUSTOMER_FEEDBACK_LABEL,
-    MARKET_INTELLIGENCE_LABEL,
-    PRICING_HISTORY_LABEL,
     ChatService,
 )
 from pricing_copilot.config import Settings
@@ -181,27 +175,41 @@ def test_chat_retrieves_multiple_permitted_sources_with_activity(service: ChatSe
     assert "## Key evidence" in response.message
     assert not response.tables
     labels = [activity.label for activity in response.activities]
-    assert CLAIMS_LABEL in labels
-    assert CONVERSION_LABEL in labels
+    assert "Conversation planning" in labels
+    assert "Portfolio analysis workflow" in labels
+    completed_workflow = next(
+        activity
+        for activity in response.activities
+        if activity.label == "Portfolio analysis workflow"
+        and activity.status.value == "completed"
+    )
+    assert completed_workflow.duration_ms is not None
 
 
 @pytest.mark.parametrize(
-    ("message", "label"),
+    "message",
     [
-        ("Show competitor price index", COMPETITOR_LABEL),
-        ("Show previous pricing actions", PRICING_HISTORY_LABEL),
-        ("Show market intelligence", MARKET_INTELLIGENCE_LABEL),
-        ("Show aggregate customer feedback", CUSTOMER_FEEDBACK_LABEL),
+        "Show competitor price index",
+        "Show previous pricing actions",
+        "Show market intelligence",
+        "Show aggregate customer feedback",
     ],
 )
-def test_chat_uses_required_safe_activity_labels(
-    service: ChatService, message: str, label: str
+def test_chat_reports_one_timed_portfolio_workflow_per_analysis(
+    service: ChatService, message: str
 ) -> None:
     response = service.submit(message)
 
     assert response.intent is ChatIntent.PRICING_ANALYSIS
     assert "## Key evidence" in response.message
-    assert label in [activity.label for activity in response.activities]
+    completed_workflows = [
+        activity
+        for activity in response.activities
+        if activity.label == "Portfolio analysis workflow"
+        and activity.status.value == "completed"
+    ]
+    assert len(completed_workflows) == 1
+    assert completed_workflows[0].duration_ms is not None
 
 
 @pytest.mark.parametrize(

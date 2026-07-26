@@ -27,9 +27,8 @@ def test_streamlit_app_distinguishes_policy_review_from_regulatory_compliance() 
 def test_streamlit_app_is_chat_first_with_activity_feedback() -> None:
     assert "st.chat_message" in SOURCE
     assert "st.chat_input" in SOURCE
-    assert "st.spinner" in SOURCE
-    assert "audit trace" in SOURCE
-    assert 'st.spinner("thinking...")' in SOURCE
+    assert "tools used and timing" in SOURCE
+    assert "completed in" in SOURCE
     assert "activity.status is activitystatus.working" in SOURCE
 
 

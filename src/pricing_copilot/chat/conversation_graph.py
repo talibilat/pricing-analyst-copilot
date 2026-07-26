@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Callable, Sequence
+from time import monotonic
 from typing import Protocol
 
 from agents import Agent, OpenAIChatCompletionsModel, RunConfig, Runner
@@ -10,6 +11,7 @@ from agents.exceptions import MaxTurnsExceeded, ModelBehaviorError
 from openai import AsyncOpenAI
 
 from pricing_copilot.chat.contracts import (
+    ActivityStatus,
     ChatActivity,
     ChatContext,
     ChatIntent,
@@ -165,6 +167,13 @@ class ConversationGraph:
             history=list(history),
             context=context,
         )
+        planning_activities: list[ChatActivity] = []
+
+        def report_planning(activity: ChatActivity) -> None:
+            planning_activities.append(activity)
+            if on_activity is not None:
+                on_activity(activity)
+
         if context.force_replay:
             decision = ConversationDecision(
                 route=ConversationRoute.TOOL_CALL,
@@ -172,6 +181,15 @@ class ConversationGraph:
                 scenario=context.scenario,
             )
         else:
+            planning_started = monotonic()
+            report_planning(
+                ChatActivity(
+                    status=ActivityStatus.WORKING,
+                    label="Conversation planning",
+                    purpose="Interpreting the request and selecting the right tools.",
+                    agent="conversation-agent",
+                )
+            )
             try:
                 decision = self.planner.plan(
                     state.message,
@@ -179,6 +197,15 @@ class ConversationGraph:
                     self.tools.available_tools(),
                 )
             except Exception as exc:
+                report_planning(
+                    ChatActivity(
+                        status=ActivityStatus.FAILED,
+                        label="Conversation planning",
+                        purpose="The request could not be interpreted.",
+                        agent="conversation-agent",
+                        duration_ms=(monotonic() - planning_started) * 1_000,
+                    )
+                )
                 return ChatResponse(
                     intent=ChatIntent.HELP,
                     route=ConversationRoute.CLARIFY,
@@ -193,7 +220,17 @@ class ConversationGraph:
                         "Use a recorded replay if you need a previously validated recommendation.",
                     ],
                     requires_clarification=True,
+                    activities=planning_activities,
                 )
+            report_planning(
+                ChatActivity(
+                    status=ActivityStatus.COMPLETED,
+                    label="Conversation planning",
+                    purpose="Created a plan and selected the required tools.",
+                    agent="conversation-agent",
+                    duration_ms=(monotonic() - planning_started) * 1_000,
+                )
+            )
         state = state.model_copy(update={"decision": decision})
         active_context = context.model_copy(
             update={
@@ -206,33 +243,37 @@ class ConversationGraph:
             }
         )
         if decision.route is ConversationRoute.DIRECT_ANSWER:
-            return self._compose_without_tool(
+            response = self._compose_without_tool(
                 ChatIntent.GENERAL_ANSWER,
                 decision.response or "",
                 decision,
                 active_context,
             )
+            return response.model_copy(update={"activities": planning_activities})
         if decision.route is ConversationRoute.CLARIFY:
             question = decision.clarification_question or "Could you clarify what you mean?"
-            return self._compose_without_tool(
+            response = self._compose_without_tool(
                 ChatIntent.CLARIFICATION,
                 question,
                 decision,
                 active_context,
                 requires_clarification=True,
             )
+            return response.model_copy(update={"activities": planning_activities})
         if decision.route is ConversationRoute.REFUSE:
-            return self._compose_without_tool(
+            response = self._compose_without_tool(
                 ChatIntent.UNSUPPORTED,
                 decision.response or "I cannot help with that request.",
                 decision,
                 active_context,
                 refused=True,
             )
+            return response.model_copy(update={"activities": planning_activities})
         response = self.tools.execute(state.message, decision, active_context, on_activity)
         return response.model_copy(
             update={
                 "route": ConversationRoute.TOOL_CALL,
+                "activities": [*planning_activities, *response.activities],
                 "limitations": [*response.limitations, *decision.limitations],
                 "suggested_next_steps": [
                     *response.suggested_next_steps,

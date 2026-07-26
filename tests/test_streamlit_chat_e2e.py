@@ -147,6 +147,19 @@ def test_streamlit_answers_a_stable_fact_without_a_business_tool() -> None:
     assert not app.dataframe
 
 
+def test_streamlit_summarises_tool_use_and_operation_size_after_completion() -> None:
+    app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
+    app.run()
+
+    app.chat_input[0].set_value("Show the average quoted premium")
+    app.run()
+
+    assert not app.exception
+    assert any("Completed in" in caption.value for caption in app.caption)
+    assert any("Tools used:" in caption.value for caption in app.caption)
+    assert any(expander.label == "Tools used and timing" for expander in app.expander)
+
+
 def test_streamlit_clarifies_price_and_uses_the_follow_up() -> None:
     app = AppTest.from_file("src/pricing_copilot/streamlit_app.py", default_timeout=10)
     app.run()
