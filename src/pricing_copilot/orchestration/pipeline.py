@@ -176,7 +176,9 @@ async def _run_governed_pipeline_async(
         details={"scenario": scenario.value},
     )
 
-    repository = PortfolioDataRepository.from_scenario(scenario)
+    repository = PortfolioDataRepository.from_persistent(
+        scenario, settings.analytics_database_path
+    )
 
     try:
         analytics = build_analytics(question, repository)
@@ -417,7 +419,9 @@ def run_governed_portfolio_workflow(
         scenario = question.scenario
         if scenario is None:
             return missing_evidence_workflow_result(question)
-        preflight_repository = PortfolioDataRepository.from_scenario(scenario)
+        preflight_repository = PortfolioDataRepository.from_persistent(
+            scenario, settings.analytics_database_path
+        )
         try:
             preflight_analytics = build_analytics(question, preflight_repository)
         except MetricCalculationError as exc:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import duckdb
 
 from pricing_copilot.contracts import Product, Region, ScenarioName, Segment
@@ -8,6 +10,7 @@ from pricing_copilot.data.generation import (
     DEFAULT_SCENARIO_VERSION,
     generate_scenario_dataset,
 )
+from pricing_copilot.data.persistent import PersistentAnalyticsDatabase
 from pricing_copilot.data.records import (
     ClaimsMonthlyRecord,
     CompetitorMonthlyRecord,
@@ -20,14 +23,15 @@ from pricing_copilot.data.records import (
 class PortfolioDataRepository:
     """Read-only, parameterized access to a generated scenario dataset via DuckDB."""
 
-    def __init__(self, connection: duckdb.DuckDBPyConnection) -> None:
+    def __init__(self, connection: duckdb.DuckDBPyConnection, scenario: ScenarioName) -> None:
         self._connection = connection
+        self._scenario = scenario
 
     @classmethod
     def from_dataset(cls, dataset: ScenarioDataset) -> PortfolioDataRepository:
         connection = duckdb.connect(":memory:")
         _load_dataset(connection, dataset)
-        return cls(connection)
+        return cls(connection, dataset.scenario)
 
     @classmethod
     def from_scenario(
@@ -38,14 +42,27 @@ class PortfolioDataRepository:
     ) -> PortfolioDataRepository:
         return cls.from_dataset(generate_scenario_dataset(scenario, seed, version))
 
+    @classmethod
+    def from_persistent(cls, scenario: ScenarioName, path: Path) -> PortfolioDataRepository:
+        """Read a single scenario's slice from the shared persistent analytics file.
+
+        Reuses ``PersistentAnalyticsDatabase.ensure`` to guarantee the file exists at
+        the current schema/data version, then opens a read-only connection. The same
+        scenario-filtered ``fetch_*`` SQL works unmodified because the persistent
+        tables carry a populated ``scenario`` column for every ``ScenarioName``.
+        """
+        PersistentAnalyticsDatabase(path).ensure()
+        connection = duckdb.connect(str(path), read_only=True)
+        return cls(connection, scenario)
+
     def fetch_claims(
         self, product: Product, region: Region, segment: Segment
     ) -> list[ClaimsMonthlyRecord]:
         rows = self._connection.execute(
             "SELECT period, product, region, segment, policies_in_force, claim_count, "
             "incurred_loss_gbp, earned_premium_gbp FROM claims "
-            "WHERE product = ? AND region = ? AND segment = ? ORDER BY period",
-            [product.value, region.value, segment.value],
+            "WHERE scenario = ? AND product = ? AND region = ? AND segment = ? ORDER BY period",
+            [self._scenario.value, product.value, region.value, segment.value],
         ).fetchall()
         return [
             ClaimsMonthlyRecord(
@@ -65,8 +82,8 @@ class PortfolioDataRepository:
         rows = self._connection.execute(
             "SELECT period, product, region, segment, quotes, sales, renewals_due, "
             "renewals_retained, average_quoted_premium_gbp FROM conversion "
-            "WHERE product = ? AND region = ? ORDER BY segment, period",
-            [product.value, region.value],
+            "WHERE scenario = ? AND product = ? AND region = ? ORDER BY segment, period",
+            [self._scenario.value, product.value, region.value],
         ).fetchall()
         return [
             ConversionMonthlyRecord(
@@ -86,8 +103,8 @@ class PortfolioDataRepository:
     def fetch_competitors(self, region: Region) -> list[CompetitorMonthlyRecord]:
         rows = self._connection.execute(
             "SELECT period, region, competitor_name, price_index FROM competitors "
-            "WHERE region = ? ORDER BY competitor_name, period",
-            [region.value],
+            "WHERE scenario = ? AND region = ? ORDER BY competitor_name, period",
+            [self._scenario.value, region.value],
         ).fetchall()
         return [
             CompetitorMonthlyRecord(
@@ -102,8 +119,8 @@ class PortfolioDataRepository:
         rows = self._connection.execute(
             "SELECT period, product, region, segment, price_change_pct, rationale, "
             "conversion_impact_pct, loss_ratio_impact_pct FROM pricing_history "
-            "WHERE product = ? AND region = ? AND segment = ? ORDER BY period",
-            [product.value, region.value, segment.value],
+            "WHERE scenario = ? AND product = ? AND region = ? AND segment = ? ORDER BY period",
+            [self._scenario.value, product.value, region.value, segment.value],
         ).fetchall()
         return [
             PricingActionRecord(
@@ -121,15 +138,18 @@ class PortfolioDataRepository:
 
 
 def _load_dataset(connection: duckdb.DuckDBPyConnection, dataset: ScenarioDataset) -> None:
+    scenario = dataset.scenario.value
     connection.execute(
-        "CREATE TABLE claims (period DATE, product VARCHAR, region VARCHAR, segment VARCHAR, "
+        "CREATE TABLE claims (scenario VARCHAR NOT NULL, period DATE, product VARCHAR, "
+        "region VARCHAR, segment VARCHAR, "
         "policies_in_force INTEGER, claim_count INTEGER, incurred_loss_gbp DOUBLE, "
         "earned_premium_gbp DOUBLE)"
     )
     connection.executemany(
-        "INSERT INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO claims VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
             (
+                scenario,
                 r.period,
                 r.product.value,
                 r.region.value,
@@ -144,14 +164,16 @@ def _load_dataset(connection: duckdb.DuckDBPyConnection, dataset: ScenarioDatase
     )
 
     connection.execute(
-        "CREATE TABLE conversion (period DATE, product VARCHAR, region VARCHAR, segment VARCHAR, "
+        "CREATE TABLE conversion (scenario VARCHAR NOT NULL, period DATE, product VARCHAR, "
+        "region VARCHAR, segment VARCHAR, "
         "quotes INTEGER, sales INTEGER, renewals_due INTEGER, renewals_retained INTEGER, "
         "average_quoted_premium_gbp DOUBLE)"
     )
     connection.executemany(
-        "INSERT INTO conversion VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO conversion VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
             (
+                scenario,
                 r.period,
                 r.product.value,
                 r.region.value,
@@ -167,26 +189,28 @@ def _load_dataset(connection: duckdb.DuckDBPyConnection, dataset: ScenarioDatase
     )
 
     connection.execute(
-        "CREATE TABLE competitors (period DATE, region VARCHAR, competitor_name VARCHAR, "
-        "price_index DOUBLE)"
+        "CREATE TABLE competitors (scenario VARCHAR NOT NULL, period DATE, region VARCHAR, "
+        "competitor_name VARCHAR, price_index DOUBLE)"
     )
     connection.executemany(
-        "INSERT INTO competitors VALUES (?, ?, ?, ?)",
+        "INSERT INTO competitors VALUES (?, ?, ?, ?, ?)",
         [
-            (r.period, r.region.value, r.competitor_name, r.price_index)
+            (scenario, r.period, r.region.value, r.competitor_name, r.price_index)
             for r in dataset.competitors
         ],
     )
 
     connection.execute(
-        "CREATE TABLE pricing_history (period DATE, product VARCHAR, region VARCHAR, "
+        "CREATE TABLE pricing_history (scenario VARCHAR NOT NULL, period DATE, product VARCHAR, "
+        "region VARCHAR, "
         "segment VARCHAR, price_change_pct DOUBLE, rationale VARCHAR, "
         "conversion_impact_pct DOUBLE, loss_ratio_impact_pct DOUBLE)"
     )
     connection.executemany(
-        "INSERT INTO pricing_history VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO pricing_history VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
             (
+                scenario,
                 r.period,
                 r.product.value,
                 r.region.value,

@@ -100,7 +100,9 @@ def _evidence_backed_workflow_result(
     if scenario is None:
         raise ValueError("Evidence-backed workflow requires a scenario.")
 
-    repository = PortfolioDataRepository.from_scenario(scenario)
+    repository = PortfolioDataRepository.from_persistent(
+        scenario, settings.analytics_database_path
+    )
 
     try:
         analytics = build_analytics(question, repository)
