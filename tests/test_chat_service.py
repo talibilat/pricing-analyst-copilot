@@ -216,9 +216,47 @@ def test_multi_source_analysis_uses_the_governed_workflow(service: ChatService) 
 
     assert response.intent is ChatIntent.PRICING_ANALYSIS
     assert response.workflow_result is not None
-    assert "## Direct answer" in response.message
-    assert "## Key evidence" in response.message
+    assert "Loss ratio moved" in response.message
+    assert "Quote-to-sale conversion moved" in response.message
+    assert "Renewal retention moved" in response.message
+    assert "**Conclusion:**" in response.message
+    assert "**Caveat or next action:**" in response.message
+    assert "Answer by question" not in response.message
     assert not response.tables
+
+
+def test_counter_increase_question_overrides_dashboard_scope_and_uses_retention_evidence(
+    service: ChatService,
+) -> None:
+    response = service.submit(
+        "What evidence would argue against another price increase?",
+        ChatContext(scenario=ScenarioName.CONTROLLED_INCREASE),
+    )
+
+    assert response.context.scenario is ScenarioName.RETENTION_CONCERN
+    assert response.workflow_result is not None
+    assert response.workflow_result.question.scenario is ScenarioName.RETENTION_CONCERN
+    assert "competitors are reducing renewal prices" in response.message
+    assert "cancellation and affordability" in response.message
+    assert "[mi-retention-industry-2025-11:chunk-001]" in response.message
+    assert "[cf-retention-cancellation-2025-11:chunk-001]" in response.message
+    assert "[cf-retention-affordability-2025-12:chunk-001]" in response.message
+    assert response.message.count("[mi-retention-industry-2025-11:chunk-001]") == 1
+    assert "**Conclusion:**" in response.message
+    assert "**Caveat or next action:**" in response.message
+    assert "Answer by question" not in response.message
+
+
+def test_governance_question_retrieves_and_cites_regulatory_evidence(service: ChatService) -> None:
+    response = service.submit(
+        "Which findings should be escalated to a human specialist before a pricing decision?"
+    )
+
+    assert response.workflow_result is not None
+    assert "Automated monitoring" in response.message
+    assert "pre-launch governance" in response.message
+    assert "qualified analyst" in response.message
+    assert "[mi-controlled-regulatory-2025-11:chunk-001]" in response.message
 
 
 def test_each_analysis_type_reaches_final_generation_with_the_full_evidence_bundle(
@@ -428,7 +466,7 @@ def test_chat_uses_deterministic_analytics_when_live_agent_credentials_are_unava
         response = service.submit("Recommend a pricing action")
 
     assert not response.refused
-    assert "direct answer" in response.message.lower()
+    assert "conclusion" in response.message.lower()
     assert response.workflow_result is not None
 
 

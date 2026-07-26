@@ -168,10 +168,7 @@ def test_governance_question_cannot_be_answered_directly_without_evidence() -> N
     assert planned.intent is ConversationIntent.INVESTIGATION
     assert set(planned.sources) == set(AnalyticsSource)
     assert planned.structured_plan is not None
-    assert (
-        planned.structured_plan.analysis_type
-        is AnalysisQuestionType.GOVERNANCE_ESCALATION
-    )
+    assert planned.structured_plan.analysis_type is AnalysisQuestionType.GOVERNANCE_ESCALATION
 
 
 @pytest.mark.parametrize(
@@ -332,14 +329,13 @@ def test_attrition_question_uses_only_customer_feedback_and_composes_an_investig
     assert "cf-retention-cancellation-2025-11:chunk-001" in response.message
     assert "cf-retention-affordability-2025-12:chunk-001" in response.message
     assert "cf-retention-calls-2025-12:chunk-001" in response.message
-    assert "## Direct answer" in response.message
     assert "Renewal pricing appears to be contributing to attrition" in response.message
     assert "retention and price-elasticity investigation should follow" in response.message
-    assert "## Supporting evidence" in response.message
-    assert "## Investigation or limitation" in response.message
-    assert "## Citations" in response.message
+    assert "**Conclusion:**" in response.message
+    assert "**Caveat or next action:**" in response.message
+    assert "Answer by question" not in response.message
     assert response.context.scenario is ScenarioName.RETENTION_CONCERN
-    assert any("Sub-questions:" in item for item in response.plan_details)
+    assert any("Evidence to combine:" in item for item in response.plan_details)
     assert any("customer feedback:" in item for item in response.plan_details)
     assert any("Evidence rule:" in item for item in response.plan_details)
     assert all(activity.label != "Portfolio analysis workflow" for activity in response.activities)

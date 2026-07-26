@@ -97,7 +97,11 @@ def _specialist_reports(
 
 
 def _evidence_backed_workflow_result(
-    question: PortfolioQuestion, settings: Settings, synthesizer: RecommendationSynthesizer | None
+    question: PortfolioQuestion,
+    settings: Settings,
+    synthesizer: RecommendationSynthesizer | None,
+    *,
+    document_query: str = RETRIEVAL_QUERY,
 ) -> WorkflowResult:
     scenario = question.scenario
     if scenario is None:
@@ -115,8 +119,8 @@ def _evidence_backed_workflow_result(
         region=question.region,
         product=question.product,
         segment=question.segment,
-        query=RETRIEVAL_QUERY,
-        top_k=6,
+        query=document_query,
+        top_k=12,
         settings=settings,
     )
 
@@ -239,6 +243,8 @@ def run_baseline_portfolio_workflow(
     question: PortfolioQuestion,
     settings: Settings | None = None,
     synthesizer: RecommendationSynthesizer | None = None,
+    *,
+    document_query: str = RETRIEVAL_QUERY,
 ) -> WorkflowResult:
     """The original single-agent baseline pipeline. Retained for fallback and side-by-side
     benchmarking against the governed multi-agent pipeline (see run_governed_portfolio_workflow)."""
@@ -246,7 +252,12 @@ def run_baseline_portfolio_workflow(
     settings = settings or get_settings()
 
     if question.scenario in IMPLEMENTED_DATA_SCENARIOS:
-        return _evidence_backed_workflow_result(question, settings, synthesizer)
+        return _evidence_backed_workflow_result(
+            question,
+            settings,
+            synthesizer,
+            document_query=document_query,
+        )
     return missing_evidence_workflow_result(question)
 
 
@@ -258,6 +269,7 @@ def run_portfolio_workflow(
     use_baseline: bool = False,
     event_listener: TraceEventListener | None = None,
     replay: bool = False,
+    document_query: str = RETRIEVAL_QUERY,
 ) -> WorkflowResult:
     """Public entry point used by the API, CLI, and Streamlit interface. Defaults to the
     governed multi-agent pipeline; set use_baseline=True (or pass an explicit synthesizer) to
@@ -267,7 +279,17 @@ def run_portfolio_workflow(
         validate_portfolio_combination(question.product, question.region, question.segment)
         return run_replay_portfolio_workflow(question, settings)
     if use_baseline or synthesizer is not None:
-        return run_baseline_portfolio_workflow(question, settings, synthesizer)
+        return run_baseline_portfolio_workflow(
+            question,
+            settings,
+            synthesizer,
+            document_query=document_query,
+        )
 
     validate_portfolio_combination(question.product, question.region, question.segment)
-    return run_governed_portfolio_workflow(question, settings, event_listener=event_listener)
+    return run_governed_portfolio_workflow(
+        question,
+        settings,
+        event_listener=event_listener,
+        document_query=document_query,
+    )

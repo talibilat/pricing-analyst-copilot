@@ -119,6 +119,14 @@ _SEGMENTATION_TERMS = (
     "unfair customer",
     "differentiated pricing",
 )
+_AGAINST_INCREASE_TERMS = (
+    "argue against",
+    "evidence against",
+    "reasons against",
+    "should not increase",
+    "shouldn't increase",
+    "not increase",
+)
 
 _SOURCE_REASONS: dict[AnalyticsSource, str] = {
     AnalyticsSource.CLAIMS: (
@@ -140,6 +148,43 @@ def _contains_any(message: str, terms: tuple[str, ...]) -> bool:
     return any(term in message for term in terms)
 
 
+def _asks_for_counter_evidence_to_an_increase(message: str) -> bool:
+    """Recognise the retention scenario encoded by a counter-increase question."""
+    mentions_increase = any(
+        phrase in message
+        for phrase in ("price increase", "pricing increase", "further increase", "another increase")
+    )
+    return mentions_increase and (
+        _contains_any(message, _AGAINST_INCREASE_TERMS)
+        or ("would" in message and "argue" in message)
+    )
+
+
+def infer_intended_scenario(
+    message: str, default: ScenarioName | None = None
+) -> ScenarioName | None:
+    """Resolve an explicit or semantically implied scenario before selecting evidence.
+
+    The dashboard context is a convenience, not evidence that it is the scenario the
+    analyst means.  Counter-evidence to a further increase is the supported retention
+    concern scenario unless the analyst has explicitly named another scenario.
+    """
+    lowered = message.lower()
+    if _contains_any(lowered, ("controlled increase", "controlled-increase")):
+        return ScenarioName.CONTROLLED_INCREASE
+    if _contains_any(
+        lowered,
+        ("conflicting evidence", "conflicting-evidence", "conflicting", "contradictory evidence"),
+    ):
+        return ScenarioName.CONFLICTING_EVIDENCE
+    if _contains_any(
+        lowered,
+        ("attrition", "price sensitivity", "retention risk", "retention concern"),
+    ) or _asks_for_counter_evidence_to_an_increase(lowered):
+        return ScenarioName.RETENTION_CONCERN
+    return default
+
+
 def _explicit_recommendation_requested(message: str) -> bool:
     negated_requests = (
         "without recommend",
@@ -158,6 +203,13 @@ def _explicit_recommendation_requested(message: str) -> bool:
 
 
 def _deduplicated_sources(message: str, decision: ConversationDecision) -> list[AnalyticsSource]:
+    if _asks_for_counter_evidence_to_an_increase(message):
+        return [
+            AnalyticsSource.CONVERSION,
+            AnalyticsSource.COMPETITORS,
+            AnalyticsSource.MARKET_INTELLIGENCE,
+            AnalyticsSource.CUSTOMER_FEEDBACK,
+        ]
     if "competitor" in message and any(
         term in message for term in ("announced", "announcement", "published", "source")
     ):
@@ -168,9 +220,7 @@ def _deduplicated_sources(message: str, decision: ConversationDecision) -> list[
     return list(dict.fromkeys(inferred or decision.sources))
 
 
-def _analysis_type(
-    message: str, *, explicit_recommendation: bool
-) -> AnalysisQuestionType:
+def _analysis_type(message: str, *, explicit_recommendation: bool) -> AnalysisQuestionType:
     if _contains_any(message, _RELIABILITY_TERMS):
         return AnalysisQuestionType.RELIABILITY
     if _contains_any(message, _ROOT_CAUSE_TERMS):
@@ -382,19 +432,10 @@ def _structured_plan(
 def plan_request(message: str, decision: ConversationDecision) -> ConversationDecision:
     """Constrain model output to a minimal, inspectable, source-aware execution plan."""
     lowered = message.lower()
-    inferred_scenario = decision.scenario
-    if _contains_any(lowered, ("controlled increase", "controlled-increase")):
-        inferred_scenario = ScenarioName.CONTROLLED_INCREASE
-    elif _contains_any(
-        lowered,
-        ("attrition", "price sensitivity", "retention risk", "retention concern"),
-    ):
-        inferred_scenario = ScenarioName.RETENTION_CONCERN
+    inferred_scenario = infer_intended_scenario(lowered, decision.scenario)
     inferred_sources = _deduplicated_sources(lowered, decision)
     explicit_recommendation = _explicit_recommendation_requested(lowered)
-    analysis_type = _analysis_type(
-        lowered, explicit_recommendation=explicit_recommendation
-    )
+    analysis_type = _analysis_type(lowered, explicit_recommendation=explicit_recommendation)
     inferred_sources = _sources_for_analysis_type(analysis_type, inferred_sources)
     evidence_workflow_types = {
         AnalysisQuestionType.RELIABILITY,
@@ -412,8 +453,7 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
         document_sources = [
             source
             for source in inferred_sources
-            if source
-            in {AnalyticsSource.MARKET_INTELLIGENCE, AnalyticsSource.CUSTOMER_FEEDBACK}
+            if source in {AnalyticsSource.MARKET_INTELLIGENCE, AnalyticsSource.CUSTOMER_FEEDBACK}
         ]
         structured_sources = [
             source for source in inferred_sources if source not in document_sources
@@ -450,9 +490,7 @@ def plan_request(message: str, decision: ConversationDecision) -> ConversationDe
         return decision.model_copy(
             update={
                 "intent": (
-                    ConversationIntent.PRICING_RECOMMENDATION
-                    if explicit_recommendation
-                    else intent
+                    ConversationIntent.PRICING_RECOMMENDATION if explicit_recommendation else intent
                 ),
                 "tool_name": (
                     ChatToolName.RECOMMENDATION if explicit_recommendation else decision.tool_name

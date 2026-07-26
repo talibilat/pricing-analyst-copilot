@@ -396,7 +396,7 @@ class ConversationGraph:
             return details
         details.append(f"Intent: {plan.intent.value.replace('_', ' ')}.")
         details.append(f"Question type: {plan.analysis_type.value.replace('_', ' ')}.")
-        details.append("Sub-questions:")
+        details.append("Evidence to combine:")
         details.extend(f"  - {question}" for question in plan.sub_questions)
         if plan.tool_calls:
             details.append("Required tool calls:")

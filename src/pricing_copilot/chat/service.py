@@ -15,6 +15,7 @@ from pricing_copilot.chat.answer_generation import (
 )
 from pricing_copilot.chat.contracts import (
     ActivityStatus,
+    AnalysisQuestionType,
     AnalyticsSource,
     ChatActivity,
     ChatContext,
@@ -26,6 +27,7 @@ from pricing_copilot.chat.contracts import (
     ConversationIntent,
     ConversationMessage,
     ConversationRoute,
+    StructuredQueryPlan,
 )
 from pricing_copilot.chat.conversation_graph import (
     AgentsSdkConversationPlanner,
@@ -33,7 +35,7 @@ from pricing_copilot.chat.conversation_graph import (
     ConversationPlanner,
     ConversationToolExecutor,
 )
-from pricing_copilot.chat.presentation import compose_analysis_response
+from pricing_copilot.chat.query_planning import infer_intended_scenario
 from pricing_copilot.chat.tool_registry import coordinator_catalogue
 from pricing_copilot.config import Settings, get_settings
 from pricing_copilot.contracts import (
@@ -159,8 +161,8 @@ class DefaultConversationTools:
     ) -> None:
         self.settings = settings or get_settings()
         self.database = PersistentAnalyticsDatabase(self.settings.analytics_database_path)
-        self.answer_generator = (
-            answer_generator or get_default_analysis_answer_generator(self.settings)
+        self.answer_generator = answer_generator or get_default_analysis_answer_generator(
+            self.settings
         )
 
     def available_tools(self) -> dict[str, object]:
@@ -802,29 +804,47 @@ class DefaultConversationTools:
                 "The answer is limited to the retrieved, scoped evidence. "
                 "No recommendation is implied unless one was explicitly requested."
             )
-        document_supporting = self._supporting_evidence_lines(evidence)
-        supporting = "\n".join(item for item in (structured_evidence, document_supporting) if item)
-        no_summary = (
-            f"Retrieved {evidence_count} evidence item(s), but no safe summary could be composed."
-        )
-        investigation_text = "\n".join(f"- {item}" for item in investigations)
-        structured_citations = "\n".join(
-            f"- [{table.title}] scoped portfolio analytics"
+        del evidence_count, citations  # Citations are attached directly to the evidence facts.
+        structured_citations = {
+            table.title: f"[{table.title}]"
             for table in tables
-            if table.title
-            in {"Claims", "Conversion", "Competitors", "Pricing History"}
+            if table.title in {"Claims", "Conversion", "Competitors", "Pricing History"}
+        }
+        evidence_lines: list[str] = []
+        for line in structured_evidence.splitlines():
+            title_match = re.match(r"- \*\*(.+?):\*\*", line)
+            citation = structured_citations.get(title_match.group(1)) if title_match else None
+            evidence_lines.append(
+                " ".join(item for item in (line.removeprefix("- "), citation) if item)
+            )
+        evidence_lines.extend(
+            line.removeprefix("- ")
+            for line in self._supporting_evidence_lines(evidence).splitlines()
         )
-        all_citations = "\n".join(item for item in (structured_citations, citations) if item)
-        evidence_heading = "Key evidence" if structured_evidence else "Supporting evidence"
-        return (
-            "## Direct answer\n"
-            f"{direct}\n\n"
-            f"## {evidence_heading}\n"
-            f"{supporting or no_summary}\n\n"
-            "## Investigation or limitation\n"
-            f"{investigation_text or limitation}\n\n"
-            "## Citations\n"
-            f"{all_citations}"
+        if not evidence_lines:
+            evidence_lines.append("No source-specific evidence was available for this conclusion.")
+        conclusion = re.split(r"(?<=[.!?])\s+", " ".join(direct.split()), maxsplit=1)[0]
+        caveat_candidates = re.split(
+            r"(?<=[.!?])\s+",
+            " ".join((investigations[0] if investigations else limitation).split()),
+        )
+        caveat = next(
+            (
+                sentence
+                for sentence in caveat_candidates
+                if any(
+                    term in sentence.lower()
+                    for term in ("investigat", "refresh", "validate", "check")
+                )
+            ),
+            caveat_candidates[0],
+        )
+        return "\n\n".join(
+            (
+                f"**Conclusion:** {conclusion}",
+                "\n".join(f"- {line}" for line in evidence_lines[:3]),
+                f"**Caveat or next action:** {caveat}",
+            )
         )
 
     @staticmethod
@@ -858,9 +878,7 @@ class DefaultConversationTools:
                 "renewals_retained",
             }.issubset(table.columns):
                 summary, investigation = DefaultConversationTools._conversion_summary(table, rows)
-            elif table.title == "Competitors" and {"period", "price_index"}.issubset(
-                table.columns
-            ):
+            elif table.title == "Competitors" and {"period", "price_index"}.issubset(table.columns):
                 summary, investigation = DefaultConversationTools._competitor_summary(table, rows)
             elif table.title == "Pricing History" and {
                 "period",
@@ -1164,8 +1182,8 @@ class DefaultConversationTools:
             channels.append("call-centre conversations")
         if len(channels) >= 2:
             return (
-                f"{_format_list(channels).capitalize()} consistently indicate price sensitivity. "
-                "The common pattern is repeated price concern, comparison shopping, and evidence "
+                f"{_format_list(channels).capitalize()} consistently indicate price sensitivity; "
+                "the common pattern is repeated price concern, comparison shopping, and evidence "
                 "that customers may not absorb another increase."
             )
         return (
@@ -1180,16 +1198,16 @@ class DefaultConversationTools:
             "no recurring affordability or fairness theme",
         }.issubset(facts):
             suffix = (
-                " Most feedback instead concerns claims handling, communication, documentation, "
-                "or claims status."
+                "; most feedback instead concerns claims handling, communication, documentation, "
+                "or claims status"
                 if "other service themes dominate" in facts
                 else ""
             )
             return (
                 "No material affordability or fairness concern is evidenced in the "
-                "controlled-increase scenario. Price-related comments are a small minority, "
-                "with no recurring affordability theme "
-                f"and no concentrated fairness concern.{suffix}"
+                "controlled-increase scenario; price-related comments are a small minority, "
+                "with no recurring affordability theme and no concentrated fairness concern"
+                f"{suffix}."
             )
         return (
             "The retrieved controlled-increase feedback does not provide enough evidence to "
@@ -1383,13 +1401,20 @@ class DefaultConversationTools:
             listener,
         )
         try:
+            document_query = self._evidence_query(message, decision)
             if decision.tool_name is ChatToolName.RECOMMENDATION:
                 result = run_portfolio_workflow(
-                    question, self.settings, event_listener=record_trace_event
+                    question,
+                    self.settings,
+                    event_listener=record_trace_event,
+                    document_query=document_query,
                 )
             else:
                 result = run_baseline_portfolio_workflow(
-                    question, self.settings, FakeRecommendationSynthesizer()
+                    question,
+                    self.settings,
+                    FakeRecommendationSynthesizer(),
+                    document_query=document_query,
                 )
         except UnsupportedPortfolioError:
             return self._unsupported_portfolio_response(context, selected_segment)
@@ -1411,26 +1436,24 @@ class DefaultConversationTools:
             # The response composer reports the reduced confidence and outstanding limitations.
             try:
                 result = run_baseline_portfolio_workflow(
-                    question, self.settings, FakeRecommendationSynthesizer()
+                    question,
+                    self.settings,
+                    FakeRecommendationSynthesizer(),
+                    document_query=self._evidence_query(message, decision),
                 )
             except UnsupportedPortfolioError:
                 return self._unsupported_portfolio_response(context, selected_segment)
         recommendation = result.recommendation
-        if decision.structured_plan is not None:
-            message_summary = self.answer_generator.generate(
-                question=message,
-                plan=decision.structured_plan,
-                result=result,
-            )
-        else:
-            message_summary = compose_analysis_response(
-                result,
-                segment_identification_requested=any(
-                    phrase in message.lower()
-                    for phrase in ("which segment", "identify the segment", "segment driving")
-                ),
-                focus=self._focus_for_message(message),
-            )
+        plan = decision.structured_plan or StructuredQueryPlan(
+            intent=decision.intent or ConversationIntent.DATA_LOOKUP,
+            analysis_type=AnalysisQuestionType.LOOKUP,
+            evidence_rule="Every material conclusion must cite retrieved evidence.",
+        )
+        message_summary = self.answer_generator.generate(
+            question=message,
+            plan=plan,
+            result=result,
+        )
         return ChatResponse(
             intent=ChatIntent.PRICING_ANALYSIS,
             context=context.model_copy(update={"segment": selected_segment}),
@@ -1439,10 +1462,18 @@ class DefaultConversationTools:
             cited_evidence_ids=recommendation.cited_evidence_ids,
             investigation_areas=recommendation.investigation_areas,
             workflow_result=result,
-            recommendation_requested=(
-                decision.intent is ConversationIntent.PRICING_RECOMMENDATION
-            ),
+            recommendation_requested=(decision.intent is ConversationIntent.PRICING_RECOMMENDATION),
         )
+
+    @staticmethod
+    def _evidence_query(message: str, decision: ConversationDecision) -> str:
+        """Preserve the analyst's evidence request when retrieving the workflow bundle."""
+        analysis_type = (
+            decision.structured_plan.analysis_type if decision.structured_plan is not None else None
+        )
+        if analysis_type is not None and analysis_type.value == "governance_escalation":
+            return f"{message} regulatory governance fair-value review analyst approval"
+        return message
 
     @staticmethod
     def _unsupported_portfolio_response(context: ChatContext, segment: Segment) -> ChatResponse:
@@ -1610,12 +1641,8 @@ class ChatService:
         """Resolve explicit scope changes while retaining earlier conversation scope."""
         lowered = message.lower()
         updates: dict[str, object] = {}
-        if "retention concern" in lowered or "retention risk" in lowered:
-            updates["scenario"] = ScenarioName.RETENTION_CONCERN
-        elif "conflicting evidence" in lowered:
-            updates["scenario"] = ScenarioName.CONFLICTING_EVIDENCE
-        elif "controlled increase" in lowered:
-            updates["scenario"] = ScenarioName.CONTROLLED_INCREASE
+        if scenario := infer_intended_scenario(lowered, context.scenario):
+            updates["scenario"] = scenario
         if "renewal" in lowered:
             updates["segment"] = Segment.RENEWAL
         elif "new business" in lowered or "new-business" in lowered:
