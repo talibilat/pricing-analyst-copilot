@@ -145,6 +145,15 @@ html, body, [data-testid="stAppViewContainer"] {
 [class*="st-key-chat_suggestion_"] [data-testid="stBaseButton-secondary"]:hover {
   background:oklch(40% 0.085 235); border-color:oklch(40% 0.085 235);
 }
+[data-testid="stChatMessage"] [data-testid="stButton"] button {
+  background:var(--pc-accent); border-color:var(--pc-accent); color:var(--pc-on-accent);
+}
+[data-testid="stChatMessage"] [data-testid="stButton"] button :is(p, span) {
+  color:var(--pc-on-accent) !important;
+}
+[data-testid="stChatMessage"] [data-testid="stButton"] button:hover {
+  background:oklch(40% 0.085 235); border-color:oklch(40% 0.085 235);
+}
 
 [data-testid="stChatMessage"] { gap:9px; color:var(--pc-text); }
 [data-testid="stChatMessageAvatarUser"],
@@ -248,13 +257,14 @@ html, body, [data-testid="stAppViewContainer"] {
   border-bottom:1px solid oklch(94% 0.008 85); padding-bottom:12px; margin-bottom:12px;
 }
 
-[data-testid="stTabs"] button[data-baseweb="tab"] {
+[data-testid="stTabs"] [role="tab"],
+[data-testid="stTabs"] [role="tab"] :is(p, span, div) {
   font-family:'IBM Plex Sans', sans-serif; font-size:13.5px; font-weight:500;
   color:var(--pc-text) !important;
 }
-[data-testid="stTabs"] button[data-baseweb="tab"] p,
-[data-testid="stTabs"] button[data-baseweb="tab"] span {
-  color:var(--pc-text) !important;
+[data-testid="stTabs"] [role="tab"][aria-selected="true"],
+[data-testid="stTabs"] [role="tab"][aria-selected="true"] :is(p, span, div) {
+  color:var(--pc-accent) !important;
 }
 
 .pc-monitoring-status-ok { color:oklch(52% 0.13 150); font-weight:600; }
