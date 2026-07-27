@@ -7,7 +7,7 @@ It answers one narrow portfolio question:
 
 The system is designed to gather evidence and propose a bounded action without replacing actuarial pricing engines or transferring accountability away from a qualified analyst.
 It uses specialist agents for interpretation, deterministic tools for calculations, an independent governance challenge, and explicit human review.
-It never executes a pricing change.
+It never executes a pricing change
 
 The complete product specification is tracked in [Issue #1](https://github.com/talibilat/pricing-analyst-copilot/issues/1).
 
