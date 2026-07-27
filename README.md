@@ -19,6 +19,7 @@ The next dependency-ready implementation ticket is [Issue #13](https://github.co
 
 ## Product outcome
 
+
 A pricing analyst will be able to:
 
 - Select a supported product, region, portfolio segment, analysis period, and scenario.
