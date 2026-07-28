@@ -11,7 +11,7 @@ New public surface:
 
 - `FreeformSqlRequest(sql: str, scenario: ScenarioName)` - frozen dataclass; a
   container for untrusted SQL text plus the closed-enum scenario it must be
-  scoped to.
+  scoped to
 - `FreeformSqlResult(sql, columns, rows, scenario, database_version)` - frozen
   dataclass carrying the executed SQL, result column names, capped rows, the
   scenario, and `ANALYTICS_DATABASE_VERSION`.
