@@ -65,7 +65,7 @@ flowchart TD
 The supervisor uses a controlled manager pattern rather than a free-form agent group chat.
 Specialists have typed inputs, typed outputs, and narrowly permitted read-only tools.
 The recommendation agent receives validated specialist reports and evidence references.
-The governance stage checks citations, numerical consistency, freshness, conflicts, movement limits, fairness constraints, and human-review wording.
+The governance stage checks citations, numerical consistency, freshness, conflicts, movement limits, fairness constraints, and human-review wording
 
 Human authority is structural, not a UI convention: no code path in this repository can execute a pricing change.
 `AnalystDecisionType` (approve, approve with conditions, reject, investigate) is recorded to a separate, append-only SQLite log (`decisions/store.py`) and nothing downstream of that log exists - there is no execution path for it to feed into.
