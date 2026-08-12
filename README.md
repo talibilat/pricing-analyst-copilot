@@ -5,7 +5,7 @@ It answers one narrow portfolio question:
 
 > Should a pricing action be considered next month for the North West personal motor renewal portfolio?
 
-The system is designed to gather evidence and propose a bounded action without replacing actuarial pricing engines or transferring accountability away from a qualified analyst.
+The system is designed to gather evidence and propose a bounded action without replacing actuarial pricing engines or transferring accountability away from a qualified analyst
 It uses specialist agents for interpretation, deterministic tools for calculations, an independent governance challenge, and explicit human review.
 It never executes a pricing change
 
